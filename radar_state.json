@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-05-02T00:00:00",
+  "cycle": 0,
+  "active_pairs": 0,
+  "market_state": "WAITING",
+  "btc": {
+    "rsi_15m": 0,
+    "rsi_1h": 0,
+    "above_vwap_15m": false,
+    "above_vwap_1h": false
+  },
+  "top_setups": [],
+  "sector_flow": [],
+  "counts": {
+    "prebuild": 0,
+    "bull": 0,
+    "sharpshooter": 0
+  }
+}
