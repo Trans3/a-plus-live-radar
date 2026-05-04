@@ -2,7 +2,6 @@ import base64
 import json
 import os
 import time
-from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -15,7 +14,7 @@ DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
 
 st.set_page_config(
-    page_title="A+ Scanner Report",
+    page_title="A+ Decision Radar",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -29,31 +28,23 @@ CSS = """
   --blue:#35A7FF; --purple:#BF65FF; --white:#F5F7FA; --muted:#9AA6B2;
 }
 .stApp{background:radial-gradient(circle at top left,#0f1a20 0%,#05080C 36%,#020407 100%);color:var(--white);} 
-.block-container{max-width:1180px;padding-top:.8rem;padding-bottom:1.5rem;}
+.block-container{max-width:1220px;padding-top:.8rem;padding-bottom:1.5rem;}
 [data-testid="stSidebar"]{background:#14171f;}
 #MainMenu, footer, header{visibility:hidden;}
-.report-shell{border:1px solid var(--line);border-radius:18px;background:rgba(3,6,9,.92);padding:18px 20px;box-shadow:0 0 36px rgba(120,255,46,.08);} 
-.header{display:grid;grid-template-columns:1.7fr .65fr;gap:18px;align-items:stretch;margin-bottom:14px;}
+.report-shell{border:1px solid var(--line);border-radius:18px;background:rgba(3,6,9,.94);padding:18px 20px;box-shadow:0 0 36px rgba(120,255,46,.08);} 
+.header{display:grid;grid-template-columns:1.55fr .8fr;gap:18px;align-items:stretch;margin-bottom:14px;}
 .header-left{border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#04090d,#08121a);padding:20px 24px;}
-.brand{display:flex;gap:18px;align-items:center;}
-.logo{width:84px;height:84px;border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:40px;font-weight:1000;box-shadow:0 0 18px rgba(120,255,46,.25);} 
-.title{font-size:52px;font-weight:1000;line-height:.95;letter-spacing:-1.5px;color:white;text-transform:uppercase;}
-.title span{color:var(--green);} .subtitle{margin-top:8px;color:var(--green);font-weight:900;letter-spacing:1px;text-transform:uppercase;}
-.meta{display:flex;gap:24px;margin-top:18px;color:var(--white);font-weight:700;font-size:14px;flex-wrap:wrap;} .meta b{color:var(--green);}
-.state-box{border:1px solid var(--line);border-radius:14px;background:#05080C;padding:18px;text-align:center;}
-.state-label{font-size:14px;font-weight:900;color:white;text-transform:uppercase;letter-spacing:.8px;}
-.state-value{font-size:44px;font-weight:1000;margin:10px 0 6px;text-transform:uppercase;}
-.state-sub{font-size:15px;font-weight:900;text-transform:uppercase;}.state-reason{font-size:13px;color:white;margin-top:6px;line-height:1.35;}
+.brand{display:flex;gap:18px;align-items:center;}.logo{width:84px;height:84px;border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:40px;font-weight:1000;box-shadow:0 0 18px rgba(120,255,46,.25);} 
+.title{font-size:50px;font-weight:1000;line-height:.95;letter-spacing:-1.5px;color:white;text-transform:uppercase;}.title span{color:var(--green);} .subtitle{margin-top:8px;color:var(--green);font-weight:900;letter-spacing:1px;text-transform:uppercase;}
+.meta{display:flex;gap:22px;margin-top:18px;color:var(--white);font-weight:700;font-size:14px;flex-wrap:wrap;} .meta b{color:var(--green);}
+.state-box{border:1px solid var(--line);border-radius:14px;background:#05080C;padding:18px;text-align:center;}.state-label{font-size:14px;font-weight:900;color:white;text-transform:uppercase;letter-spacing:.8px;}.state-value{font-size:44px;font-weight:1000;margin:10px 0 6px;text-transform:uppercase;}.state-sub{font-size:15px;font-weight:900;text-transform:uppercase;}.state-reason{font-size:13px;color:white;margin-top:6px;line-height:1.35;}
+.decision-banner{display:grid;grid-template-columns:1.1fr .9fr .9fr;gap:12px;margin:12px 0 18px;}.decision-tile{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px 16px;}.tile-k{color:var(--muted);text-transform:uppercase;font-weight:900;font-size:12px;letter-spacing:.8px;}.tile-v{font-size:26px;font-weight:1000;margin-top:4px;}.tile-sub{font-size:13px;color:white;margin-top:5px;}
 .section-title{display:flex;align-items:center;gap:18px;justify-content:center;margin:15px 0 12px;}.section-title:before,.section-title:after{content:"";height:3px;background:var(--green);flex:1;box-shadow:0 0 8px rgba(120,255,46,.5);} .section-title span{font-size:28px;font-weight:1000;text-transform:uppercase;letter-spacing:1px;}
-.setup-row{display:grid;grid-template-columns:90px 270px 230px 1fr;gap:18px;align-items:center;border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.96);padding:18px;margin-bottom:12px;min-height:188px;} 
-.rank-badge{height:148px;border:3px solid var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:1000;color:white;background:#05080C;}
-.coin-title{font-size:46px;font-weight:1000;letter-spacing:1px;line-height:1;color:white;}.pair-small{color:var(--muted);font-size:13px;font-weight:700;margin-top:4px;}
-.tag{display:inline-block;border-radius:6px;padding:5px 12px;margin-top:9px;font-size:18px;font-weight:1000;text-transform:uppercase;background:#080A0E;}.tag-pre{border:2px solid var(--yellow);color:var(--yellow);}.tag-bull{border:2px solid var(--green);color:var(--green);}.tag-sharp{border:2px solid var(--red);color:var(--red);}.tag-watch{border:2px solid var(--blue);color:var(--blue);} 
+.setup-card{border:1px solid var(--line);border-radius:16px;background:rgba(9,17,25,.96);padding:18px;margin-bottom:18px;}.setup-top{display:grid;grid-template-columns:90px 255px 200px 1fr;gap:18px;align-items:center;}.rank-badge{height:142px;border:3px solid var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:1000;color:white;background:#05080C;}.coin-title{font-size:46px;font-weight:1000;letter-spacing:1px;line-height:1;color:white;}.pair-small{color:var(--muted);font-size:13px;font-weight:700;margin-top:4px;}.tag{display:inline-block;border-radius:6px;padding:5px 12px;margin-top:9px;font-size:18px;font-weight:1000;text-transform:uppercase;background:#080A0E;}.tag-pre{border:2px solid var(--yellow);color:var(--yellow);}.tag-bull{border:2px solid var(--green);color:var(--green);}.tag-sharp{border:2px solid var(--red);color:var(--red);}.tag-watch{border:2px solid var(--blue);color:var(--blue);} 
 .bullets{margin-top:10px;color:white;font-size:15px;font-weight:700;line-height:1.55;}.bullets div:before{content:"›";color:var(--green);font-weight:1000;margin-right:8px;}.accent-orange .bullets div:before{color:var(--orange);} .accent-blue .bullets div:before{color:var(--blue);} 
-.scores{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 20px;}.score-line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;}.score-line:last-child{border-bottom:0}.score-label{font-size:13px;font-weight:900;color:white;text-transform:uppercase;line-height:1.05;}.score-num{font-size:42px;font-weight:1000;line-height:1;}.score-trigger{color:var(--green)}.score-trade{color:var(--purple)}.score-conf{color:var(--blue)}
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.chart-card{border:1px solid var(--line);border-radius:10px;background:#071017;padding:8px;}.chart-caption{text-align:center;font-size:14px;font-weight:1000;margin-top:4px;text-transform:uppercase;}.timing-pill{margin-top:8px;border-radius:8px;border:2px solid;padding:6px 8px;text-align:center;font-weight:1000;text-transform:uppercase;font-size:15px;background:#05080C;}
-.bottom-grid{display:grid;grid-template-columns:1.1fr 1fr 1.25fr;gap:14px;margin-top:14px;}.bottom-panel{border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.92);padding:16px;min-height:178px;}.panel-title{color:var(--green);font-size:18px;font-weight:1000;text-transform:uppercase;text-align:center;margin-bottom:12px;}.btc-big{font-size:32px;font-weight:1000;text-transform:uppercase;}.metric-row{display:flex;justify-content:space-between;border-top:1px solid #17232D;padding:8px 0;color:white;font-size:14px;}.sector-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #17232D;padding:6px 0;font-size:17px;font-weight:900;}.read-row{display:grid;grid-template-columns:130px 1fr;gap:8px;border-bottom:1px solid #17232D;padding:9px 0;}.read-key{font-weight:1000;text-transform:uppercase;}.read-desc{color:white;}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:white;font-weight:800;}.footer .left{color:var(--green);font-size:18px}.small{font-size:13px;color:var(--muted);font-weight:500;}
-.notice{border:1px solid #3b3f14;background:rgba(255,217,61,.18);border-radius:10px;padding:10px 14px;color:#fff3a3;margin:10px 0 14px;font-weight:700;}
+.scores{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 18px;}.score-line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;}.score-line:last-child{border-bottom:0}.score-label{font-size:12px;font-weight:900;color:white;text-transform:uppercase;line-height:1.05;}.score-num{font-size:40px;font-weight:1000;line-height:1;}.score-trigger{color:var(--green)}.score-trade{color:var(--purple)}.score-conf{color:var(--blue)}
+.decision-box{border:1px solid var(--line);border-radius:12px;background:#071017;padding:14px;}.decision-head{font-size:13px;color:var(--muted);font-weight:900;text-transform:uppercase;}.projected{font-size:30px;font-weight:1000;color:var(--green);}.riskgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.riskcell{border-top:1px solid #17232D;padding-top:8px}.riskcell span{display:block;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.riskcell b{font-size:17px;color:white}.riskcell .red{color:var(--red)}.riskcell .green{color:var(--green)}
+.tool-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px;}.tool-panel{border:1px solid var(--line);border-radius:12px;background:#071017;padding:12px;}.tool-title{font-size:14px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}.stage-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}.stage{padding:7px 9px;border:1px solid #27343D;border-radius:999px;font-size:12px;font-weight:1000;text-transform:uppercase;color:#9AA6B2;}.stage-on{border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(120,255,46,.18)}.stage-current{background:rgba(120,255,46,.14)}.arrow{color:#64707A;font-weight:1000}.timing-track{position:relative;height:42px;margin:8px 0 2px;background:linear-gradient(90deg,rgba(255,217,61,.16),rgba(120,255,46,.22),rgba(255,77,77,.18));border:1px solid #27343D;border-radius:999px;}.timing-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;padding:0 8px}.timing-marker{position:absolute;top:-6px;width:8px;height:54px;border-radius:8px;background:white;box-shadow:0 0 14px white}.next-box{font-size:14px;line-height:1.45;color:white}.next-box b{color:var(--green)}.fail{color:var(--red);font-weight:900}.why{color:white;font-weight:700;line-height:1.5}.bottom-grid{display:grid;grid-template-columns:1.1fr 1fr 1.25fr;gap:14px;margin-top:14px;}.bottom-panel{border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.92);padding:16px;min-height:178px;}.panel-title{color:var(--green);font-size:18px;font-weight:1000;text-transform:uppercase;text-align:center;margin-bottom:12px;}.btc-big{font-size:32px;font-weight:1000;text-transform:uppercase;}.metric-row{display:flex;justify-content:space-between;border-top:1px solid #17232D;padding:8px 0;color:white;font-size:14px;}.sector-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #17232D;padding:6px 0;font-size:17px;font-weight:900;}.read-row{display:grid;grid-template-columns:130px 1fr;gap:8px;border-bottom:1px solid #17232D;padding:9px 0;}.read-key{font-weight:1000;text-transform:uppercase;}.read-desc{color:white;}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:white;font-weight:800;}.footer .left{color:var(--green);font-size:18px}.small{font-size:13px;color:var(--muted);font-weight:500;}.notice{border:1px solid #3b3f14;background:rgba(255,217,61,.18);border-radius:10px;padding:10px 14px;color:#fff3a3;margin:10px 0 14px;font-weight:700;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -133,15 +124,122 @@ def timing_color(t):
     return "#FF4D4D"
 
 
-def spark(values, title, accent="#78FF2E"):
-    vals = [float(v) for v in (values or []) if v is not None]
+def safe_float(x, default=0.0):
+    try:
+        if x is None: return default
+        return float(x)
+    except Exception:
+        return default
+
+
+def pct_change(values):
+    vals = [safe_float(v) for v in (values or []) if safe_float(v) > 0]
+    if len(vals) < 2 or vals[0] <= 0: return 0.0
+    return (vals[-1] - vals[0]) / vals[0] * 100.0
+
+
+def range_pct(values):
+    vals = [safe_float(v) for v in (values or []) if safe_float(v) > 0]
+    if len(vals) < 2: return 0.0
+    last = vals[-1] or 1
+    return (max(vals) - min(vals)) / last * 100.0
+
+
+def projected_move(setup, market):
+    close30 = setup.get("close_30m", []) or []
+    close1h = setup.get("close_1h", []) or []
+    vol30 = range_pct(close30)
+    vol1h = range_pct(close1h)
+    ch30 = abs(pct_change(close30))
+    flags = setup.get("flags", {}) or {}
+    t = safe_float(setup.get("trigger_score"))
+    tr = safe_float(setup.get("trade_score"))
+    c = safe_float(setup.get("confidence"))
+    quality = max(0.45, min(1.35, (0.45*t + 0.25*tr + 0.30*c) / 100.0))
+    structure_boost = 0.35 if flags.get("vwap_accept") else 0.0
+    structure_boost += 0.25 if flags.get("pullback") else 0.0
+    structure_boost += 0.25 if flags.get("structure_break") else 0.0
+    structure_boost += 0.20 if flags.get("volume_spike") else 0.0
+    structure_boost += 0.25 if flags.get("acceleration") else 0.0
+    regime = (market or "").upper()
+    regime_mult = 1.15 if regime == "BULL" else 1.0 if regime == "PREBULL" else 0.78 if regime == "BEAR" else 0.9
+    base = (0.45 * vol1h) + (0.35 * vol30) + (0.20 * ch30) + structure_boost
+    high = max(0.35, min(8.0, base * quality * regime_mult))
+    low = max(0.15, min(high * 0.72, high * 0.42))
+    conf = int(max(20, min(95, 20 + (quality * 45) + (structure_boost * 12) + (12 if regime in {"BULL","PREBULL"} else 0))))
+    return round(low, 2), round(high, 2), conf
+
+
+def trade_levels(setup, market):
+    price = safe_float(setup.get("price"))
+    vwap = safe_float(setup.get("vwap"))
+    low, high, _ = projected_move(setup, market)
+    if price <= 0:
+        return {"entry_low":"—", "entry_high":"—", "stop":"—", "target":"—", "rr":"—"}
+    if vwap > 0 and vwap < price:
+        entry_low = max(vwap, price * 0.992)
+        entry_high = price * 1.002
+        stop = min(vwap * 0.996, entry_low * 0.994)
+    else:
+        entry_low = price * 0.994
+        entry_high = price * 1.002
+        stop = price * 0.988
+    target = price * (1 + high / 100.0)
+    risk = max(1e-9, entry_high - stop)
+    reward = max(0.0, target - entry_high)
+    rr = reward / risk if risk else 0
+    decimals = 6 if price < 1 else 4 if price < 10 else 2
+    fmt = lambda x: f"${x:,.{decimals}f}"
+    return {"entry_low":fmt(entry_low), "entry_high":fmt(entry_high), "stop":fmt(stop), "target":fmt(target), "rr":f"{rr:.1f}:1"}
+
+
+def setup_stages(setup):
+    flags = setup.get("flags", {}) or {}
+    cr = setup.get("chart_read", {}) or {}
+    timing = (cr.get("timing") or setup.get("entry_readiness_label") or "WATCH").upper()
+    stages = [
+        ("Compression", bool(flags.get("compression"))),
+        ("Impulse", bool(flags.get("impulse") or flags.get("acceleration"))),
+        ("Pullback", bool(flags.get("pullback"))),
+        ("VWAP Hold", bool(flags.get("vwap_accept"))),
+        ("Entry", timing == "ON TIME"),
+    ]
+    current = 0
+    for i, (_, passed) in enumerate(stages):
+        if passed: current = i
+    return stages, current
+
+
+def timing_position(timing):
+    t = (timing or "").upper()
+    if t == "EARLY": return 20
+    if t in {"ON TIME", "OPTIMAL", "READY SOON"}: return 50
+    if t in {"LATE", "REJECTED"}: return 84
+    return 34
+
+
+def decision_chart(setup, market, accent="#78FF2E"):
+    price = safe_float(setup.get("price"))
+    vals = [safe_float(v) for v in (setup.get("close_30m") or setup.get("close_1h") or []) if safe_float(v) > 0]
+    if not vals and price > 0:
+        vals = [price]
+    levels = trade_levels(setup, market)
+    vwap = safe_float(setup.get("vwap"))
     fig = go.Figure()
     if len(vals) >= 2:
-        colors = [accent if vals[i] >= vals[i-1] else "#FF5A4D" for i in range(1, len(vals))]
-        fig.add_trace(go.Scatter(y=vals, mode="lines", line=dict(width=3, color=accent), fill="tozeroy", fillcolor="rgba(120,255,46,0.05)"))
+        fig.add_trace(go.Scatter(y=vals, mode="lines", name="Price", line=dict(width=3, color=accent)))
     else:
-        fig.add_trace(go.Scatter(y=[0,0], mode="lines", line=dict(width=2, color="#23303A")))
-    fig.update_layout(height=118, margin=dict(l=0,r=0,t=24,b=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#071017", title=dict(text=title, font=dict(size=13,color=accent)), xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False)
+        fig.add_trace(go.Scatter(y=[price, price], mode="lines", name="Price", line=dict(width=3, color=accent)))
+    # Plotly hlines require numeric levels; parse levels by using raw approximate from price/projection
+    low, high, _ = projected_move(setup, market)
+    if price > 0:
+        target = price * (1 + high / 100)
+        stop = price * 0.988
+        if vwap > 0:
+            fig.add_hline(y=vwap, line_dash="dot", line_color="#FFD93D", annotation_text="VWAP", annotation_font_color="#FFD93D")
+        fig.add_hline(y=target, line_dash="dash", line_color="#78FF2E", annotation_text="Target", annotation_font_color="#78FF2E")
+        fig.add_hline(y=stop, line_dash="dash", line_color="#FF4D4D", annotation_text="Invalid", annotation_font_color="#FF4D4D")
+    fig.update_layout(height=205, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#071017", xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False)
     return fig
 
 
@@ -158,13 +256,39 @@ def bullets_for(s):
     return items[:3]
 
 
-def render_setup_row(setup, idx):
+def tag_for(setup):
+    return setup.get("tag") or setup.get("state") or "WATCH"
+
+
+def action_text(setup, timing):
+    t = (timing or "").upper()
+    if t == "ON TIME":
+        return "Best zone: watch for continuation confirmation, then act with invalidation defined."
+    if t == "EARLY":
+        return "Do not chase. Let the first controlled pullback form, then reassess."
+    if t == "LATE":
+        return "Skip the first move. Wait for a new base or VWAP reclaim."
+    return "Watch only. No clean trigger until price proves control."
+
+
+def why_text(setup):
+    flags = setup.get("flags", {}) or {}
+    if flags.get("pullback") and flags.get("vwap_accept"):
+        return "Buyers are defending VWAP after a move. That is where continuation setups become tradable."
+    if flags.get("impulse") and not flags.get("pullback"):
+        return "Impulse is visible, but the safer money waits for the first pullback instead of chasing expansion."
+    if flags.get("vwap_accept"):
+        return "Buyer control is present, but the setup still needs cleaner timing or confirmation."
+    return "The radar sees activity, but this is not actionable until control and structure improve."
+
+
+def render_setup_card(setup, idx, market):
     accents = ["#78FF2E", "#FF8A3D", "#35A7FF"]
     accent = accents[(idx-1) % 3]
     accent_class = "accent-orange" if idx == 2 else "accent-blue" if idx == 3 else ""
     coin = setup.get("coin") or str(setup.get("pair", "NONE")).split("/")[0]
     pair = setup.get("pair", "")
-    tag = setup.get("tag", "WATCH")
+    tag = tag_for(setup)
     cr = setup.get("chart_read", {}) or {}
     timing = cr.get("timing", setup.get("entry_readiness_label", "WATCH"))
     b = bullets_for(setup)
@@ -172,27 +296,59 @@ def render_setup_row(setup, idx):
     t = int(setup.get("trigger_score", 0) or 0)
     tr = int(setup.get("trade_score", 0) or 0)
     c = int(setup.get("confidence", 0) or 0)
+    low, high, pconf = projected_move(setup, market)
+    levels = trade_levels(setup, market)
+    stages, current = setup_stages(setup)
+    stage_html = ""
+    for i, (name, passed) in enumerate(stages):
+        cls = "stage stage-on" if passed else "stage"
+        if i == current: cls += " stage-current"
+        stage_html += f"<span class='{cls}'>{name}</span>"
+        if i < len(stages)-1: stage_html += "<span class='arrow'>→</span>"
+    pos = timing_position(timing)
     st.markdown(f"""
-    <div class="setup-row {accent_class}">
-      <div class="rank-badge" style="border-color:{accent};">{idx}</div>
-      <div>
-        <div class="coin-title">{coin}</div>
-        <div class="pair-small">{pair}</div>
-        <div class="{tag_class(tag)}">{tag}</div>
-        <div class="bullets">{bullet_html}</div>
+    <div class="setup-card {accent_class}">
+      <div class="setup-top">
+        <div class="rank-badge" style="border-color:{accent};">{idx}</div>
+        <div>
+          <div class="coin-title">{coin}</div>
+          <div class="pair-small">{pair}</div>
+          <div class="{tag_class(tag)}">{tag}</div>
+          <div class="bullets">{bullet_html}</div>
+        </div>
+        <div class="scores">
+          <div class="score-line"><div class="score-label">Trigger<br/>Score</div><div class="score-num score-trigger">{t}</div></div>
+          <div class="score-line"><div class="score-label">Trade<br/>Score</div><div class="score-num score-trade">{tr}</div></div>
+          <div class="score-line"><div class="score-label">Confidence<br/>Score</div><div class="score-num score-conf">{c}</div></div>
+        </div>
+        <div class="decision-box">
+          <div class="decision-head">Projected Move Window</div>
+          <div class="projected">+{low}% to +{high}%</div>
+          <div class="small">Model confidence: {pconf}% · range estimate, not certainty</div>
+          <div class="riskgrid">
+            <div class="riskcell"><span>Entry Zone</span><b>{levels['entry_low']} – {levels['entry_high']}</b></div>
+            <div class="riskcell"><span>Target</span><b class="green">{levels['target']}</b></div>
+            <div class="riskcell"><span>Invalidation</span><b class="red">{levels['stop']}</b></div>
+          </div>
+        </div>
       </div>
-      <div class="scores">
-        <div class="score-line"><div class="score-label">Trigger<br/>Score</div><div class="score-num score-trigger">{t}</div></div>
-        <div class="score-line"><div class="score-label">Trade<br/>Score</div><div class="score-num score-trade">{tr}</div></div>
-        <div class="score-line"><div class="score-label">Confidence<br/>Score</div><div class="score-num score-conf">{c}</div></div>
-      </div>
-      <div>
+      <div class="tool-grid">
+        <div class="tool-panel">
+          <div class="tool-title">Decision Map: Price vs VWAP / Target / Invalidation</div>
     """, unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1: st.plotly_chart(spark(setup.get("close_30m", []), "30M MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
-    with col2: st.plotly_chart(spark(setup.get("close_1h", []), "1H MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
+    st.plotly_chart(decision_chart(setup, market, accent), width="stretch", config={"displayModeBar": False})
     st.markdown(f"""
-        <div class="timing-pill" style="border-color:{timing_color(timing)};color:{timing_color(timing)};">Timing: {timing}</div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-title">Veteran Read</div>
+          <div class="stage-row">{stage_html}</div>
+          <div class="tool-title" style="margin-top:14px;color:{timing_color(timing)};">Timing Gauge</div>
+          <div class="timing-track"><div class="timing-marker" style="left:{pos}%;background:{timing_color(timing)};box-shadow:0 0 12px {timing_color(timing)};"></div></div>
+          <div class="timing-labels"><span>Early</span><span>On Time</span><span>Late</span></div>
+          <div class="next-box" style="margin-top:12px;"><b>Next move:</b> {action_text(setup, timing)}</div>
+          <div class="next-box" style="margin-top:8px;"><b>Why:</b> {why_text(setup)}</div>
+          <div class="next-box fail" style="margin-top:8px;">Fail condition: VWAP loss / lower low invalidates the idea.</div>
+        </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -209,7 +365,7 @@ with st.sidebar:
     refresh = st.slider("Refresh seconds", 8, 60, 20)
     auto = st.toggle("Auto refresh", value=True)
     manual = st.button("Refresh now")
-    st.caption("Scanner → GitHub JSON → Streamlit report")
+    st.caption("Scanner → GitHub JSON → Streamlit decision report")
 
 state, ok, source = load_state()
 if manual:
@@ -228,11 +384,18 @@ updated = state.get("generated_at") or state.get("timestamp") or ""
 cycle = state.get("cycle_number", state.get("cycle", 0))
 active = state.get("active_pairs", 0)
 
+# Decision banner values
+best = setups[0] if setups else {}
+best_coin = best.get("pair", "None yet")
+best_timing = (best.get("chart_read", {}) or {}).get("timing", "WAIT") if best else "WAIT"
+action = "TRADE SELECTIVELY" if market in {"PREBULL", "BULL"} else "WAIT / SHARPSHOOTER ONLY" if market == "BEAR" else "WAIT FOR DATA"
+action_color = "#78FF2E" if market == "BULL" else "#FFD93D" if market == "PREBULL" else "#FF4D4D"
+
 st.markdown('<div class="report-shell">', unsafe_allow_html=True)
 st.markdown(f"""
 <div class="header">
   <div class="header-left">
-    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> SCANNER REPORT</div><div class="subtitle">Real Time Market Radar</div></div></div>
+    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> DECISION RADAR</div><div class="subtitle">Visual Market Command Center</div></div></div>
     <div class="meta"><div>📅 <b>{str(updated)[:10] or 'waiting'}</b></div><div>🕒 <b>{str(updated)[11:19] or '--:--:--'}</b></div><div>🔄 Cycle: <b>{cycle}</b></div><div>🎯 Active Pairs: <b>{active}</b></div></div>
   </div>
   <div class="state-box">
@@ -242,21 +405,25 @@ st.markdown(f"""
     <div class="state-reason">{btc.get('reason','Start scanner')}</div>
   </div>
 </div>
+<div class="decision-banner">
+  <div class="decision-tile"><div class="tile-k">Action Read</div><div class="tile-v" style="color:{action_color};">{action}</div><div class="tile-sub">The radar favors patience unless timing is clean.</div></div>
+  <div class="decision-tile"><div class="tile-k">Best Opportunity</div><div class="tile-v" style="color:#F5F7FA;">{best_coin}</div><div class="tile-sub">Timing: <b style="color:{timing_color(best_timing)};">{best_timing}</b></div></div>
+  <div class="decision-tile"><div class="tile-k">Trader Rule</div><div class="tile-v" style="color:#35A7FF;">Define Risk First</div><div class="tile-sub">Every setup shows target, invalidation, and projected move.</div></div>
+</div>
 """, unsafe_allow_html=True)
 
 if not ok:
     st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-title"><span>★ Top 3 Setups ★</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title"><span>★ Top Decision Setups ★</span></div>', unsafe_allow_html=True)
 if setups:
     for i, setup in enumerate(setups[:3], start=1):
-        render_setup_row(setup, i)
+        render_setup_card(setup, i, market)
 else:
     st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
     for i in range(1,4):
-        render_setup_row({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i)
+        render_setup_card({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i, market)
 
-# Bottom panels
 sector_rows = "".join([f'<div class="sector-row"><span>{k}</span><span>{fires(v)}</span></div>' for k,v in sorted(sector_counts.items(), key=lambda x:x[1], reverse=True)[:6]]) or '<div class="small">No sector flow yet.</div>'
 counts_rows = "".join([f'<div class="metric-row"><span>{k}</span><b>{v}</b></div>' for k,v in state_counts.items()]) or '<div class="small">No state counts yet.</div>'
 btc_state = market if market != "PREBULL" else "WATCH"
@@ -271,16 +438,15 @@ st.markdown(f"""
     <div class="metric-row"><span>15M VWAP</span><b>{'YES' if btc.get('above_vwap_15m') else 'NO'}</b></div>
     <div class="metric-row"><span>1H VWAP</span><b>{'YES' if btc.get('above_vwap_60m') or btc.get('above_vwap_1h') else 'NO'}</b></div>
   </div>
-  <div class="bottom-panel"><div class="panel-title">Sector Flow</div>{sector_rows}</div>
+  <div class="bottom-panel"><div class="panel-title">Sector Flow</div>{sector_rows}<br/><div class="panel-title">State Counts</div>{counts_rows}</div>
   <div class="bottom-panel">
     <div class="panel-title">How To Read This</div>
-    <div class="read-row"><div class="read-key" style="color:#FFD93D;">PREBUILD</div><div class="read-desc">Setup forming. Watch for confirmation.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#78FF2E;">BULL</div><div class="read-desc">Market and setup aligned. Trade ready.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#FF4D4D;">SHARPSHOOTER</div><div class="read-desc">Strong coin in weak market. Smaller size only.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#35A7FF;">TIMING</div><div class="read-desc">ON TIME = best zone. LATE = avoid chasing.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#78FF2E;">Projected</div><div class="read-desc">Estimated move range from volatility, impulse, scores, VWAP, and BTC regime.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#FFD93D;">Entry Zone</div><div class="read-desc">Area where risk can be defined. Not a blind buy signal.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#FF4D4D;">Invalid</div><div class="read-desc">Where the trade idea is wrong. Respect this first.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#35A7FF;">Timing</div><div class="read-desc">ON TIME = best zone. LATE = avoid chasing.</div></div>
   </div>
 </div>
-<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Scan • Filter • Rank • Execute</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
+<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Projected ranges are estimates, not guarantees. Trade risk first.</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
-
