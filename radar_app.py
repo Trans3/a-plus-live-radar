@@ -1,5 +1,7 @@
 import json
 import os
+import base64
+import requests
 from datetime import datetime
 from pathlib import Path
 
@@ -8,6 +10,28 @@ import plotly.graph_objects as go
 import streamlit as st
 
 STATE_PATH = Path("radar_state.json")
+
+# Cloud data bridge. Streamlit Cloud reads radar_state.json from your GitHub repo.
+# Set these in Streamlit Secrets or leave defaults for your public repo.
+DEFAULT_GITHUB_RADAR_REPO = "Trans3o/a-plus-live-radar"
+DEFAULT_GITHUB_RADAR_BRANCH = "main"
+DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
+
+
+def _secret_or_env(name: str, default: str = "") -> str:
+    try:
+        return str(st.secrets.get(name, os.getenv(name, default))).strip()
+    except Exception:
+        return str(os.getenv(name, default)).strip()
+
+
+def cloud_settings():
+    return {
+        "repo": _secret_or_env("GITHUB_RADAR_REPO", DEFAULT_GITHUB_RADAR_REPO),
+        "branch": _secret_or_env("GITHUB_RADAR_BRANCH", DEFAULT_GITHUB_RADAR_BRANCH),
+        "path": _secret_or_env("GITHUB_RADAR_PATH", DEFAULT_GITHUB_RADAR_PATH),
+        "token": _secret_or_env("GITHUB_RADAR_TOKEN", ""),
+    }
 
 st.set_page_config(
     page_title="A+ Live Radar",
@@ -79,14 +103,47 @@ def sample_state():
     }
 
 
-def load_state(path: Path):
-    if not path.exists():
-        return sample_state(), False, f"Waiting for {path.name}. Start the scanner first."
+@st.cache_data(ttl=10, show_spinner=False)
+def load_state(path_str: str):
+    """Load radar state. Local file wins; cloud GitHub state is fallback for Streamlit Cloud. Cached briefly for smoother UI."""
+    path = Path(path_str)
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f), True, "OK - local radar_state.json"
+        except Exception as e:
+            return sample_state(), False, f"Could not read {path.name}: {e}"
+
+    cfg = cloud_settings()
+    repo = cfg["repo"]
+    branch = cfg["branch"]
+    gh_path = cfg["path"]
+    token = cfg["token"]
+
+    if not repo:
+        return sample_state(), False, f"Waiting for {path.name}. Start the scanner first or set GITHUB_RADAR_REPO."
+
+    api_url = f"https://api.github.com/repos/{repo}/contents/{gh_path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "a-plus-live-radar-app",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f), True, "OK"
+        r = requests.get(api_url, headers=headers, params={"ref": branch, "_": datetime.now().timestamp()}, timeout=10)
+        if r.status_code != 200:
+            return sample_state(), False, f"Waiting for cloud radar_state.json from GitHub ({r.status_code}). Run scanner cloud pipeline."
+        obj = r.json() or {}
+        encoded = obj.get("content", "")
+        if not encoded:
+            return sample_state(), False, "GitHub radar_state.json exists but has no content."
+        raw = base64.b64decode(encoded).decode("utf-8")
+        return json.loads(raw), True, "OK - cloud GitHub radar_state.json"
     except Exception as e:
-        return sample_state(), False, f"Could not read {path.name}: {e}"
+        return sample_state(), False, f"Could not load cloud radar_state.json: {e}"
 
 
 def state_color(state: str):
@@ -163,19 +220,52 @@ def setup_card(setup, accent="#78FF2E"):
     """, unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.plotly_chart(line_chart(setup.get("close_30m", []), "30M MOVEMENT", accent), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(line_chart(setup.get("close_30m", []), "30M MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
     with c2:
-        st.plotly_chart(line_chart(setup.get("close_1h", []), "1H MOVEMENT", accent), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(line_chart(setup.get("close_1h", []), "1H MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
 
 
-state, ok, msg = load_state(STATE_PATH)
+state, ok, msg = load_state(str(STATE_PATH))
 market = state.get("market_state", "WAITING")
 color = state_color(market)
 
-# Auto-refresh using browser refresh. Keeps dependencies minimal.
-refresh_seconds = st.sidebar.slider("Refresh seconds", 5, 120, 15)
-st.sidebar.caption("Keep the scanner running in another PowerShell window.")
-st.components.v1.html(f"<script>setTimeout(function(){{window.parent.location.reload();}}, {refresh_seconds * 1000});</script>", height=0)
+# Smooth refresh controls. The old version hard-refreshed the page and jumped back to the top.
+# This version preserves scroll position and caches cloud reads briefly.
+st.sidebar.markdown("### Radar Refresh")
+auto_refresh = st.sidebar.toggle("Auto refresh", value=True)
+refresh_seconds = st.sidebar.slider("Refresh seconds", 10, 120, 20)
+if st.sidebar.button("Refresh now"):
+    st.cache_data.clear()
+    st.rerun()
+st.sidebar.caption("Cloud mode: scanner pushes radar_state.json to GitHub. Local mode: keep scanner running in another PowerShell window.")
+
+if auto_refresh:
+    st.components.v1.html(
+        f"""
+        <script>
+        const KEY = 'a_plus_radar_scroll_y';
+        function saveScroll() {{
+            try {{ localStorage.setItem(KEY, String(window.parent.scrollY || 0)); }} catch(e) {{}}
+        }}
+        function restoreScroll() {{
+            try {{
+                const y = parseInt(localStorage.getItem(KEY) || '0');
+                if (!Number.isNaN(y) && y > 0) {{
+                    setTimeout(() => window.parent.scrollTo(0, y), 80);
+                    setTimeout(() => window.parent.scrollTo(0, y), 300);
+                }}
+            }} catch(e) {{}}
+        }}
+        window.parent.addEventListener('scroll', saveScroll, {{passive: true}});
+        restoreScroll();
+        setTimeout(function(){{
+            saveScroll();
+            window.parent.location.reload();
+        }}, {refresh_seconds * 1000});
+        </script>
+        """,
+        height=0,
+    )
 
 h1, h2 = st.columns([2.2, 1])
 with h1:
@@ -243,4 +333,4 @@ with f2:
         st.caption("No state counts yet.")
 
 st.markdown("---")
-st.markdown('<div class="footer-note">Not financial advice. This app reads your local radar_state.json generated by the scanner. Keep the scanner running for live updates.</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-note">Not financial advice. This app reads radar_state.json from local file or GitHub cloud bridge generated by the scanner.</div>', unsafe_allow_html=True)
