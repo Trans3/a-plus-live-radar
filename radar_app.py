@@ -12,6 +12,7 @@ STATE_PATH = Path("radar_state.json")
 DEFAULT_GITHUB_RADAR_REPO = "Trans3/a-plus-live-radar"
 DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
+DEFAULT_GITHUB_PERFORMANCE_PATH = "radar_performance.json"
 
 st.set_page_config(
     page_title="A+ Decision Radar",
@@ -45,6 +46,9 @@ CSS = """
 .scores{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 18px;}.score-line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;}.score-line:last-child{border-bottom:0}.score-label{font-size:12px;font-weight:900;color:white;text-transform:uppercase;line-height:1.05;}.score-num{font-size:40px;font-weight:1000;line-height:1;}.score-trigger{color:var(--green)}.score-trade{color:var(--purple)}.score-conf{color:var(--blue)}
 .decision-box{border:1px solid var(--line);border-radius:12px;background:#071017;padding:14px;}.decision-head{font-size:13px;color:var(--muted);font-weight:900;text-transform:uppercase;}.projected{font-size:30px;font-weight:1000;color:var(--green);}.riskgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.riskcell{border-top:1px solid #17232D;padding-top:8px}.riskcell span{display:block;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.riskcell b{font-size:17px;color:white}.riskcell .red{color:var(--red)}.riskcell .green{color:var(--green)}
 .tool-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px;}.tool-panel{border:1px solid var(--line);border-radius:12px;background:#071017;padding:12px;}.tool-title{font-size:14px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}.stage-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}.stage{padding:7px 9px;border:1px solid #27343D;border-radius:999px;font-size:12px;font-weight:1000;text-transform:uppercase;color:#9AA6B2;}.stage-on{border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(120,255,46,.18)}.stage-current{background:rgba(120,255,46,.14)}.arrow{color:#64707A;font-weight:1000}.timing-track{position:relative;height:42px;margin:8px 0 2px;background:linear-gradient(90deg,rgba(255,217,61,.16),rgba(120,255,46,.22),rgba(255,77,77,.18));border:1px solid #27343D;border-radius:999px;}.timing-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;padding:0 8px}.timing-marker{position:absolute;top:-6px;width:8px;height:54px;border-radius:8px;background:white;box-shadow:0 0 14px white}.next-box{font-size:14px;line-height:1.45;color:white}.next-box b{color:var(--green)}.fail{color:var(--red);font-weight:900}.why{color:white;font-weight:700;line-height:1.5}.bottom-grid{display:grid;grid-template-columns:1.1fr 1fr 1.25fr;gap:14px;margin-top:14px;}.bottom-panel{border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.92);padding:16px;min-height:178px;}.panel-title{color:var(--green);font-size:18px;font-weight:1000;text-transform:uppercase;text-align:center;margin-bottom:12px;}.btc-big{font-size:32px;font-weight:1000;text-transform:uppercase;}.metric-row{display:flex;justify-content:space-between;border-top:1px solid #17232D;padding:8px 0;color:white;font-size:14px;}.sector-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #17232D;padding:6px 0;font-size:17px;font-weight:900;}.read-row{display:grid;grid-template-columns:130px 1fr;gap:8px;border-bottom:1px solid #17232D;padding:9px 0;}.read-key{font-weight:1000;text-transform:uppercase;}.read-desc{color:white;}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:white;font-weight:800;}.footer .left{color:var(--green);font-size:18px}.small{font-size:13px;color:var(--muted);font-weight:500;}.notice{border:1px solid #3b3f14;background:rgba(255,217,61,.18);border-radius:10px;padding:10px 14px;color:#fff3a3;margin:10px 0 14px;font-weight:700;}
+.refresh-row{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:2px 0 10px;color:var(--muted);font-size:12px;font-weight:800;}
+div.stButton > button:first-child{background:#071017;border:1px solid var(--green);color:var(--green);border-radius:999px;padding:.45rem 1rem;font-weight:1000;box-shadow:0 0 10px rgba(120,255,46,.12);}
+div.stButton > button:first-child:hover{border-color:white;color:white;background:#0A1720;}
 
 .perf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:12px 0 18px;}.perf-card{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px 15px;}.perf-k{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;}.perf-v{font-size:28px;font-weight:1000;color:var(--green);margin-top:4px;}.perf-sub{font-size:12px;color:white;margin-top:3px;}.perf-table{width:100%;border-collapse:collapse;margin-top:8px;}.perf-table th{color:var(--muted);font-size:12px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:8px;}.perf-table td{color:white;border-bottom:1px solid #17232D;padding:8px;font-size:13px;}.badge-good{color:var(--green);font-weight:1000}.badge-warn{color:var(--yellow);font-weight:1000}.badge-bad{color:var(--red);font-weight:1000}
 </style>
@@ -64,6 +68,7 @@ def settings():
         "repo": secret_or_env("GITHUB_RADAR_REPO", DEFAULT_GITHUB_RADAR_REPO),
         "branch": secret_or_env("GITHUB_RADAR_BRANCH", DEFAULT_GITHUB_RADAR_BRANCH),
         "path": secret_or_env("GITHUB_RADAR_PATH", DEFAULT_GITHUB_RADAR_PATH),
+        "performance_path": secret_or_env("GITHUB_PERFORMANCE_PATH", DEFAULT_GITHUB_PERFORMANCE_PATH),
         "token": secret_or_env("GITHUB_RADAR_TOKEN", ""),
     }
 
@@ -103,6 +108,46 @@ def load_state():
     except Exception as e:
         return sample_state(), False, f"cloud read error: {e}"
 
+
+
+
+def sample_performance():
+    return {
+        "generated_at": "",
+        "cycle_number": 0,
+        "summary": {
+            "total_signals": 0,
+            "hit_1pct_rate": 0,
+            "hit_2pct_rate": 0,
+            "avg_max_move_pct": 0,
+            "best_pair": "—",
+            "best_move_pct": 0,
+        },
+        "records": [],
+    }
+
+
+@st.cache_data(ttl=8, show_spinner=False)
+def load_performance():
+    cfg = settings()
+    local_path = Path(cfg.get("performance_path", DEFAULT_GITHUB_PERFORMANCE_PATH))
+    if local_path.exists():
+        try:
+            return json.loads(local_path.read_text(encoding="utf-8")), True, "local"
+        except Exception as e:
+            return sample_performance(), False, f"local performance read error: {e}"
+    url = f"https://api.github.com/repos/{cfg['repo']}/contents/{cfg.get('performance_path', DEFAULT_GITHUB_PERFORMANCE_PATH)}"
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "a-plus-radar-app", "X-GitHub-Api-Version": "2022-11-28"}
+    if cfg["token"]:
+        headers["Authorization"] = f"Bearer {cfg['token']}"
+    try:
+        r = requests.get(url, headers=headers, params={"ref": cfg["branch"], "_": time.time()}, timeout=10)
+        if r.status_code != 200:
+            return sample_performance(), False, f"GitHub performance {r.status_code}: {r.text[:120]}"
+        raw = base64.b64decode((r.json() or {}).get("content", "")).decode("utf-8")
+        return json.loads(raw), True, "cloud"
+    except Exception as e:
+        return sample_performance(), False, f"cloud performance read error: {e}"
 
 def state_color(state):
     state = (state or "").upper()
@@ -323,33 +368,50 @@ def perf_summary():
     }
 
 
-def render_performance_dashboard():
-    s = perf_summary()
-    best_pair = s["best"].get("pair", "—") if s.get("best") else "—"
-    best_gain = safe_float(s["best"].get("max_gain_pct", 0)) if s.get("best") else 0
+def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="cloud"):
+    perf_state = perf_state or sample_performance()
+    summary = perf_state.get("summary", {}) or {}
+    records = perf_state.get("records", []) or []
+    total = int(summary.get("total_signals", len(records)) or 0)
+    hit1_rate = safe_float(summary.get("hit_1pct_rate", 0))
+    hit2_rate = safe_float(summary.get("hit_2pct_rate", 0))
+    avg_max = safe_float(summary.get("avg_max_move_pct", 0))
+    best_pair = summary.get("best_pair", "—") or "—"
+    best_gain = safe_float(summary.get("best_move_pct", 0))
+    updated = perf_state.get("generated_at", "")
+    source_note = "Persistent scanner-side history" if perf_ok else f"Performance source issue: {perf_source}"
+
     st.markdown(f"""
     <div class="section-title"><span>★ Performance Dashboard ★</span></div>
     <div class="perf-grid">
-      <div class="perf-card"><div class="perf-k">Tracked Signals</div><div class="perf-v">{s['total']}</div><div class="perf-sub">This browser session</div></div>
-      <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{s['hit1_rate']:.0f}%</div><div class="perf-sub">{s['hit1']} signals</div></div>
-      <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{s['hit2_rate']:.0f}%</div><div class="perf-sub">{s['hit2']} signals</div></div>
-      <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{s['avg_max']:+.2f}%</div><div class="perf-sub">Observed after alert</div></div>
+      <div class="perf-card"><div class="perf-k">Tracked Signals</div><div class="perf-v">{total}</div><div class="perf-sub">Scanner-side history</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{hit1_rate:.0f}%</div><div class="perf-sub">Since tracking started</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{hit2_rate:.0f}%</div><div class="perf-sub">Momentum target test</div></div>
+      <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{avg_max:+.2f}%</div><div class="perf-sub">Observed after alert</div></div>
       <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.2f}% max</div></div>
     </div>
-    <div class="notice">Performance tracking is session-based right now. Keep this app open during market hours. Next production step is scanner-side persistent history.</div>
+    <div class="notice">{source_note}. Updated: {updated or 'waiting for scanner'}.</div>
     """, unsafe_allow_html=True)
-    records = sorted(st.session_state.perf_ledger.values(), key=lambda r: r.get("last_seen", 0), reverse=True)[:12]
+
+    records = sorted(records, key=lambda r: r.get("last_seen", r.get("first_seen", "")), reverse=True)[:15]
     if records:
         rows = []
         for r in records:
             status = r.get("status", "OPEN")
             cls = "badge-good" if "HIT" in status else "badge-bad" if status == "DRAWDOWN" else "badge-warn"
-            rows.append(f"<tr><td>{r.get('pair','')}</td><td>{r.get('tag','')}</td><td>{r.get('timing_last','')}</td><td class='{cls}'>{status}</td><td>{safe_float(r.get('current_pct')):+.2f}%</td><td>{safe_float(r.get('max_gain_pct')):+.2f}%</td><td>{safe_float(r.get('max_drawdown_pct')):+.2f}%</td></tr>")
+            rows.append(
+                f"<tr><td>{r.get('pair','')}</td><td>{r.get('tag','')}</td><td>{r.get('timing_last','')}</td>"
+                f"<td class='{cls}'>{status}</td><td>{safe_float(r.get('current_pct')):+.2f}%</td>"
+                f"<td>{safe_float(r.get('max_gain_pct', r.get('max_move_pct'))):+.2f}%</td>"
+                f"<td>{safe_float(r.get('max_drawdown_pct', r.get('drawdown_pct'))):+.2f}%</td></tr>"
+            )
         st.markdown("""
         <div class="bottom-panel" style="margin-bottom:18px;">
           <div class="panel-title">Recent Signal Outcomes</div>
           <table class="perf-table"><thead><tr><th>Pair</th><th>Type</th><th>Timing</th><th>Status</th><th>Now</th><th>Max</th><th>Drawdown</th></tr></thead><tbody>
         """ + "".join(rows) + "</tbody></table></div>", unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="notice">No persistent performance records yet. Run v18 scanner through a full cycle.</div>', unsafe_allow_html=True)
 
 def decision_chart(setup, market, accent="#78FF2E"):
     price = safe_float(setup.get("price"))
@@ -497,20 +559,26 @@ with st.sidebar:
     st.markdown("### Radar Controls")
     refresh = st.slider("Refresh seconds", 8, 60, 20)
     auto = st.toggle("Auto refresh", value=True)
-    manual = st.button("Refresh now")
-    reset_perf = st.button("Reset performance tracker")
+    manual = st.button("Refresh Now", key="sidebar_refresh")
+    reset_perf = st.button("Clear app cache")
     st.caption("Scanner → GitHub JSON → Streamlit decision report")
 
-state, ok, source = load_state()
+# Prominent refresh control for the main page (sidebar can stay collapsed).
+st.markdown('<div class="refresh-row"><span>Live data source refreshes from GitHub JSON.</span></div>', unsafe_allow_html=True)
+top_left, top_mid, top_right = st.columns([6, 1.5, 1.5])
+with top_right:
+    top_refresh = st.button("↻ Refresh Radar", key="top_refresh")
+
 if reset_perf:
-    st.session_state.perf_ledger = {}
-    st.session_state.perf_started_at = time.time()
+    st.cache_data.clear()
     st.rerun()
-if manual:
+if manual or top_refresh:
     st.cache_data.clear()
     st.rerun()
 if auto:
     st.markdown(f"<script>setTimeout(function(){{window.location.reload();}}, {refresh*1000});</script>", unsafe_allow_html=True)
+
+state, ok, source = load_state()
 
 market = state.get("market_state") or state.get("regime_name") or "WAITING"
 color = state_color(market)
@@ -521,7 +589,7 @@ state_counts = state.get("state_counts", {}) or {}
 updated = state.get("generated_at") or state.get("timestamp") or ""
 cycle = state.get("cycle_number", state.get("cycle", 0))
 active = state.get("active_pairs", 0)
-update_perf_tracker(setups, market)
+perf_state, perf_ok, perf_source = load_performance()
 
 # Decision banner values
 best = setups[0] if setups else {}
@@ -554,7 +622,7 @@ st.markdown(f"""
 if not ok:
     st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
 
-render_performance_dashboard()
+render_performance_dashboard(perf_state, perf_ok, perf_source)
 
 st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
 if setups:
