@@ -45,6 +45,8 @@ CSS = """
 .scores{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 18px;}.score-line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;}.score-line:last-child{border-bottom:0}.score-label{font-size:12px;font-weight:900;color:white;text-transform:uppercase;line-height:1.05;}.score-num{font-size:40px;font-weight:1000;line-height:1;}.score-trigger{color:var(--green)}.score-trade{color:var(--purple)}.score-conf{color:var(--blue)}
 .decision-box{border:1px solid var(--line);border-radius:12px;background:#071017;padding:14px;}.decision-head{font-size:13px;color:var(--muted);font-weight:900;text-transform:uppercase;}.projected{font-size:30px;font-weight:1000;color:var(--green);}.riskgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.riskcell{border-top:1px solid #17232D;padding-top:8px}.riskcell span{display:block;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.riskcell b{font-size:17px;color:white}.riskcell .red{color:var(--red)}.riskcell .green{color:var(--green)}
 .tool-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px;}.tool-panel{border:1px solid var(--line);border-radius:12px;background:#071017;padding:12px;}.tool-title{font-size:14px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}.stage-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}.stage{padding:7px 9px;border:1px solid #27343D;border-radius:999px;font-size:12px;font-weight:1000;text-transform:uppercase;color:#9AA6B2;}.stage-on{border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(120,255,46,.18)}.stage-current{background:rgba(120,255,46,.14)}.arrow{color:#64707A;font-weight:1000}.timing-track{position:relative;height:42px;margin:8px 0 2px;background:linear-gradient(90deg,rgba(255,217,61,.16),rgba(120,255,46,.22),rgba(255,77,77,.18));border:1px solid #27343D;border-radius:999px;}.timing-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;padding:0 8px}.timing-marker{position:absolute;top:-6px;width:8px;height:54px;border-radius:8px;background:white;box-shadow:0 0 14px white}.next-box{font-size:14px;line-height:1.45;color:white}.next-box b{color:var(--green)}.fail{color:var(--red);font-weight:900}.why{color:white;font-weight:700;line-height:1.5}.bottom-grid{display:grid;grid-template-columns:1.1fr 1fr 1.25fr;gap:14px;margin-top:14px;}.bottom-panel{border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.92);padding:16px;min-height:178px;}.panel-title{color:var(--green);font-size:18px;font-weight:1000;text-transform:uppercase;text-align:center;margin-bottom:12px;}.btc-big{font-size:32px;font-weight:1000;text-transform:uppercase;}.metric-row{display:flex;justify-content:space-between;border-top:1px solid #17232D;padding:8px 0;color:white;font-size:14px;}.sector-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #17232D;padding:6px 0;font-size:17px;font-weight:900;}.read-row{display:grid;grid-template-columns:130px 1fr;gap:8px;border-bottom:1px solid #17232D;padding:9px 0;}.read-key{font-weight:1000;text-transform:uppercase;}.read-desc{color:white;}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:white;font-weight:800;}.footer .left{color:var(--green);font-size:18px}.small{font-size:13px;color:var(--muted);font-weight:500;}.notice{border:1px solid #3b3f14;background:rgba(255,217,61,.18);border-radius:10px;padding:10px 14px;color:#fff3a3;margin:10px 0 14px;font-weight:700;}
+
+.perf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:12px 0 18px;}.perf-card{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px 15px;}.perf-k{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;}.perf-v{font-size:28px;font-weight:1000;color:var(--green);margin-top:4px;}.perf-sub{font-size:12px;color:white;margin-top:3px;}.perf-table{width:100%;border-collapse:collapse;margin-top:8px;}.perf-table th{color:var(--muted);font-size:12px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:8px;}.perf-table td{color:white;border-bottom:1px solid #17232D;padding:8px;font-size:13px;}.badge-good{color:var(--green);font-weight:1000}.badge-warn{color:var(--yellow);font-weight:1000}.badge-bad{color:var(--red);font-weight:1000}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -218,6 +220,137 @@ def timing_position(timing):
     return 34
 
 
+
+TOP_SETUP_LIMIT = 5
+PERF_WIN_LEVEL_PCT = 2.0
+PERF_SCALP_LEVEL_PCT = 1.0
+PERF_FAIL_LEVEL_PCT = -1.2
+
+
+def setup_key(setup):
+    return f"{setup.get('pair','UNKNOWN')}|{setup.get('tag','')}"
+
+
+def setup_timing(setup):
+    return (setup.get("chart_read", {}) or {}).get("timing", setup.get("entry_readiness_label", "WATCH"))
+
+
+def init_perf_tracker():
+    if "perf_ledger" not in st.session_state:
+        st.session_state.perf_ledger = {}
+    if "perf_started_at" not in st.session_state:
+        st.session_state.perf_started_at = time.time()
+
+
+def update_perf_tracker(setups, market):
+    """Browser-session performance tracker.
+    Tracks what happens after a setup appears while this app is open.
+    Production upgrade later: move this to scanner-side persistent history.
+    """
+    init_perf_tracker()
+    now = time.time()
+    active_keys = set()
+    for setup in (setups or [])[:TOP_SETUP_LIMIT]:
+        key = setup_key(setup)
+        active_keys.add(key)
+        price = safe_float(setup.get("price"))
+        if price <= 0:
+            continue
+        low, high, pconf = projected_move(setup, market)
+        if key not in st.session_state.perf_ledger:
+            st.session_state.perf_ledger[key] = {
+                "pair": setup.get("pair", ""),
+                "tag": setup.get("tag", ""),
+                "first_seen": now,
+                "last_seen": now,
+                "entry_price": price,
+                "last_price": price,
+                "max_price": price,
+                "min_price": price,
+                "projected_low": low,
+                "projected_high": high,
+                "confidence": int(setup.get("confidence", 0) or 0),
+                "timing_first": setup_timing(setup),
+                "timing_last": setup_timing(setup),
+                "status": "OPEN",
+            }
+        rec = st.session_state.perf_ledger[key]
+        rec["last_seen"] = now
+        rec["last_price"] = price
+        rec["max_price"] = max(safe_float(rec.get("max_price")), price)
+        rec["min_price"] = min(safe_float(rec.get("min_price"), price), price)
+        rec["timing_last"] = setup_timing(setup)
+        rec["confidence"] = int(setup.get("confidence", rec.get("confidence", 0)) or 0)
+        entry = safe_float(rec.get("entry_price"))
+        if entry > 0:
+            rec["max_gain_pct"] = round((rec["max_price"] - entry) / entry * 100, 3)
+            rec["max_drawdown_pct"] = round((rec["min_price"] - entry) / entry * 100, 3)
+            rec["current_pct"] = round((price - entry) / entry * 100, 3)
+        else:
+            rec["max_gain_pct"] = rec["max_drawdown_pct"] = rec["current_pct"] = 0.0
+        if rec["max_gain_pct"] >= PERF_WIN_LEVEL_PCT:
+            rec["status"] = "HIT +2%"
+        elif rec["max_gain_pct"] >= PERF_SCALP_LEVEL_PCT:
+            rec["status"] = "HIT +1%"
+        elif rec["max_drawdown_pct"] <= PERF_FAIL_LEVEL_PCT:
+            rec["status"] = "DRAWDOWN"
+        else:
+            rec["status"] = "OPEN"
+    for key, rec in st.session_state.perf_ledger.items():
+        if key not in active_keys and now - rec.get("last_seen", now) > 120:
+            if rec.get("status") == "OPEN":
+                rec["status"] = "INACTIVE"
+
+
+def perf_summary():
+    init_perf_tracker()
+    records = list(st.session_state.perf_ledger.values())
+    total = len(records)
+    hit1 = sum(1 for r in records if safe_float(r.get("max_gain_pct")) >= PERF_SCALP_LEVEL_PCT)
+    hit2 = sum(1 for r in records if safe_float(r.get("max_gain_pct")) >= PERF_WIN_LEVEL_PCT)
+    dd = sum(1 for r in records if safe_float(r.get("max_drawdown_pct")) <= PERF_FAIL_LEVEL_PCT)
+    avg = sum(safe_float(r.get("max_gain_pct")) for r in records) / total if total else 0
+    best = max(records, key=lambda r: safe_float(r.get("max_gain_pct")), default={})
+    return {
+        "total": total,
+        "hit1": hit1,
+        "hit2": hit2,
+        "dd": dd,
+        "hit2_rate": (hit2 / total * 100) if total else 0,
+        "hit1_rate": (hit1 / total * 100) if total else 0,
+        "avg_max": avg,
+        "best": best,
+    }
+
+
+def render_performance_dashboard():
+    s = perf_summary()
+    best_pair = s["best"].get("pair", "—") if s.get("best") else "—"
+    best_gain = safe_float(s["best"].get("max_gain_pct", 0)) if s.get("best") else 0
+    st.markdown(f"""
+    <div class="section-title"><span>★ Performance Dashboard ★</span></div>
+    <div class="perf-grid">
+      <div class="perf-card"><div class="perf-k">Tracked Signals</div><div class="perf-v">{s['total']}</div><div class="perf-sub">This browser session</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{s['hit1_rate']:.0f}%</div><div class="perf-sub">{s['hit1']} signals</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{s['hit2_rate']:.0f}%</div><div class="perf-sub">{s['hit2']} signals</div></div>
+      <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{s['avg_max']:+.2f}%</div><div class="perf-sub">Observed after alert</div></div>
+      <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.2f}% max</div></div>
+    </div>
+    <div class="notice">Performance tracking is session-based right now. Keep this app open during market hours. Next production step is scanner-side persistent history.</div>
+    """, unsafe_allow_html=True)
+    records = sorted(st.session_state.perf_ledger.values(), key=lambda r: r.get("last_seen", 0), reverse=True)[:12]
+    if records:
+        rows = []
+        for r in records:
+            status = r.get("status", "OPEN")
+            cls = "badge-good" if "HIT" in status else "badge-bad" if status == "DRAWDOWN" else "badge-warn"
+            rows.append(f"<tr><td>{r.get('pair','')}</td><td>{r.get('tag','')}</td><td>{r.get('timing_last','')}</td><td class='{cls}'>{status}</td><td>{safe_float(r.get('current_pct')):+.2f}%</td><td>{safe_float(r.get('max_gain_pct')):+.2f}%</td><td>{safe_float(r.get('max_drawdown_pct')):+.2f}%</td></tr>")
+        st.markdown("""
+        <div class="bottom-panel" style="margin-bottom:18px;">
+          <div class="panel-title">Recent Signal Outcomes</div>
+          <table class="perf-table"><thead><tr><th>Pair</th><th>Type</th><th>Timing</th><th>Status</th><th>Now</th><th>Max</th><th>Drawdown</th></tr></thead><tbody>
+        """ + "".join(rows) + "</tbody></table></div>", unsafe_allow_html=True)
+
 def decision_chart(setup, market, accent="#78FF2E"):
     price = safe_float(setup.get("price"))
     vals = [safe_float(v) for v in (setup.get("close_30m") or setup.get("close_1h") or []) if safe_float(v) > 0]
@@ -283,9 +416,9 @@ def why_text(setup):
 
 
 def render_setup_card(setup, idx, market):
-    accents = ["#78FF2E", "#FF8A3D", "#35A7FF"]
-    accent = accents[(idx-1) % 3]
-    accent_class = "accent-orange" if idx == 2 else "accent-blue" if idx == 3 else ""
+    accents = ["#78FF2E", "#FF8A3D", "#35A7FF", "#BF65FF", "#FFD93D"]
+    accent = accents[(idx-1) % len(accents)]
+    accent_class = "accent-orange" if idx in (2,5) else "accent-blue" if idx == 3 else ""
     coin = setup.get("coin") or str(setup.get("pair", "NONE")).split("/")[0]
     pair = setup.get("pair", "")
     tag = tag_for(setup)
@@ -322,7 +455,7 @@ def render_setup_card(setup, idx, market):
           <div class="score-line"><div class="score-label">Confidence<br/>Score</div><div class="score-num score-conf">{c}</div></div>
         </div>
         <div class="decision-box">
-          <div class="decision-head">Projected Move Window</div>
+          <div class="decision-head">Expected Move Range</div>
           <div class="projected">+{low}% to +{high}%</div>
           <div class="small">Model confidence: {pconf}% · range estimate, not certainty</div>
           <div class="riskgrid">
@@ -365,9 +498,14 @@ with st.sidebar:
     refresh = st.slider("Refresh seconds", 8, 60, 20)
     auto = st.toggle("Auto refresh", value=True)
     manual = st.button("Refresh now")
+    reset_perf = st.button("Reset performance tracker")
     st.caption("Scanner → GitHub JSON → Streamlit decision report")
 
 state, ok, source = load_state()
+if reset_perf:
+    st.session_state.perf_ledger = {}
+    st.session_state.perf_started_at = time.time()
+    st.rerun()
 if manual:
     st.cache_data.clear()
     st.rerun()
@@ -383,6 +521,7 @@ state_counts = state.get("state_counts", {}) or {}
 updated = state.get("generated_at") or state.get("timestamp") or ""
 cycle = state.get("cycle_number", state.get("cycle", 0))
 active = state.get("active_pairs", 0)
+update_perf_tracker(setups, market)
 
 # Decision banner values
 best = setups[0] if setups else {}
@@ -415,13 +554,15 @@ st.markdown(f"""
 if not ok:
     st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-title"><span>★ Top Decision Setups ★</span></div>', unsafe_allow_html=True)
+render_performance_dashboard()
+
+st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
 if setups:
-    for i, setup in enumerate(setups[:3], start=1):
+    for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
         render_setup_card(setup, i, market)
 else:
     st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
-    for i in range(1,4):
+    for i in range(1,TOP_SETUP_LIMIT+1):
         render_setup_card({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i, market)
 
 sector_rows = "".join([f'<div class="sector-row"><span>{k}</span><span>{fires(v)}</span></div>' for k,v in sorted(sector_counts.items(), key=lambda x:x[1], reverse=True)[:6]]) or '<div class="small">No sector flow yet.</div>'
@@ -447,6 +588,6 @@ st.markdown(f"""
     <div class="read-row"><div class="read-key" style="color:#35A7FF;">Timing</div><div class="read-desc">ON TIME = best zone. LATE = avoid chasing.</div></div>
   </div>
 </div>
-<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Projected ranges are estimates, not guarantees. Trade risk first.</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
+<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Expected ranges are estimates, not guarantees. Trade risk first.</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
 """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
