@@ -1,40 +1,21 @@
+import base64
 import json
 import os
-import base64
-import requests
+import time
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
-import plotly.graph_objects as go
+import requests
 import streamlit as st
+import plotly.graph_objects as go
 
 STATE_PATH = Path("radar_state.json")
-
-# Cloud data bridge. Streamlit Cloud reads radar_state.json from your GitHub repo.
-# Set these in Streamlit Secrets or leave defaults for your public repo.
-DEFAULT_GITHUB_RADAR_REPO = "Trans3o/a-plus-live-radar"
+DEFAULT_GITHUB_RADAR_REPO = "Trans3/a-plus-live-radar"
 DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
 
-
-def _secret_or_env(name: str, default: str = "") -> str:
-    try:
-        return str(st.secrets.get(name, os.getenv(name, default))).strip()
-    except Exception:
-        return str(os.getenv(name, default)).strip()
-
-
-def cloud_settings():
-    return {
-        "repo": _secret_or_env("GITHUB_RADAR_REPO", DEFAULT_GITHUB_RADAR_REPO),
-        "branch": _secret_or_env("GITHUB_RADAR_BRANCH", DEFAULT_GITHUB_RADAR_BRANCH),
-        "path": _secret_or_env("GITHUB_RADAR_PATH", DEFAULT_GITHUB_RADAR_PATH),
-        "token": _secret_or_env("GITHUB_RADAR_TOKEN", ""),
-    }
-
 st.set_page_config(
-    page_title="A+ Live Radar",
+    page_title="A+ Scanner Report",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -42,56 +23,61 @@ st.set_page_config(
 
 CSS = """
 <style>
-:root {
-  --bg: #05080C;
-  --panel: #091119;
-  --line: #23303A;
-  --green: #78FF2E;
-  --yellow: #FFD93D;
-  --red: #FF4D4D;
-  --blue: #35A7FF;
-  --purple: #BF65FF;
-  --muted: #9AA6B2;
+:root{
+  --bg:#05080C; --panel:#091119; --panel2:#071017; --line:#22303A;
+  --green:#78FF2E; --yellow:#FFD93D; --red:#FF4D4D; --orange:#FF8A3D;
+  --blue:#35A7FF; --purple:#BF65FF; --white:#F5F7FA; --muted:#9AA6B2;
 }
-.stApp { background: radial-gradient(circle at top left, #0D1720 0%, #05080C 42%, #030507 100%); color: white; }
-.block-container { padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1500px; }
-[data-testid="stMetricValue"] { color: var(--green); }
-.radar-header {
-  border: 1px solid var(--line); border-radius: 18px; padding: 22px 26px;
-  background: linear-gradient(135deg, rgba(9,17,25,.96), rgba(3,6,9,.96));
-  box-shadow: 0 0 30px rgba(120,255,46,.08);
-}
-.title { font-size: 48px; line-height: 1; font-weight: 900; letter-spacing: -1px; }
-.sub { color: var(--green); font-weight: 800; letter-spacing: .7px; margin-top: 6px; }
-.state-box { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: #05080C; text-align: center; }
-.state-label { font-size: 14px; color: white; font-weight: 800; }
-.state-value { font-size: 42px; font-weight: 900; margin-top: 5px; }
-.card {
-  border: 1px solid var(--line); border-radius: 18px; padding: 18px;
-  background: rgba(9,17,25,.92); box-shadow: 0 0 20px rgba(0,0,0,.25);
-  min-height: 520px;
-}
-.rank { font-size: 26px; font-weight: 900; border: 2px solid var(--green); border-radius: 12px; padding: 4px 13px; display:inline-block; margin-right: 10px; }
-.coin { font-size: 38px; font-weight: 900; letter-spacing: 1px; }
-.tag { font-size: 14px; font-weight: 900; border-radius: 8px; padding: 5px 10px; display:inline-block; margin-top: 7px; }
-.tag-pre { color: var(--yellow); border: 1px solid var(--yellow); }
-.tag-bull { color: var(--green); border: 1px solid var(--green); }
-.tag-sharp { color: var(--red); border: 1px solid var(--red); }
-.caption { color: #D7DEE6; font-size: 15px; margin-top: 10px; min-height: 42px; }
-.readbox { margin-top: 10px; border: 1px solid #1C2832; border-radius: 12px; padding: 10px; background: #071017; }
-.readline { color: white; font-size: 14px; margin: 2px 0; }
-.timing { font-weight: 900; font-size: 18px; }
-.footer-note { color: var(--muted); font-size: 13px; }
-.small-panel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: rgba(9,17,25,.88); }
+.stApp{background:radial-gradient(circle at top left,#0f1a20 0%,#05080C 36%,#020407 100%);color:var(--white);} 
+.block-container{max-width:1180px;padding-top:.8rem;padding-bottom:1.5rem;}
+[data-testid="stSidebar"]{background:#14171f;}
+#MainMenu, footer, header{visibility:hidden;}
+.report-shell{border:1px solid var(--line);border-radius:18px;background:rgba(3,6,9,.92);padding:18px 20px;box-shadow:0 0 36px rgba(120,255,46,.08);} 
+.header{display:grid;grid-template-columns:1.7fr .65fr;gap:18px;align-items:stretch;margin-bottom:14px;}
+.header-left{border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#04090d,#08121a);padding:20px 24px;}
+.brand{display:flex;gap:18px;align-items:center;}
+.logo{width:84px;height:84px;border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:40px;font-weight:1000;box-shadow:0 0 18px rgba(120,255,46,.25);} 
+.title{font-size:52px;font-weight:1000;line-height:.95;letter-spacing:-1.5px;color:white;text-transform:uppercase;}
+.title span{color:var(--green);} .subtitle{margin-top:8px;color:var(--green);font-weight:900;letter-spacing:1px;text-transform:uppercase;}
+.meta{display:flex;gap:24px;margin-top:18px;color:var(--white);font-weight:700;font-size:14px;flex-wrap:wrap;} .meta b{color:var(--green);}
+.state-box{border:1px solid var(--line);border-radius:14px;background:#05080C;padding:18px;text-align:center;}
+.state-label{font-size:14px;font-weight:900;color:white;text-transform:uppercase;letter-spacing:.8px;}
+.state-value{font-size:44px;font-weight:1000;margin:10px 0 6px;text-transform:uppercase;}
+.state-sub{font-size:15px;font-weight:900;text-transform:uppercase;}.state-reason{font-size:13px;color:white;margin-top:6px;line-height:1.35;}
+.section-title{display:flex;align-items:center;gap:18px;justify-content:center;margin:15px 0 12px;}.section-title:before,.section-title:after{content:"";height:3px;background:var(--green);flex:1;box-shadow:0 0 8px rgba(120,255,46,.5);} .section-title span{font-size:28px;font-weight:1000;text-transform:uppercase;letter-spacing:1px;}
+.setup-row{display:grid;grid-template-columns:90px 270px 230px 1fr;gap:18px;align-items:center;border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.96);padding:18px;margin-bottom:12px;min-height:188px;} 
+.rank-badge{height:148px;border:3px solid var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:1000;color:white;background:#05080C;}
+.coin-title{font-size:46px;font-weight:1000;letter-spacing:1px;line-height:1;color:white;}.pair-small{color:var(--muted);font-size:13px;font-weight:700;margin-top:4px;}
+.tag{display:inline-block;border-radius:6px;padding:5px 12px;margin-top:9px;font-size:18px;font-weight:1000;text-transform:uppercase;background:#080A0E;}.tag-pre{border:2px solid var(--yellow);color:var(--yellow);}.tag-bull{border:2px solid var(--green);color:var(--green);}.tag-sharp{border:2px solid var(--red);color:var(--red);}.tag-watch{border:2px solid var(--blue);color:var(--blue);} 
+.bullets{margin-top:10px;color:white;font-size:15px;font-weight:700;line-height:1.55;}.bullets div:before{content:"›";color:var(--green);font-weight:1000;margin-right:8px;}.accent-orange .bullets div:before{color:var(--orange);} .accent-blue .bullets div:before{color:var(--blue);} 
+.scores{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 20px;}.score-line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;}.score-line:last-child{border-bottom:0}.score-label{font-size:13px;font-weight:900;color:white;text-transform:uppercase;line-height:1.05;}.score-num{font-size:42px;font-weight:1000;line-height:1;}.score-trigger{color:var(--green)}.score-trade{color:var(--purple)}.score-conf{color:var(--blue)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.chart-card{border:1px solid var(--line);border-radius:10px;background:#071017;padding:8px;}.chart-caption{text-align:center;font-size:14px;font-weight:1000;margin-top:4px;text-transform:uppercase;}.timing-pill{margin-top:8px;border-radius:8px;border:2px solid;padding:6px 8px;text-align:center;font-weight:1000;text-transform:uppercase;font-size:15px;background:#05080C;}
+.bottom-grid{display:grid;grid-template-columns:1.1fr 1fr 1.25fr;gap:14px;margin-top:14px;}.bottom-panel{border:1px solid var(--line);border-radius:14px;background:rgba(9,17,25,.92);padding:16px;min-height:178px;}.panel-title{color:var(--green);font-size:18px;font-weight:1000;text-transform:uppercase;text-align:center;margin-bottom:12px;}.btc-big{font-size:32px;font-weight:1000;text-transform:uppercase;}.metric-row{display:flex;justify-content:space-between;border-top:1px solid #17232D;padding:8px 0;color:white;font-size:14px;}.sector-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #17232D;padding:6px 0;font-size:17px;font-weight:900;}.read-row{display:grid;grid-template-columns:130px 1fr;gap:8px;border-bottom:1px solid #17232D;padding:9px 0;}.read-key{font-weight:1000;text-transform:uppercase;}.read-desc{color:white;}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:white;font-weight:800;}.footer .left{color:var(--green);font-size:18px}.small{font-size:13px;color:var(--muted);font-weight:500;}
+.notice{border:1px solid #3b3f14;background:rgba(255,217,61,.18);border-radius:10px;padding:10px 14px;color:#fff3a3;margin:10px 0 14px;font-weight:700;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
 
-def sample_state():
-    now = datetime.now().isoformat(timespec="seconds")
+def secret_or_env(name: str, default: str = "") -> str:
+    try:
+        return str(st.secrets.get(name, os.getenv(name, default))).strip()
+    except Exception:
+        return str(os.getenv(name, default)).strip()
+
+
+def settings():
     return {
-        "generated_at": now,
+        "repo": secret_or_env("GITHUB_RADAR_REPO", DEFAULT_GITHUB_RADAR_REPO),
+        "branch": secret_or_env("GITHUB_RADAR_BRANCH", DEFAULT_GITHUB_RADAR_BRANCH),
+        "path": secret_or_env("GITHUB_RADAR_PATH", DEFAULT_GITHUB_RADAR_PATH),
+        "token": secret_or_env("GITHUB_RADAR_TOKEN", ""),
+    }
+
+
+def sample_state():
+    return {
+        "generated_at": "",
         "cycle_number": 0,
         "active_pairs": 0,
         "market_state": "WAITING",
@@ -103,234 +89,198 @@ def sample_state():
     }
 
 
-@st.cache_data(ttl=10, show_spinner=False)
-def load_state(path_str: str):
-    """Load radar state. Local file wins; cloud GitHub state is fallback for Streamlit Cloud. Cached briefly for smoother UI."""
-    path = Path(path_str)
-    if path.exists():
+@st.cache_data(ttl=8, show_spinner=False)
+def load_state():
+    if STATE_PATH.exists():
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f), True, "OK - local radar_state.json"
+            return json.loads(STATE_PATH.read_text(encoding="utf-8")), True, "local"
         except Exception as e:
-            return sample_state(), False, f"Could not read {path.name}: {e}"
-
-    cfg = cloud_settings()
-    repo = cfg["repo"]
-    branch = cfg["branch"]
-    gh_path = cfg["path"]
-    token = cfg["token"]
-
-    if not repo:
-        return sample_state(), False, f"Waiting for {path.name}. Start the scanner first or set GITHUB_RADAR_REPO."
-
-    api_url = f"https://api.github.com/repos/{repo}/contents/{gh_path}"
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "a-plus-live-radar-app",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
+            return sample_state(), False, f"local read error: {e}"
+    cfg = settings()
+    url = f"https://api.github.com/repos/{cfg['repo']}/contents/{cfg['path']}"
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "a-plus-radar-app", "X-GitHub-Api-Version": "2022-11-28"}
+    if cfg["token"]:
+        headers["Authorization"] = f"Bearer {cfg['token']}"
     try:
-        r = requests.get(api_url, headers=headers, params={"ref": branch, "_": datetime.now().timestamp()}, timeout=10)
+        r = requests.get(url, headers=headers, params={"ref": cfg["branch"], "_": time.time()}, timeout=10)
         if r.status_code != 200:
-            return sample_state(), False, f"Waiting for cloud radar_state.json from GitHub ({r.status_code}). Run scanner cloud pipeline."
-        obj = r.json() or {}
-        encoded = obj.get("content", "")
-        if not encoded:
-            return sample_state(), False, "GitHub radar_state.json exists but has no content."
-        raw = base64.b64decode(encoded).decode("utf-8")
-        return json.loads(raw), True, "OK - cloud GitHub radar_state.json"
+            return sample_state(), False, f"GitHub {r.status_code}: {r.text[:120]}"
+        raw = base64.b64decode((r.json() or {}).get("content", "")).decode("utf-8")
+        return json.loads(raw), True, "cloud"
     except Exception as e:
-        return sample_state(), False, f"Could not load cloud radar_state.json: {e}"
+        return sample_state(), False, f"cloud read error: {e}"
 
 
-def state_color(state: str):
-    if state == "BULL":
-        return "#78FF2E"
-    if state in {"PREBULL", "WATCH", "WAITING"}:
-        return "#FFD93D"
+def state_color(state):
+    state = (state or "").upper()
+    if state == "BULL": return "#78FF2E"
+    if state in {"PREBULL", "WATCH", "WAITING"}: return "#FFD93D"
     return "#FF4D4D"
 
 
-def tag_class(tag: str):
+def tag_class(tag):
     tag = (tag or "").upper()
-    if tag == "BULL":
-        return "tag tag-bull"
-    if tag == "SHARPSHOOTER":
-        return "tag tag-sharp"
+    if tag == "BULL": return "tag tag-bull"
+    if tag == "SHARPSHOOTER": return "tag tag-sharp"
+    if tag == "WATCHLIST": return "tag tag-watch"
     return "tag tag-pre"
 
 
-def timing_color(timing: str):
-    t = (timing or "").upper()
-    if t == "ON TIME":
-        return "#78FF2E"
-    if t in {"EARLY", "WATCH", "WAIT"}:
-        return "#FFD93D"
+def timing_color(t):
+    t = (t or "").upper()
+    if t == "ON TIME": return "#78FF2E"
+    if t in {"EARLY", "WATCH", "WAIT"}: return "#FFD93D"
     return "#FF4D4D"
 
 
-def line_chart(values, title, accent="#78FF2E"):
+def spark(values, title, accent="#78FF2E"):
     vals = [float(v) for v in (values or []) if v is not None]
     fig = go.Figure()
     if len(vals) >= 2:
+        colors = [accent if vals[i] >= vals[i-1] else "#FF5A4D" for i in range(1, len(vals))]
         fig.add_trace(go.Scatter(y=vals, mode="lines", line=dict(width=3, color=accent), fill="tozeroy", fillcolor="rgba(120,255,46,0.05)"))
-    fig.update_layout(
-        title=dict(text=title, font=dict(size=14, color=accent)),
-        height=170,
-        margin=dict(l=8, r=8, t=34, b=8),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#071017",
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        showlegend=False,
-    )
+    else:
+        fig.add_trace(go.Scatter(y=[0,0], mode="lines", line=dict(width=2, color="#23303A")))
+    fig.update_layout(height=118, margin=dict(l=0,r=0,t=24,b=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#071017", title=dict(text=title, font=dict(size=13,color=accent)), xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False)
     return fig
 
 
-def setup_card(setup, accent="#78FF2E"):
-    rank = setup.get("rank", "-")
-    coin = setup.get("coin") or setup.get("pair", "NO SETUP")
+def bullets_for(s):
+    cr = s.get("chart_read", {}) or {}
+    flags = s.get("flags", {}) or {}
+    items = []
+    if flags.get("acceleration"): items.append("Momentum increasing")
+    elif flags.get("impulse"): items.append("Strong move")
+    else: items.append("Momentum building")
+    items.append(cr.get("read_30m", "Chart forming"))
+    if flags.get("vwap_accept"): items.append("Buyers holding control")
+    else: items.append("Needs VWAP proof")
+    return items[:3]
+
+
+def render_setup_row(setup, idx):
+    accents = ["#78FF2E", "#FF8A3D", "#35A7FF"]
+    accent = accents[(idx-1) % 3]
+    accent_class = "accent-orange" if idx == 2 else "accent-blue" if idx == 3 else ""
+    coin = setup.get("coin") or str(setup.get("pair", "NONE")).split("/")[0]
+    pair = setup.get("pair", "")
     tag = setup.get("tag", "WATCH")
     cr = setup.get("chart_read", {}) or {}
-    timing = cr.get("timing", "WATCH")
-    caption = setup.get("caption", "")
-    tscore = setup.get("trigger_score", 0)
-    trscore = setup.get("trade_score", 0)
-    cscore = setup.get("confidence", 0)
-
+    timing = cr.get("timing", setup.get("entry_readiness_label", "WATCH"))
+    b = bullets_for(setup)
+    bullet_html = "".join([f"<div>{x}</div>" for x in b])
+    t = int(setup.get("trigger_score", 0) or 0)
+    tr = int(setup.get("trade_score", 0) or 0)
+    c = int(setup.get("confidence", 0) or 0)
     st.markdown(f"""
-    <div class="card" style="border-color:{accent};">
-      <div><span class="rank" style="border-color:{accent};">{rank}</span><span class="coin">{coin}</span></div>
-      <div class="{tag_class(tag)}">{tag}</div>
-      <div class="caption">{caption}</div>
-      <div style="display:flex; gap:14px; margin-top:12px;">
-        <div><div style="color:#9AA6B2;font-size:12px;">TRIGGER</div><div style="font-size:34px;font-weight:900;color:#78FF2E;">{tscore}</div></div>
-        <div><div style="color:#9AA6B2;font-size:12px;">TRADE</div><div style="font-size:34px;font-weight:900;color:#BF65FF;">{trscore}</div></div>
-        <div><div style="color:#9AA6B2;font-size:12px;">CONF</div><div style="font-size:34px;font-weight:900;color:#35A7FF;">{cscore}</div></div>
+    <div class="setup-row {accent_class}">
+      <div class="rank-badge" style="border-color:{accent};">{idx}</div>
+      <div>
+        <div class="coin-title">{coin}</div>
+        <div class="pair-small">{pair}</div>
+        <div class="{tag_class(tag)}">{tag}</div>
+        <div class="bullets">{bullet_html}</div>
       </div>
-      <div class="readbox">
-        <div class="readline"><b>30M:</b> {cr.get('read_30m', 'No read')}</div>
-        <div class="readline"><b>1H:</b> {cr.get('read_1h', 'No read')}</div>
-        <div class="timing" style="color:{timing_color(timing)};">Timing: {timing}</div>
+      <div class="scores">
+        <div class="score-line"><div class="score-label">Trigger<br/>Score</div><div class="score-num score-trigger">{t}</div></div>
+        <div class="score-line"><div class="score-label">Trade<br/>Score</div><div class="score-num score-trade">{tr}</div></div>
+        <div class="score-line"><div class="score-label">Confidence<br/>Score</div><div class="score-num score-conf">{c}</div></div>
+      </div>
+      <div>
+    """, unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1: st.plotly_chart(spark(setup.get("close_30m", []), "30M MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
+    with col2: st.plotly_chart(spark(setup.get("close_1h", []), "1H MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
+    st.markdown(f"""
+        <div class="timing-pill" style="border-color:{timing_color(timing)};color:{timing_color(timing)};">Timing: {timing}</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.plotly_chart(line_chart(setup.get("close_30m", []), "30M MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
-    with c2:
-        st.plotly_chart(line_chart(setup.get("close_1h", []), "1H MOVEMENT", accent), width="stretch", config={"displayModeBar": False})
 
 
-state, ok, msg = load_state(str(STATE_PATH))
-market = state.get("market_state", "WAITING")
-color = state_color(market)
+def fires(n):
+    try: n = int(n)
+    except Exception: n = 0
+    return "🔥" * min(max(n,0),3) if n else "—"
 
-# Smooth refresh controls. The old version hard-refreshed the page and jumped back to the top.
-# This version preserves scroll position and caches cloud reads briefly.
-st.sidebar.markdown("### Radar Refresh")
-auto_refresh = st.sidebar.toggle("Auto refresh", value=True)
-refresh_seconds = st.sidebar.slider("Refresh seconds", 10, 120, 20)
-if st.sidebar.button("Refresh now"):
+
+with st.sidebar:
+    st.markdown("### Radar Controls")
+    refresh = st.slider("Refresh seconds", 8, 60, 20)
+    auto = st.toggle("Auto refresh", value=True)
+    manual = st.button("Refresh now")
+    st.caption("Scanner → GitHub JSON → Streamlit report")
+
+state, ok, source = load_state()
+if manual:
     st.cache_data.clear()
     st.rerun()
-st.sidebar.caption("Cloud mode: scanner pushes radar_state.json to GitHub. Local mode: keep scanner running in another PowerShell window.")
+if auto:
+    st.markdown(f"<script>setTimeout(function(){{window.location.reload();}}, {refresh*1000});</script>", unsafe_allow_html=True)
 
-if auto_refresh:
-    st.components.v1.html(
-        f"""
-        <script>
-        const KEY = 'a_plus_radar_scroll_y';
-        function saveScroll() {{
-            try {{ localStorage.setItem(KEY, String(window.parent.scrollY || 0)); }} catch(e) {{}}
-        }}
-        function restoreScroll() {{
-            try {{
-                const y = parseInt(localStorage.getItem(KEY) || '0');
-                if (!Number.isNaN(y) && y > 0) {{
-                    setTimeout(() => window.parent.scrollTo(0, y), 80);
-                    setTimeout(() => window.parent.scrollTo(0, y), 300);
-                }}
-            }} catch(e) {{}}
-        }}
-        window.parent.addEventListener('scroll', saveScroll, {{passive: true}});
-        restoreScroll();
-        setTimeout(function(){{
-            saveScroll();
-            window.parent.location.reload();
-        }}, {refresh_seconds * 1000});
-        </script>
-        """,
-        height=0,
-    )
+market = state.get("market_state") or state.get("regime_name") or "WAITING"
+color = state_color(market)
+btc = state.get("btc", {}) or {}
+setups = state.get("top_setups", []) or []
+sector_counts = state.get("sector_counts", {}) or {}
+state_counts = state.get("state_counts", {}) or {}
+updated = state.get("generated_at") or state.get("timestamp") or ""
+cycle = state.get("cycle_number", state.get("cycle", 0))
+active = state.get("active_pairs", 0)
 
-h1, h2 = st.columns([2.2, 1])
-with h1:
-    st.markdown(f"""
-    <div class="radar-header">
-      <div class="title"><span style="color:#78FF2E;">A+</span> LIVE RADAR APP</div>
-      <div class="sub">VISUAL MARKET COMMAND CENTER</div>
-      <div style="margin-top:16px;color:#D7DEE6;">Last update: <b>{state.get('generated_at','')}</b> &nbsp; | &nbsp; Cycle: <b>{state.get('cycle_number',0)}</b> &nbsp; | &nbsp; Active pairs: <b style="color:#78FF2E;">{state.get('active_pairs',0)}</b></div>
-    </div>
-    """, unsafe_allow_html=True)
-with h2:
-    st.markdown(f"""
-    <div class="state-box">
-      <div class="state-label">MARKET STATE</div>
-      <div class="state-value" style="color:{color};">{market}</div>
-      <div style="color:#D7DEE6;">{state.get('btc',{}).get('reason','')}</div>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown('<div class="report-shell">', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="header">
+  <div class="header-left">
+    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> SCANNER REPORT</div><div class="subtitle">Real Time Market Radar</div></div></div>
+    <div class="meta"><div>📅 <b>{str(updated)[:10] or 'waiting'}</b></div><div>🕒 <b>{str(updated)[11:19] or '--:--:--'}</b></div><div>🔄 Cycle: <b>{cycle}</b></div><div>🎯 Active Pairs: <b>{active}</b></div></div>
+  </div>
+  <div class="state-box">
+    <div class="state-label">Market State</div>
+    <div class="state-value" style="color:{color};">{market}</div>
+    <div class="state-sub" style="color:{color};">{'Market warming up' if market=='PREBULL' else 'Trade-ready conditions' if market=='BULL' else 'Weak tape' if market=='BEAR' else 'Waiting for data'}</div>
+    <div class="state-reason">{btc.get('reason','Start scanner')}</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 if not ok:
-    st.warning(msg)
+    st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
 
-m1, m2, m3, m4 = st.columns(4)
-btc = state.get("btc", {}) or {}
-with m1:
-    st.metric("BTC 15M RSI", btc.get("rsi_15m", 0))
-with m2:
-    st.metric("BTC 1H RSI", btc.get("rsi_60m", 0))
-with m3:
-    st.metric("Above 15M VWAP", "YES" if btc.get("above_vwap_15m") else "NO")
-with m4:
-    st.metric("Above 1H VWAP", "YES" if btc.get("above_vwap_60m") else "NO")
-
-st.markdown("### 🎯 Top Radar Setups")
-setups = state.get("top_setups", []) or []
-accents = ["#78FF2E", "#FF8A3D", "#35A7FF"]
-if not setups:
-    st.info("No live setups yet. Start the scanner and wait for the next cycle.")
+st.markdown('<div class="section-title"><span>★ Top 3 Setups ★</span></div>', unsafe_allow_html=True)
+if setups:
+    for i, setup in enumerate(setups[:3], start=1):
+        render_setup_row(setup, i)
 else:
-    cols = st.columns(3)
-    for i, col in enumerate(cols):
-        with col:
-            if i < len(setups):
-                setup_card(setups[i], accents[i])
-            else:
-                st.markdown('<div class="card"><div class="coin">NO SETUP</div><div class="caption">Cash is a position.</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
+    for i in range(1,4):
+        render_setup_row({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i)
 
-st.markdown("### 🌊 Market Flow")
-f1, f2 = st.columns([1, 1])
-with f1:
-    st.markdown('<div class="small-panel"><b>Sector Flow</b></div>', unsafe_allow_html=True)
-    sectors = state.get("sector_counts", {}) or {}
-    if sectors:
-        df = pd.DataFrame([{"Sector": k, "Count": v} for k, v in sorted(sectors.items(), key=lambda x: x[1], reverse=True)])
-        st.bar_chart(df.set_index("Sector"))
-    else:
-        st.caption("No sector flow yet.")
-with f2:
-    st.markdown('<div class="small-panel"><b>Scanner State Counts</b></div>', unsafe_allow_html=True)
-    counts = state.get("state_counts", {}) or {}
-    if counts:
-        df2 = pd.DataFrame([{"State": k, "Count": v} for k, v in counts.items()])
-        st.bar_chart(df2.set_index("State"))
-    else:
-        st.caption("No state counts yet.")
+# Bottom panels
+sector_rows = "".join([f'<div class="sector-row"><span>{k}</span><span>{fires(v)}</span></div>' for k,v in sorted(sector_counts.items(), key=lambda x:x[1], reverse=True)[:6]]) or '<div class="small">No sector flow yet.</div>'
+counts_rows = "".join([f'<div class="metric-row"><span>{k}</span><b>{v}</b></div>' for k,v in state_counts.items()]) or '<div class="small">No state counts yet.</div>'
+btc_state = market if market != "PREBULL" else "WATCH"
+st.markdown(f"""
+<div class="bottom-grid">
+  <div class="bottom-panel">
+    <div class="panel-title">Market Snapshot</div>
+    <div class="btc-big" style="color:{color};">BTC {btc_state}</div>
+    <div class="small">{btc.get('reason','Higher-timeframe read')}</div>
+    <div class="metric-row"><span>BTC 15M RSI</span><b>{btc.get('rsi_15m',0)}</b></div>
+    <div class="metric-row"><span>BTC 1H RSI</span><b>{btc.get('rsi_60m', btc.get('rsi_1h',0))}</b></div>
+    <div class="metric-row"><span>15M VWAP</span><b>{'YES' if btc.get('above_vwap_15m') else 'NO'}</b></div>
+    <div class="metric-row"><span>1H VWAP</span><b>{'YES' if btc.get('above_vwap_60m') or btc.get('above_vwap_1h') else 'NO'}</b></div>
+  </div>
+  <div class="bottom-panel"><div class="panel-title">Sector Flow</div>{sector_rows}</div>
+  <div class="bottom-panel">
+    <div class="panel-title">How To Read This</div>
+    <div class="read-row"><div class="read-key" style="color:#FFD93D;">PREBUILD</div><div class="read-desc">Setup forming. Watch for confirmation.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#78FF2E;">BULL</div><div class="read-desc">Market and setup aligned. Trade ready.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#FF4D4D;">SHARPSHOOTER</div><div class="read-desc">Strong coin in weak market. Smaller size only.</div></div>
+    <div class="read-row"><div class="read-key" style="color:#35A7FF;">TIMING</div><div class="read-desc">ON TIME = best zone. LATE = avoid chasing.</div></div>
+  </div>
+</div>
+<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Scan • Filter • Rank • Execute</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
+""", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-st.markdown('<div class="footer-note">Not financial advice. This app reads radar_state.json from local file or GitHub cloud bridge generated by the scanner.</div>', unsafe_allow_html=True)
