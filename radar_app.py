@@ -52,6 +52,7 @@ div.stButton > button:first-child{background:#071017;border:1px solid var(--gree
 div.stButton > button:first-child:hover{border-color:white;color:white;background:#0A1720;}
 
 .perf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:12px 0 18px;}.perf-card{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px 15px;}.perf-k{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;}.perf-v{font-size:28px;font-weight:1000;color:var(--green);margin-top:4px;}.perf-sub{font-size:12px;color:white;margin-top:3px;}.perf-table{width:100%;border-collapse:collapse;margin-top:8px;}.perf-table th{color:var(--muted);font-size:12px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:8px;}.perf-table td{color:white;border-bottom:1px solid #17232D;padding:8px;font-size:13px;}.badge-good{color:var(--green);font-weight:1000}.badge-warn{color:var(--yellow);font-weight:1000}.badge-bad{color:var(--red);font-weight:1000}
+.proof-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 18px;}.proof-panel{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px;}.proof-title{font-size:15px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}.proof-table{width:100%;border-collapse:collapse;}.proof-table th{color:var(--muted);font-size:11px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:6px;}.proof-table td{color:white;border-bottom:1px solid #17232D;padding:6px;font-size:12px;}.edge-pos{color:var(--green);font-weight:1000}.edge-neg{color:var(--red);font-weight:1000}
 
 .exec-clock{border:1px solid #27343D;border-radius:12px;background:#05080C;padding:10px 12px;margin-top:10px;}
 .exec-k{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.7px;}
@@ -484,6 +485,52 @@ def perf_summary():
     }
 
 
+
+def _render_proof_bucket(title, rows, limit=6):
+    rows = rows or []
+    if not rows:
+        return f"""
+        <div class="proof-panel"><div class="proof-title">{title}</div><div class="small">Waiting for enough tracked records.</div></div>
+        """
+    body = []
+    for r in rows[:limit]:
+        edge = safe_float(r.get("edge_score", 0))
+        edge_cls = "edge-pos" if edge >= 0 else "edge-neg"
+        body.append(
+            f"<tr><td>{r.get('name','')}</td><td>{int(r.get('total',0) or 0)}</td>"
+            f"<td>{safe_float(r.get('hit_1pct_rate')):.0f}%</td><td>{safe_float(r.get('hit_2pct_rate')):.0f}%</td>"
+            f"<td>{safe_float(r.get('avg_max_move_pct')):+.2f}%</td><td class='{edge_cls}'>{edge:+.1f}</td></tr>"
+        )
+    return f"""
+    <div class="proof-panel"><div class="proof-title">{title}</div>
+      <table class="proof-table"><thead><tr><th>Bucket</th><th>N</th><th>+1%</th><th>+2%</th><th>Avg Max</th><th>Edge</th></tr></thead><tbody>{''.join(body)}</tbody></table>
+    </div>
+    """
+
+
+def render_proof_analytics(summary):
+    proof = summary.get("proof_read", {}) or {}
+    html = f"""
+    <div class="section-title"><span>★ Proof Analytics ★</span></div>
+    <div class="decision-banner">
+      <div class="decision-tile"><div class="tile-k">Best Regime</div><div class="tile-v" style="color:#78FF2E;">{proof.get('best_regime','UNKNOWN')}</div><div class="tile-sub">Directional until sample size grows.</div></div>
+      <div class="decision-tile"><div class="tile-k">Best Timing</div><div class="tile-v" style="color:#35A7FF;">{proof.get('best_timing','UNKNOWN')}</div><div class="tile-sub">Use this to refine alerts.</div></div>
+      <div class="decision-tile"><div class="tile-k">Best Setup</div><div class="tile-v" style="color:#FFD93D;">{proof.get('best_setup_type','UNKNOWN')}</div><div class="tile-sub">Buckets under 30 samples are not proven yet.</div></div>
+    </div>
+    <div class="proof-grid">
+      {_render_proof_bucket('By Regime', summary.get('by_regime'))}
+      {_render_proof_bucket('By Timing', summary.get('by_timing'))}
+      {_render_proof_bucket('By Sector', summary.get('by_sector'))}
+      {_render_proof_bucket('By Tag', summary.get('by_tag'))}
+      {_render_proof_bucket('By Setup Type', summary.get('by_setup_type'))}
+      {_render_proof_bucket('By RSI Zone', summary.get('by_rsi_zone'))}
+      {_render_proof_bucket('By VWAP Distance', summary.get('by_vwap_distance'))}
+      {_render_proof_bucket('By Hour', summary.get('by_hour'))}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
 def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="cloud"):
     perf_state = perf_state or sample_performance()
     summary = perf_state.get("summary", {}) or {}
@@ -527,7 +574,9 @@ def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="clo
           <table class="perf-table"><thead><tr><th>Pair</th><th>Type</th><th>Timing</th><th>Status</th><th>Now</th><th>Max</th><th>Drawdown</th></tr></thead><tbody>
         """ + "".join(rows) + "</tbody></table></div>", unsafe_allow_html=True)
     else:
-        st.markdown('<div class="notice">No persistent performance records yet. Run v18 scanner through a full cycle.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="notice">No persistent performance records yet. Run v21 scanner through a full cycle.</div>', unsafe_allow_html=True)
+
+    render_proof_analytics(summary)
 
 def decision_chart(setup, market, accent="#78FF2E"):
     price = safe_float(setup.get("price"))
