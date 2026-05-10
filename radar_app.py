@@ -10,7 +10,7 @@ import streamlit as st
 import plotly.graph_objects as go
 
 STATE_PATH = Path("radar_state.json")
-DEFAULT_GITHUB_RADAR_REPO = "Trans3/a-plus-live-radar"
+DEFAULT_GITHUB_RADAR_REPO = "Trans3o/a-plus-live-radar"
 DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
 DEFAULT_GITHUB_PERFORMANCE_PATH = "radar_performance.json"
@@ -54,6 +54,14 @@ div.stButton > button:first-child:hover{border-color:white;color:white;backgroun
 .perf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:12px 0 18px;}.perf-card{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px 15px;}.perf-k{color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;}.perf-v{font-size:28px;font-weight:1000;color:var(--green);margin-top:4px;}.perf-sub{font-size:12px;color:white;margin-top:3px;}.perf-table{width:100%;border-collapse:collapse;margin-top:8px;}.perf-table th{color:var(--muted);font-size:12px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:8px;}.perf-table td{color:white;border-bottom:1px solid #17232D;padding:8px;font-size:13px;}.badge-good{color:var(--green);font-weight:1000}.badge-warn{color:var(--yellow);font-weight:1000}.badge-bad{color:var(--red);font-weight:1000}
 .proof-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 18px;}.proof-panel{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px;}.proof-title{font-size:15px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}.proof-table{width:100%;border-collapse:collapse;}.proof-table th{color:var(--muted);font-size:11px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:6px;}.proof-table td{color:white;border-bottom:1px solid #17232D;padding:6px;font-size:12px;}.edge-pos{color:var(--green);font-weight:1000}.edge-neg{color:var(--red);font-weight:1000}
 .env-box{border:1px solid #27343D;border-radius:12px;background:#05080C;padding:10px 12px;margin-top:10px;}.env-k{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.7px;}.env-v{font-size:24px;font-weight:1000;margin-top:3px;color:var(--green);}.env-tier{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:3px 9px;margin-left:8px;font-size:12px;font-weight:1000;}.env-adj{font-size:12px;color:white;margin-top:6px;line-height:1.35;}.env-pos{color:var(--green);font-weight:1000}.env-neg{color:var(--red);font-weight:1000}
+
+.billboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 18px;}
+.billboard-panel{border:1px solid var(--line);border-radius:13px;background:#071017;padding:14px;}
+.billboard-title{font-size:15px;font-weight:1000;color:var(--green);text-transform:uppercase;margin-bottom:8px;}
+.billboard-table{width:100%;border-collapse:collapse;}
+.billboard-table th{color:var(--muted);font-size:11px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line);padding:6px;}
+.billboard-table td{color:white;border-bottom:1px solid #17232D;padding:6px;font-size:12px;}
+.billboard-up{color:var(--green);font-weight:1000}.billboard-down{color:var(--red);font-weight:1000}
 
 .exec-clock{border:1px solid #27343D;border-radius:12px;background:#05080C;padding:10px 12px;margin-top:10px;}
 .exec-k{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.7px;}
@@ -533,6 +541,67 @@ def render_proof_analytics(summary):
     st.markdown(html, unsafe_allow_html=True)
 
 
+
+def fmt_pct(x):
+    v = safe_float(x)
+    cls = "billboard-up" if v >= 0 else "billboard-down"
+    return f"<span class='{cls}'>{v:+.2f}%</span>"
+
+
+def fmt_volume(x):
+    v = safe_float(x)
+    if v >= 1_000_000:
+        return f"${v/1_000_000:.1f}M"
+    if v >= 1_000:
+        return f"${v/1_000:.0f}K"
+    return f"${v:.0f}"
+
+
+def billboard_rows(rows, show_score=True):
+    if not rows:
+        return "<tr><td colspan='5'>Waiting for billboard data.</td></tr>"
+    html = []
+    for r in rows[:10]:
+        score_cell = f"<td>{safe_float(r.get('billboard_score')):.2f}</td>" if show_score else ""
+        html.append(
+            "<tr>"
+            f"<td><b>{r.get('pair','')}</b></td>"
+            f"<td>{fmt_pct(r.get('change_1h_pct', 0))}</td>"
+            f"<td>{fmt_pct(r.get('change_24h_pct', 0))}</td>"
+            f"<td>{fmt_volume(r.get('usd_volume', 0))}</td>"
+            f"{score_cell}"
+            "</tr>"
+        )
+    return "".join(html)
+
+
+def render_billboard_dashboard(state):
+    billboard = (state or {}).get("billboard", {}) or {}
+    one_hour = billboard.get("one_hour", []) or []
+    twenty_four = billboard.get("twenty_four_hour", []) or []
+    note = billboard.get("note", "1H board is primary. 24H board is context only.")
+    st.markdown(f"""
+    <div class="section-title"><span>★ Kraken Billboard ★</span></div>
+    <div class="notice">{note}</div>
+    <div class="billboard-grid">
+      <div class="billboard-panel">
+        <div class="billboard-title">1H Momentum Board — Primary Radar</div>
+        <table class="billboard-table">
+          <thead><tr><th>Pair</th><th>1H</th><th>24H</th><th>Vol</th><th>Score</th></tr></thead>
+          <tbody>{billboard_rows(one_hour, show_score=True)}</tbody>
+        </table>
+      </div>
+      <div class="billboard-panel">
+        <div class="billboard-title">24H Context Board — Not Entry Signal</div>
+        <table class="billboard-table">
+          <thead><tr><th>Pair</th><th>1H</th><th>24H</th><th>Vol</th></tr></thead>
+          <tbody>{billboard_rows(twenty_four, show_score=False)}</tbody>
+        </table>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="cloud"):
     perf_state = perf_state or sample_performance()
     summary = perf_state.get("summary", {}) or {}
@@ -821,6 +890,8 @@ st.markdown(f"""
 
 if not ok:
     st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
+
+render_billboard_dashboard(state)
 
 render_performance_dashboard(perf_state, perf_ok, perf_source)
 
