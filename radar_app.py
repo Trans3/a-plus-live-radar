@@ -2200,7 +2200,7 @@ def normalize_github_repo(repo: str) -> str:
         return "Trans3o/a-plus-live-radar"
     return repo
 
-GITHUB_RADAR_REPO = normalize_github_repo(os.getenv("GITHUB_RADAR_REPO", "Trans3o/a-plus-live-radar"))
+GITHUB_RADAR_REPO = normalize_github_repo(os.getenv("GITHUB_RADAR_REPO", "Trans3/a-plus-live-radar"))
 GITHUB_RADAR_BRANCH = os.getenv("GITHUB_RADAR_BRANCH", "main").strip()
 GITHUB_RADAR_PATH = os.getenv("GITHUB_RADAR_PATH", "radar_state.json").strip()
 CLOUD_PUSH_MIN_SECONDS = int(os.getenv("CLOUD_PUSH_MIN_SECONDS", "15"))
