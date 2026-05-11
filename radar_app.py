@@ -10,7 +10,7 @@ import streamlit as st
 import plotly.graph_objects as go
 
 STATE_PATH = Path("radar_state.json")
-DEFAULT_GITHUB_RADAR_REPO = "Trans3o/a-plus-live-radar"
+DEFAULT_GITHUB_RADAR_REPO = "Trans3/a-plus-live-radar"
 DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
 DEFAULT_GITHUB_PERFORMANCE_PATH = "radar_performance.json"
