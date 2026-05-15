@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-15T18:52:13",
-  "cycle_number": 3049,
+  "generated_at": "2026-05-15T18:53:33",
+  "cycle_number": 3050,
   "active_pairs": 7,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -8,9 +8,9 @@
     "reason": "BTC lacks clean higher-timeframe control",
     "market_phase": "CHOP",
     "volatility_state": "NORMAL",
-    "price_5m": 79060.0,
-    "price_15m": 79060.0,
-    "price_60m": 79060.0,
+    "price_5m": 79060.1,
+    "price_15m": 79060.1,
+    "price_60m": 79060.1,
     "rsi_15m": 48.5,
     "rsi_60m": 28.76,
     "above_vwap_15m": false,
@@ -31,42 +31,42 @@
       {
         "pair": "LUNA/USD",
         "coin": "LUNA",
-        "change_1h_pct": 2.602,
-        "change_24h_pct": 1.881,
-        "usd_volume": 1362606.98,
-        "billboard_score": 0.9223
-      },
-      {
-        "pair": "ZEREBRO/USD",
-        "coin": "ZEREBRO",
-        "change_1h_pct": 3.25,
-        "change_24h_pct": 2.554,
-        "usd_volume": 252783.2,
-        "billboard_score": 0.8543
+        "change_1h_pct": 2.319,
+        "change_24h_pct": 1.599,
+        "usd_volume": 1362025.19,
+        "billboard_score": 0.9207
       },
       {
         "pair": "WARD/USD",
         "coin": "WARD",
         "change_1h_pct": 1.189,
         "change_24h_pct": 8.078,
-        "usd_volume": 704621.94,
-        "billboard_score": 0.8521
+        "usd_volume": 688484.75,
+        "billboard_score": 0.863
       },
       {
-        "pair": "MLN/USD",
-        "coin": "MLN",
-        "change_1h_pct": 1.603,
-        "change_24h_pct": 12.736,
-        "usd_volume": 529678.95,
+        "pair": "ZEREBRO/USD",
+        "coin": "ZEREBRO",
+        "change_1h_pct": 2.357,
+        "change_24h_pct": 1.667,
+        "usd_volume": 250738.36,
         "billboard_score": 0.8511
       },
       {
         "pair": "ASRR/USD",
         "coin": "ASRR",
-        "change_1h_pct": 47.045,
-        "change_24h_pct": 128.386,
-        "usd_volume": 87745.23,
-        "billboard_score": 0.8138
+        "change_1h_pct": 23.402,
+        "change_24h_pct": 90.724,
+        "usd_volume": 75541.33,
+        "billboard_score": 0.8022
+      },
+      {
+        "pair": "MLN/USD",
+        "coin": "MLN",
+        "change_1h_pct": 0.898,
+        "change_24h_pct": 11.953,
+        "usd_volume": 526075.04,
+        "billboard_score": 0.7913
       },
       {
         "pair": "ASSET/USD",
@@ -74,7 +74,15 @@
         "change_1h_pct": 2.21,
         "change_24h_pct": 31.264,
         "usd_volume": 99349.54,
-        "billboard_score": 0.767
+        "billboard_score": 0.762
+      },
+      {
+        "pair": "TRIA/USD",
+        "coin": "TRIA",
+        "change_1h_pct": 1.018,
+        "change_24h_pct": 2.67,
+        "usd_volume": 125904.44,
+        "billboard_score": 0.7359
       },
       {
         "pair": "AKE/USD",
@@ -82,23 +90,31 @@
         "change_1h_pct": 1.725,
         "change_24h_pct": 19.237,
         "usd_volume": 92043.45,
-        "billboard_score": 0.7383
+        "billboard_score": 0.7326
       },
       {
         "pair": "USDG/USD",
         "coin": "USDG",
         "change_1h_pct": 0.0,
         "change_24h_pct": 0.0,
-        "usd_volume": 2730494.65,
-        "billboard_score": 0.7234
+        "usd_volume": 2730390.87,
+        "billboard_score": 0.7174
       },
       {
         "pair": "ZEUS/USD",
         "coin": "ZEUS",
-        "change_1h_pct": 5.345,
-        "change_24h_pct": 7.57,
-        "usd_volume": 41192.67,
-        "billboard_score": 0.7191
+        "change_1h_pct": 5.172,
+        "change_24h_pct": 7.394,
+        "usd_volume": 41130.24,
+        "billboard_score": 0.713
+      },
+      {
+        "pair": "USDG/USDC",
+        "coin": "USDG",
+        "change_1h_pct": 0.0,
+        "change_24h_pct": 0.0,
+        "usd_volume": 1674596.76,
+        "billboard_score": 0.6957
       },
       {
         "pair": "INX/USD",
@@ -106,23 +122,7 @@
         "change_1h_pct": 0.854,
         "change_24h_pct": 1.878,
         "usd_volume": 115099.55,
-        "billboard_score": 0.7064
-      },
-      {
-        "pair": "USDG/USDC",
-        "coin": "USDG",
-        "change_1h_pct": 0.0,
-        "change_24h_pct": 0.0,
-        "usd_volume": 1674937.94,
-        "billboard_score": 0.7021
-      },
-      {
-        "pair": "TRIA/USD",
-        "coin": "TRIA",
-        "change_1h_pct": 0.713,
-        "change_24h_pct": 2.36,
-        "usd_volume": 125656.72,
-        "billboard_score": 0.6723
+        "billboard_score": 0.6859
       }
     ],
     "twenty_four_hour": [
@@ -130,8 +130,8 @@
         "pair": "ASRR/USD",
         "coin": "ASRR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 128.386,
-        "usd_volume": 87745.23,
+        "change_24h_pct": 90.724,
+        "usd_volume": 75541.33,
         "billboard_score": 0.0
       },
       {
@@ -146,24 +146,24 @@
         "pair": "SBR/USD",
         "coin": "SBR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 50.0,
-        "usd_volume": 139023.59,
+        "change_24h_pct": 46.789,
+        "usd_volume": 136373.11,
         "billboard_score": 0.0
       },
       {
         "pair": "FIS/USD",
         "coin": "FIS",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 43.84,
-        "usd_volume": 332470.21,
+        "change_24h_pct": 40.287,
+        "usd_volume": 324670.92,
         "billboard_score": 0.0
       },
       {
         "pair": "SUP/USD",
         "coin": "SUP",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 38.848,
-        "usd_volume": 241515.15,
+        "change_24h_pct": 38.205,
+        "usd_volume": 240439.5,
         "billboard_score": 0.0
       },
       {
@@ -218,8 +218,8 @@
         "pair": "MLN/USD",
         "coin": "MLN",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 12.736,
-        "usd_volume": 529678.95,
+        "change_24h_pct": 11.953,
+        "usd_volume": 526075.04,
         "billboard_score": 0.0
       }
     ],
@@ -704,8 +704,6 @@
         0.04534,
         0.04534,
         0.04534,
-        0.04534,
-        0.04534,
         0.04556,
         0.04556,
         0.04556,
@@ -727,6 +725,8 @@
         0.04554,
         0.04554,
         0.04554,
+        0.04559,
+        0.04559,
         0.04559,
         0.04559
       ],
@@ -841,7 +841,7 @@
       ],
       "rsi_1m": 50.0,
       "rsi_5m": 50.0,
-      "vwap": 0.9999027381801389,
+      "vwap": 0.9999027424033405,
       "macd_hist_15m": 3.762221619982758e-06,
       "close_30m": [
         0.9999,
@@ -854,8 +854,6 @@
         0.9999,
         0.9999,
         0.9999,
-        0.9999,
-        0.9999,
         1.0,
         1.0,
         0.9999,
@@ -866,6 +864,8 @@
         0.9999,
         1.0,
         1.0,
+        0.9999,
+        0.9999,
         0.9999,
         0.9999,
         0.9999,
@@ -999,7 +999,7 @@
         1.0,
         1.0,
         1.0,
-        1.0,
+        0.99996,
         0.99996,
         0.99996,
         0.99996,
@@ -1093,10 +1093,10 @@
       "pair": "GWEI/USD",
       "coin": "GWEI",
       "tag": "PREBUILD",
-      "price": 0.157151,
-      "change_24h_pct": 6.299,
+      "price": 0.156875,
+      "change_24h_pct": 6.112,
       "trigger_score": 0,
-      "trade_score": 9,
+      "trade_score": 8,
       "confidence": 0,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -1127,17 +1127,15 @@
         "no volume spike",
         "no structure break",
         "momentum failing",
-        "RSI<55.0 or RSI>72.0 (RSI=37.29)",
-        "5m RSI<53.5 (RSI=48.18)",
+        "RSI<55.0 or RSI>72.0 (RSI=7.57)",
+        "5m RSI<53.5 (RSI=46.39)",
         "15m MACD hist < 0"
       ],
-      "rsi_1m": 37.287,
-      "rsi_5m": 48.18,
-      "vwap": 0.1578324978519232,
-      "macd_hist_15m": -9.076699562022341e-05,
+      "rsi_1m": 7.57,
+      "rsi_5m": 46.387,
+      "vwap": 0.1578646672736586,
+      "macd_hist_15m": -0.00010838067083386918,
       "close_30m": [
-        0.157246,
-        0.157246,
         0.157246,
         0.157246,
         0.157246,
@@ -1165,7 +1163,9 @@
         0.157041,
         0.157017,
         0.157151,
-        0.157151
+        0.157151,
+        0.15691,
+        0.156875
       ],
       "close_1h": [
         0.129841,
@@ -1207,23 +1207,23 @@
         0.159634,
         0.157049,
         0.157507,
-        0.157151
+        0.156875
       ],
       "chart_read": {
         "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "EARLY",
-        "change_30m_pct": -0.06,
-        "change_1h_pct": 21.033
+        "change_30m_pct": -0.236,
+        "change_1h_pct": 20.821
       },
       "momentum_quality": "FAILING",
       "trap_risk": "LOW",
-      "volatility_state": "NORMAL",
+      "volatility_state": "COMPRESSING",
       "structure_type": "WEAK",
-      "relative_strength_pct": -0.389,
-      "distance_from_vwap_pct": -0.432,
-      "composite_score": 13,
-      "environment_score": 13,
+      "relative_strength_pct": -0.564,
+      "distance_from_vwap_pct": -0.627,
+      "composite_score": 10,
+      "environment_score": 10,
       "environment_tier": "UNKNOWN",
       "environment_adjustments": [],
       "billboard_score": 0,
