@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-15T18:10:27",
-  "cycle_number": 3011,
+  "generated_at": "2026-05-15T18:11:47",
+  "cycle_number": 3012,
   "active_pairs": 7,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -17,7 +17,7 @@
     "above_vwap_60m": false
   },
   "sector_counts": {
-    "OTHER": 5
+    "OTHER": 1
   },
   "state_counts": {
     "READY": 0,
@@ -29,84 +29,44 @@
   "billboard": {
     "one_hour": [
       {
-        "pair": "WARD/USD",
-        "coin": "WARD",
-        "change_1h_pct": 3.5,
-        "change_24h_pct": 7.501,
-        "usd_volume": 870156.2,
-        "billboard_score": 0.913
+        "pair": "ALPHA/USD",
+        "coin": "ALPHA",
+        "change_1h_pct": 6.977,
+        "change_24h_pct": 9.338,
+        "usd_volume": 441024.05,
+        "billboard_score": 0.9128
       },
       {
         "pair": "SUP/USD",
         "coin": "SUP",
-        "change_1h_pct": 28.071,
-        "change_24h_pct": 54.451,
-        "usd_volume": 248186.01,
-        "billboard_score": 0.8793
-      },
-      {
-        "pair": "ALPHA/USD",
-        "coin": "ALPHA",
-        "change_1h_pct": 3.128,
-        "change_24h_pct": 9.168,
-        "usd_volume": 440127.1,
-        "billboard_score": 0.8543
-      },
-      {
-        "pair": "SBR/USD",
-        "coin": "SBR",
-        "change_1h_pct": 17.203,
-        "change_24h_pct": 68.349,
-        "usd_volume": 149218.59,
-        "billboard_score": 0.8424
+        "change_1h_pct": 15.184,
+        "change_24h_pct": 40.875,
+        "usd_volume": 238608.89,
+        "billboard_score": 0.8745
       },
       {
         "pair": "GWEI/USD",
         "coin": "GWEI",
-        "change_1h_pct": 1.037,
-        "change_24h_pct": 7.108,
-        "usd_volume": 1450114.51,
-        "billboard_score": 0.8011
+        "change_1h_pct": 1.036,
+        "change_24h_pct": 7.276,
+        "usd_volume": 1453760.68,
+        "billboard_score": 0.833
       },
       {
-        "pair": "FIS/USD",
-        "coin": "FIS",
-        "change_1h_pct": 1.755,
-        "change_24h_pct": 48.98,
-        "usd_volume": 343758.61,
-        "billboard_score": 0.7815
+        "pair": "SBR/USD",
+        "coin": "SBR",
+        "change_1h_pct": 3.399,
+        "change_24h_pct": 67.661,
+        "usd_volume": 148728.61,
+        "billboard_score": 0.8181
       },
       {
         "pair": "ASRR/USD",
         "coin": "ASRR",
-        "change_1h_pct": 93.543,
-        "change_24h_pct": 116.327,
-        "usd_volume": 48542.36,
-        "billboard_score": 0.7793
-      },
-      {
-        "pair": "HIPPO/USD",
-        "coin": "HIPPO",
-        "change_1h_pct": 1.946,
-        "change_24h_pct": 0.0,
-        "usd_volume": 164758.37,
-        "billboard_score": 0.7652
-      },
-      {
-        "pair": "LCX/USD",
-        "coin": "LCX",
-        "change_1h_pct": 3.303,
-        "change_24h_pct": 5.849,
-        "usd_volume": 99562.83,
-        "billboard_score": 0.7467
-      },
-      {
-        "pair": "USDG/USD",
-        "coin": "USDG",
-        "change_1h_pct": 0.01,
-        "change_24h_pct": 0.01,
-        "usd_volume": 2727005.57,
-        "billboard_score": 0.7315
+        "change_1h_pct": 124.433,
+        "change_24h_pct": 159.369,
+        "usd_volume": 60818.29,
+        "billboard_score": 0.7915
       },
       {
         "pair": "SAHARA/USD",
@@ -114,15 +74,55 @@
         "change_1h_pct": 1.33,
         "change_24h_pct": 0.593,
         "usd_volume": 141081.02,
-        "billboard_score": 0.7076
+        "billboard_score": 0.7553
+      },
+      {
+        "pair": "HIPPO/USD",
+        "coin": "HIPPO",
+        "change_1h_pct": 1.158,
+        "change_24h_pct": 0.0,
+        "usd_volume": 164758.37,
+        "billboard_score": 0.7426
+      },
+      {
+        "pair": "UNITAS/USD",
+        "coin": "UNITAS",
+        "change_1h_pct": 0.477,
+        "change_24h_pct": 8.332,
+        "usd_volume": 567441.14,
+        "billboard_score": 0.7415
+      },
+      {
+        "pair": "LCX/USD",
+        "coin": "LCX",
+        "change_1h_pct": 2.114,
+        "change_24h_pct": 4.63,
+        "usd_volume": 98616.55,
+        "billboard_score": 0.7383
+      },
+      {
+        "pair": "ASSET/USD",
+        "coin": "ASSET",
+        "change_1h_pct": 1.539,
+        "change_24h_pct": 29.53,
+        "usd_volume": 104623.26,
+        "billboard_score": 0.7319
       },
       {
         "pair": "STORJ/USD",
         "coin": "STORJ",
-        "change_1h_pct": 0.601,
+        "change_1h_pct": 0.543,
         "change_24h_pct": 30.205,
         "usd_volume": 373061.28,
-        "billboard_score": 0.7043
+        "billboard_score": 0.7245
+      },
+      {
+        "pair": "WARD/USD",
+        "coin": "WARD",
+        "change_1h_pct": 0.328,
+        "change_24h_pct": 6.001,
+        "usd_volume": 855014.69,
+        "billboard_score": 0.7213
       }
     ],
     "twenty_four_hour": [
@@ -130,32 +130,32 @@
         "pair": "ASRR/USD",
         "coin": "ASRR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 116.327,
-        "usd_volume": 48542.36,
+        "change_24h_pct": 159.369,
+        "usd_volume": 60818.29,
         "billboard_score": 0.0
       },
       {
         "pair": "SBR/USD",
         "coin": "SBR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 68.349,
-        "usd_volume": 149218.59,
-        "billboard_score": 0.0
-      },
-      {
-        "pair": "SUP/USD",
-        "coin": "SUP",
-        "change_1h_pct": 0.0,
-        "change_24h_pct": 54.451,
-        "usd_volume": 248186.01,
+        "change_24h_pct": 67.661,
+        "usd_volume": 148728.61,
         "billboard_score": 0.0
       },
       {
         "pair": "FIS/USD",
         "coin": "FIS",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 48.98,
-        "usd_volume": 343758.61,
+        "change_24h_pct": 46.334,
+        "usd_volume": 337192.79,
+        "billboard_score": 0.0
+      },
+      {
+        "pair": "SUP/USD",
+        "coin": "SUP",
+        "change_1h_pct": 0.0,
+        "change_24h_pct": 40.875,
+        "usd_volume": 238608.89,
         "billboard_score": 0.0
       },
       {
@@ -211,15 +211,15 @@
         "coin": "PONKE",
         "change_1h_pct": 0.0,
         "change_24h_pct": 9.774,
-        "usd_volume": 1151020.32,
+        "usd_volume": 1150967.96,
         "billboard_score": 0.0
       },
       {
-        "pair": "BLUAI/USD",
-        "coin": "BLUAI",
+        "pair": "ALPHA/USD",
+        "coin": "ALPHA",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 9.268,
-        "usd_volume": 26414.52,
+        "change_24h_pct": 9.338,
+        "usd_volume": 441024.05,
         "billboard_score": 0.0
       }
     ],
@@ -231,11 +231,11 @@
       "pair": "GWEI/USD",
       "coin": "GWEI",
       "tag": "PREBUILD",
-      "price": 0.158349,
-      "change_24h_pct": 7.109,
-      "trigger_score": 65,
-      "trade_score": 62,
-      "confidence": 65,
+      "price": 0.158596,
+      "change_24h_pct": 7.276,
+      "trigger_score": 85,
+      "trade_score": 51,
+      "confidence": 85,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
       "sector": "OTHER",
@@ -245,12 +245,12 @@
         "compression": false,
         "impulse": true,
         "vwap_accept": true,
-        "pullback": false,
-        "acceleration": true,
+        "pullback": true,
+        "acceleration": false,
         "rsi_ok": true,
         "macd_turn_up": false,
         "trend_ok": true,
-        "volume_spike": true,
+        "volume_spike": false,
         "structure_break": false,
         "momentum_building": true,
         "momentum_failing": false,
@@ -260,17 +260,15 @@
       },
       "missing": [
         "no compression",
-        "no pullback",
+        "no volume spike",
         "no structure break",
         "15m MACD hist < 0"
       ],
-      "rsi_1m": 61.687,
-      "rsi_5m": 56.313,
-      "vwap": 0.15747903845853892,
-      "macd_hist_15m": -3.0950590224530674e-05,
+      "rsi_1m": 58.65,
+      "rsi_5m": 57.395,
+      "vwap": 0.15747261405490348,
+      "macd_hist_15m": -1.518762726157992e-05,
       "close_30m": [
-        0.157427,
-        0.157427,
         0.157427,
         0.157427,
         0.157427,
@@ -298,7 +296,9 @@
         0.157001,
         0.157001,
         0.158347,
-        0.158349
+        0.158349,
+        0.158596,
+        0.158596
       ],
       "close_1h": [
         0.129841,
@@ -340,21 +340,21 @@
         0.159634,
         0.157049,
         0.157507,
-        0.158349
+        0.158596
       ],
       "chart_read": {
-        "read_30m": "Momentum burst",
+        "read_30m": "Pullback holding VWAP",
         "read_1h": "Trend intact",
-        "timing": "EARLY",
-        "change_30m_pct": 0.586,
-        "change_1h_pct": 21.956
+        "timing": "ON TIME",
+        "change_30m_pct": 0.743,
+        "change_1h_pct": 22.146
       },
       "momentum_quality": "BUILDING",
       "trap_risk": "LOW",
       "volatility_state": "HIGH",
       "structure_type": "BASE",
-      "relative_strength_pct": 1.023,
-      "distance_from_vwap_pct": 0.552,
+      "relative_strength_pct": 1.18,
+      "distance_from_vwap_pct": 0.713,
       "composite_score": 64,
       "environment_score": 64,
       "environment_tier": "UNKNOWN",
@@ -365,7 +365,7 @@
       "veteran_decision": "SHARPSHOOTER",
       "position_size": "SCOUT",
       "decision_reason": "outperforming BTC, near VWAP/value",
-      "caption": "momentum is increasing, it is still trying to prove structure, and buyers are holding control above VWAP."
+      "caption": "a strong move just happened, it is pulling back after the move, and buyers are holding control above VWAP."
     },
     {
       "rank": 2,
@@ -550,7 +550,7 @@
       ],
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
-      "vwap": 0.9999750334488617,
+      "vwap": 0.9999755463085577,
       "macd_hist_15m": 3.3088053128541393e-06,
       "close_30m": [
         1.0,
@@ -1000,7 +1000,6 @@
         0.9999,
         0.9999,
         0.9999,
-        0.9999,
         1.0,
         1.0,
         0.9999,
@@ -1013,6 +1012,7 @@
         1.0,
         1.0,
         1.0,
+        0.9999,
         0.9999,
         0.9999,
         0.9999
@@ -1128,10 +1128,9 @@
       ],
       "rsi_1m": 0.0,
       "rsi_5m": 50.676,
-      "vwap": 0.04526371804579025,
+      "vwap": 0.04526485702774265,
       "macd_hist_15m": 1.4014592978126906e-05,
       "close_30m": [
-        0.04562,
         0.04562,
         0.04562,
         0.04562,
@@ -1148,6 +1147,7 @@
         0.0457,
         0.0457,
         0.0457,
+        0.04534,
         0.04534,
         0.04534,
         0.04534,
@@ -1216,7 +1216,7 @@
       "volatility_state": "NORMAL",
       "structure_type": "BASE",
       "relative_strength_pct": 0.034,
-      "distance_from_vwap_pct": 0.169,
+      "distance_from_vwap_pct": 0.166,
       "composite_score": 42,
       "environment_score": 42,
       "environment_tier": "UNKNOWN",
