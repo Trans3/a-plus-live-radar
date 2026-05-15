@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-15T17:58:21",
-  "cycle_number": 3000,
+  "generated_at": "2026-05-15T17:59:16",
+  "cycle_number": 3001,
   "active_pairs": 8,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -8,11 +8,11 @@
     "reason": "BTC lacks clean higher-timeframe control",
     "market_phase": "CHOP",
     "volatility_state": "NORMAL",
-    "price_5m": 78930.0,
-    "price_15m": 78930.1,
-    "price_60m": 78930.1,
-    "rsi_15m": 27.1,
-    "rsi_60m": 24.87,
+    "price_5m": 78924.9,
+    "price_15m": 78924.9,
+    "price_60m": 78924.9,
+    "rsi_15m": 26.9,
+    "rsi_60m": 24.83,
     "above_vwap_15m": false,
     "above_vwap_60m": false
   },
@@ -356,7 +356,7 @@
       "trap_risk": "LOW",
       "volatility_state": "COMPRESSING",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.49,
+      "relative_strength_pct": 0.496,
       "distance_from_vwap_pct": -0.001,
       "composite_score": 40,
       "environment_score": 40,
@@ -412,7 +412,7 @@
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
       "vwap": 0.9999728130727825,
-      "macd_hist_15m": 2.9366029094011813e-06,
+      "macd_hist_15m": 3.3088053128541393e-06,
       "close_30m": [
         1.0,
         1.0,
@@ -446,7 +446,6 @@
         1.0
       ],
       "close_1h": [
-        1.0,
         1.00001,
         1.00001,
         1.00001,
@@ -485,20 +484,21 @@
         0.99996,
         0.99999,
         0.99996,
+        1.0,
         1.0
       ],
       "chart_read": {
         "read_30m": "Range building",
-        "read_1h": "Trend intact",
+        "read_1h": "Trend trying to hold",
         "timing": "LATE",
         "change_30m_pct": 0.0,
-        "change_1h_pct": 0.0
+        "change_1h_pct": -0.001
       },
       "momentum_quality": "STABLE",
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.202,
+      "relative_strength_pct": 0.208,
       "distance_from_vwap_pct": 0.003,
       "composite_score": 50,
       "environment_score": 50,
@@ -554,7 +554,7 @@
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
       "vwap": 1.0003,
-      "macd_hist_15m": 9.804430381267445e-06,
+      "macd_hist_15m": 7.152776937086012e-06,
       "close_30m": [
         1.0003,
         1.0003,
@@ -588,7 +588,6 @@
         1.0003
       ],
       "close_1h": [
-        1.00011,
         1.00014,
         1.00014,
         1.00014,
@@ -625,6 +624,7 @@
         1.00011,
         1.00011,
         1.00011,
+        1.0003,
         1.0003,
         1.0003,
         1.0003
@@ -634,13 +634,13 @@
         "read_1h": "Trend intact",
         "timing": "LATE",
         "change_30m_pct": 0.0,
-        "change_1h_pct": 0.019
+        "change_1h_pct": 0.016
       },
       "momentum_quality": "PEAKING",
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.198,
+      "relative_strength_pct": 0.204,
       "distance_from_vwap_pct": 0.0,
       "composite_score": 38,
       "environment_score": 38,
@@ -695,10 +695,9 @@
       ],
       "rsi_1m": 83.333,
       "rsi_5m": 74.306,
-      "vwap": 0.045261421739525916,
+      "vwap": 0.045263551215880285,
       "macd_hist_15m": 5.7198309763132195e-05,
       "close_30m": [
-        0.04568,
         0.04549,
         0.04549,
         0.04549,
@@ -721,6 +720,7 @@
         0.0456,
         0.0456,
         0.04568,
+        0.0457,
         0.0457,
         0.0457,
         0.0457,
@@ -769,21 +769,21 @@
         0.04493,
         0.04543,
         0.045,
-        0.0457
+        0.04534
       ],
       "chart_read": {
-        "read_30m": "Range building",
+        "read_30m": "Building upward",
         "read_1h": "Trend intact",
         "timing": "LATE",
-        "change_30m_pct": 0.044,
-        "change_1h_pct": 7.026
+        "change_30m_pct": 0.462,
+        "change_1h_pct": 6.183
       },
       "momentum_quality": "PEAKING",
       "trap_risk": "MEDIUM",
       "volatility_state": "COMPRESSING",
       "structure_type": "BASE",
-      "relative_strength_pct": 1.754,
-      "distance_from_vwap_pct": 0.969,
+      "relative_strength_pct": 1.76,
+      "distance_from_vwap_pct": 0.964,
       "composite_score": 33,
       "environment_score": 33,
       "environment_tier": "UNKNOWN",
@@ -804,7 +804,7 @@
       "price": 0.9999,
       "change_24h_pct": 0.0,
       "trigger_score": 40,
-      "trade_score": 14,
+      "trade_score": 20,
       "confidence": 40,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -820,7 +820,7 @@
         "rsi_ok": false,
         "macd_turn_up": false,
         "trend_ok": false,
-        "volume_spike": false,
+        "volume_spike": true,
         "structure_break": false,
         "momentum_building": false,
         "momentum_failing": false,
@@ -832,7 +832,6 @@
         "no impulse",
         "no pullback",
         "trend not aligned",
-        "no volume spike",
         "no structure break",
         "RSI<55.0 or RSI>72.0 (RSI=100.00)",
         "15m MACD hist < 0"
@@ -926,7 +925,7 @@
       "trap_risk": "MEDIUM",
       "volatility_state": "UNKNOWN",
       "structure_type": "RANGE",
-      "relative_strength_pct": 0.198,
+      "relative_strength_pct": 0.204,
       "distance_from_vwap_pct": 0.0,
       "composite_score": 25,
       "environment_score": 25,
@@ -948,7 +947,7 @@
       "price": 0.9999,
       "change_24h_pct": 0.0,
       "trigger_score": 30,
-      "trade_score": 21,
+      "trade_score": 26,
       "confidence": 30,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -964,7 +963,7 @@
         "rsi_ok": false,
         "macd_turn_up": false,
         "trend_ok": false,
-        "volume_spike": false,
+        "volume_spike": true,
         "structure_break": false,
         "momentum_building": false,
         "momentum_failing": true,
@@ -976,7 +975,6 @@
         "no impulse",
         "VWAP not accepted",
         "trend not aligned",
-        "no volume spike",
         "no structure break",
         "momentum weakening",
         "RSI<55.0 or RSI>72.0 (RSI=50.00)",
@@ -985,7 +983,7 @@
       ],
       "rsi_1m": 50.0,
       "rsi_5m": 50.0,
-      "vwap": 0.9999005479747799,
+      "vwap": 0.9999014319326551,
       "macd_hist_15m": -1.3700123038482987e-07,
       "close_30m": [
         0.9999,
@@ -1015,7 +1013,7 @@
         0.9999,
         0.9999,
         0.9999,
-        0.9999,
+        1.0,
         1.0,
         0.9999
       ],
@@ -1059,20 +1057,20 @@
         0.9999,
         0.9999,
         0.9999,
-        1.0
+        0.9999
       ],
       "chart_read": {
         "read_30m": "Range building",
         "read_1h": "No clean 1H trend",
         "timing": "WAIT",
         "change_30m_pct": 0.0,
-        "change_1h_pct": 0.01
+        "change_1h_pct": 0.0
       },
       "momentum_quality": "WEAKENING",
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.198,
+      "relative_strength_pct": 0.204,
       "distance_from_vwap_pct": -0.0,
       "composite_score": 39,
       "environment_score": 39,
@@ -1215,7 +1213,7 @@
       "trap_risk": "MEDIUM",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.198,
+      "relative_strength_pct": 0.204,
       "distance_from_vwap_pct": 0.067,
       "composite_score": 30,
       "environment_score": 30,
@@ -1307,7 +1305,6 @@
         1.0002
       ],
       "close_1h": [
-        1.0,
         1.0002,
         1.0004,
         1.0001,
@@ -1346,6 +1343,7 @@
         1.0002,
         1.0002,
         1.0003,
+        1.0002,
         1.0002
       ],
       "chart_read": {
@@ -1353,13 +1351,13 @@
         "read_1h": "Trend intact",
         "timing": "LATE",
         "change_30m_pct": 0.0,
-        "change_1h_pct": 0.02
+        "change_1h_pct": 0.0
       },
       "momentum_quality": "PEAKING",
       "trap_risk": "MEDIUM",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.188,
+      "relative_strength_pct": 0.194,
       "distance_from_vwap_pct": 0.008,
       "composite_score": 30,
       "environment_score": 30,
