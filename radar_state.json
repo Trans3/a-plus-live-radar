@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-15T19:38:09",
-  "cycle_number": 3090,
+  "generated_at": "2026-05-15T19:39:01",
+  "cycle_number": 3091,
   "active_pairs": 9,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -8,10 +8,10 @@
     "reason": "BTC lacks clean higher-timeframe control",
     "market_phase": "CHOP",
     "volatility_state": "NORMAL",
-    "price_5m": 79035.1,
-    "price_15m": 79035.1,
-    "price_60m": 79035.1,
-    "rsi_15m": 44.54,
+    "price_5m": 79035.2,
+    "price_15m": 79035.2,
+    "price_60m": 79035.2,
+    "rsi_15m": 44.55,
     "rsi_60m": 29.87,
     "above_vwap_15m": false,
     "above_vwap_60m": false
@@ -266,10 +266,9 @@
       ],
       "rsi_1m": 86.667,
       "rsi_5m": 80.916,
-      "vwap": 77.66292265478309,
+      "vwap": 77.66301176615363,
       "macd_hist_15m": 0.11690120331096382,
       "close_30m": [
-        78.39,
         78.39,
         78.3,
         78.28,
@@ -297,6 +296,7 @@
         78.62,
         78.62,
         78.62,
+        78.56,
         78.56,
         78.56
       ],
@@ -411,7 +411,6 @@
       "macd_hist_15m": 6.095990223694749e-06,
       "close_30m": [
         1.0,
-        1.0,
         0.9999,
         1.0,
         0.9999,
@@ -439,6 +438,7 @@
         0.9999,
         0.9999,
         0.9999,
+        1.0,
         1.0
       ],
       "close_1h": [
@@ -694,10 +694,9 @@
       ],
       "rsi_1m": 44.0,
       "rsi_5m": 55.072,
-      "vwap": 44.2215673251225,
+      "vwap": 44.22149294886161,
       "macd_hist_15m": 0.004486119864562876,
       "close_30m": [
-        44.15,
         44.18,
         44.18,
         44.15,
@@ -726,6 +725,7 @@
         44.22,
         44.22,
         44.22,
+        44.21,
         44.21
       ],
       "close_1h": [
@@ -774,7 +774,7 @@
         "read_30m": "Range building",
         "read_1h": "Strong but needs proof",
         "timing": "WAIT",
-        "change_30m_pct": 0.136,
+        "change_30m_pct": 0.068,
         "change_1h_pct": 13.446
       },
       "momentum_quality": "WEAKENING",
@@ -948,7 +948,7 @@
       "price": 0.157441,
       "change_24h_pct": 6.495,
       "trigger_score": 25,
-      "trade_score": 41,
+      "trade_score": 50,
       "confidence": 25,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -965,7 +965,7 @@
         "macd_turn_up": false,
         "trend_ok": true,
         "volume_spike": false,
-        "structure_break": false,
+        "structure_break": true,
         "momentum_building": true,
         "momentum_failing": false,
         "trap_risk_high": false,
@@ -977,17 +977,15 @@
         "VWAP not accepted",
         "no pullback",
         "no volume spike",
-        "no structure break",
         "RSI<55.0 or RSI>72.0 (RSI=77.85)",
         "5m RSI<53.5 (RSI=51.16)",
         "15m MACD hist < 0"
       ],
       "rsi_1m": 77.849,
       "rsi_5m": 51.161,
-      "vwap": 0.15777955971432037,
+      "vwap": 0.1577679968193285,
       "macd_hist_15m": -9.852645938330224e-05,
       "close_30m": [
-        0.158057,
         0.157808,
         0.157808,
         0.158072,
@@ -1015,6 +1013,7 @@
         0.157041,
         0.156993,
         0.157209,
+        0.157441,
         0.157441,
         0.157441
       ],
@@ -1064,7 +1063,7 @@
         "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "LATE",
-        "change_30m_pct": -0.39,
+        "change_30m_pct": -0.233,
         "change_1h_pct": 23.661
       },
       "momentum_quality": "BUILDING",
@@ -1072,7 +1071,7 @@
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
       "relative_strength_pct": -0.187,
-      "distance_from_vwap_pct": -0.215,
+      "distance_from_vwap_pct": -0.207,
       "composite_score": 50,
       "environment_score": 50,
       "environment_tier": "UNKNOWN",
@@ -1083,7 +1082,7 @@
       "veteran_decision": "WAIT",
       "position_size": "NO TRADE",
       "decision_reason": "near VWAP/value",
-      "caption": "a strong move just happened, it is still trying to prove structure, and buyers have not fully taken VWAP control yet."
+      "caption": "a strong move just happened, it is breaking structure upward, and buyers have not fully taken VWAP control yet."
     },
     {
       "rank": 7,
@@ -1424,7 +1423,6 @@
       "vwap": 0.045440236458037374,
       "macd_hist_15m": -2.3745914347593933e-05,
       "close_30m": [
-        0.04582,
         0.04587,
         0.04592,
         0.04592,
@@ -1452,6 +1450,7 @@
         0.04569,
         0.0455,
         0.0455,
+        0.04527,
         0.04527,
         0.04527
       ],
@@ -1501,7 +1500,7 @@
         "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "EARLY",
-        "change_30m_pct": -1.2,
+        "change_30m_pct": -1.308,
         "change_1h_pct": 6.417
       },
       "momentum_quality": "FAILING",
