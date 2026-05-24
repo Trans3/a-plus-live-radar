@@ -140,34 +140,27 @@ def load_state():
 
     raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json"
 
-try:
-    r = requests.get(
-        raw_url,
-        headers={"User-Agent": "a-plus-radar-app"},
-        timeout=10,
-    )
+    try:
+        r = requests.get(
+            raw_url,
+            headers={"User-Agent": "a-plus-radar-app"},
+            timeout=10,
+        )
 
-    if r.status_code == 200:
-        return r.json(), True, "cloud: GitHub raw radar_state.json"
+        if r.status_code == 200:
+            return r.json(), True, "cloud: GitHub raw radar_state.json"
 
-    cloud_error = f"GitHub raw HTTP {r.status_code}: {r.text[:120]}"
+        cloud_error = f"GitHub raw HTTP {r.status_code}: {r.text[:120]}"
 
-except Exception as e:
-    cloud_error = f"cloud read error: {e}"
+    except Exception as e:
+        cloud_error = f"cloud read error: {e}"
 
     local = read_local()
-    if local:
-        data, ok, src = local
-        return data, ok, f"{src}; cloud failed: {cloud_error}"
+        if local:
+            data, ok, src = local
+            return data, ok, f"{src}; cloud failed: {cloud_error}"
 
     return sample_state(), False, cloud_error
-
-    local = read_local()
-if local:
-    data, ok, src = local
-    return data, ok, f"{src}; cloud failed: {cloud_error}"
-
-return sample_state(), False, cloud_error
 
 
 
