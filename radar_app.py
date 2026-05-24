@@ -23,6 +23,37 @@ st.set_page_config(
 )
 
 CSS = """
+table{
+    font-size:14px;
+}
+.billboard-table{
+    width:100%;
+    overflow-x:auto;
+    display:block;
+}
+.sticky-upgrade{
+    position:sticky;
+    top:0;
+    z-index:999;
+    background:#061018;
+    border:1px solid #FFD93D;
+    border-radius:12px;
+    padding:12px 16px;
+    margin-bottom:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.sticky-btn{
+    background:#FFD93D;
+    color:#000;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:900;
+}
 <style>
 :root{
   --bg:#05080C; --panel:#091119; --panel2:#071017; --line:#22303A;
@@ -136,7 +167,7 @@ def load_state():
         cfg = settings()
 
     raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json"
-
+        st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
@@ -639,6 +670,21 @@ def render_billboard_dashboard(state):
         twenty_four = twenty_four[:5]
     note = billboard.get("note", "1H board is primary. 24H board is context only.")
     st.markdown(f"""
+    <div class="sticky-upgrade">
+    <div>
+        <div style="font-weight:900;color:#FFD93D;">
+            PREBULL Momentum Detected
+        </div>
+        <div class="small">
+            Unlock execution reasoning, invalidations, and analytics engine.
+        </div>
+    </div>
+
+    <div class="sticky-btn">
+        Upgrade Access
+    </div>
+</div>
+""", unsafe_allow_html=True)
     <div class="section-title"><span>★ Kraken Billboard ★</span></div>
     <div class="notice">{note}</div>
     <div class="billboard-grid">
@@ -1056,6 +1102,9 @@ st.markdown(f"""
 <div class="header">
   <div class="header-left">
     <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> DECISION RADAR</div><div class="subtitle">Momentum execution radar built to reduce emotional trading and identify high-probability continuation setups.</div></div></div>
+    <div class="small">
+Built using live Kraken market data, momentum structure analysis, VWAP positioning, and execution-based filtering.
+</div>
     <div class="meta"><div>📅 <b>{str(updated)[:10] or 'waiting'}</b></div><div>🕒 <b>{str(updated)[11:19] or '--:--:--'}</b></div><div>🔄 Cycle: <b>{cycle}</b></div><div>🎯 Active Pairs: <b>{active}</b></div></div>
 <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
   <div class="cta-main">⚡ LIVE RADAR ACTIVE</div>
