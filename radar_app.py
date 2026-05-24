@@ -23,6 +23,7 @@ st.set_page_config(
 )
 
 CSS = """
+</style>
 table{
     font-size:14px;
 }
