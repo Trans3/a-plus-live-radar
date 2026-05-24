@@ -1119,5 +1119,5 @@ st.markdown(f"""
     <div class="read-row"><div class="read-key" style="color:#35A7FF;">Timing</div><div class="read-desc">EXECUTE ZONE = next few minutes only. WAIT = let setup form. TOO LATE = skip chase.</div></div>
   </div>
 </div>
-<div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Expected ranges are estimates, not guarantees. Trade risk first.</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
+<span class="left">🏆 Built to reduce emotional trading and improve momentum execution discipline.</span>
 """, unsafe_allow_html=True)
