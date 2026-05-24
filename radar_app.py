@@ -1001,7 +1001,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
           <div class="tool-title" style="margin-top:14px;color:{timing_color(timing)};">Timing Gauge</div>
           <div class="timing-track"><div class="timing-marker" style="left:{pos}%;background:{timing_color(timing)};box-shadow:0 0 12px {timing_color(timing)};"></div></div>
           <div class="timing-labels"><span>Early</span><span>On Time</span><span>Late</span></div>
-          <div class="next-box" style="margin-top:12px;"><b>Simple answer:</b> <span class="{clock['class']}">{clock['status']}</span> — {action_text(setup, timing)}</div>
+          <div class="next-box" style="margin-top:12px;"><b>Simple answer:</b> <span class="{clock['class']}">{clock['status']}</span> | {action_text(setup, timing)}</div>
           <div class="next-box" style="margin-top:8px;"><b>Why:</b> {why_text(setup)}</div>
           <div class="next-box fail" style="margin-top:8px;">Fail condition: VWAP loss / lower low invalidates the idea.</div>
         </div>
