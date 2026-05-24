@@ -632,6 +632,9 @@ def render_billboard_dashboard(state):
     billboard = (state or {}).get("billboard", {}) or {}
     one_hour = billboard.get("one_hour", []) or []
     twenty_four = billboard.get("twenty_four_hour", []) or []
+    if membership == "Free":
+        one_hour = one_hour[:5]
+        twenty_four = twenty_four[:5]
     note = billboard.get("note", "1H board is primary. 24H board is context only.")
     st.markdown(f"""
     <div class="section-title"><span>★ Kraken Billboard ★</span></div>
