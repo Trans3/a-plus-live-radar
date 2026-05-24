@@ -985,7 +985,7 @@ membership = st.radio(
     label_visibility="collapsed",
     key="membership_view_main_v1",
 )
-    cta_text = "Get Full Radar"
+cta_text = "Get Full Radar"
 
 # Prominent refresh control for the main page (sidebar can stay collapsed).
 st.markdown('<div class="refresh-row"><span>Live data source refreshes from GitHub JSON.</span></div>', unsafe_allow_html=True)
