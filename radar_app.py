@@ -724,7 +724,7 @@ def has_tier(tier, required):
 def locked_panel(title, required_tier, body, cta="Get Full Radar"):
     st.markdown(f"""
     <div class="proof-panel" style="margin:12px 0 18px;">
-      <div class="proof-title">🔒 {title}</div>
+      <div class="proof-title">LOCK {title}</div>
       <div class="small">{body}</div>
       <div style="margin-top:12px;color:#FFD93D;font-weight:1000;">Requires {required_tier} · {cta}</div>
     </div>
