@@ -812,10 +812,10 @@ def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="clo
     <div class="section-title"><span> Performance Dashboard </span></div>
     <div class="perf-grid">
       <div class="perf-card"><div class="perf-k">Tracked Signals</div><div class="perf-v">{total}</div><div class="perf-sub">Scanner-side history</div></div>
-      <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{hit1_rate:.f}%</div><div class="perf-sub">Since tracking started</div></div>
-      <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{hit2_rate:.f}%</div><div class="perf-sub">Momentum target test</div></div>
-      <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{avg_max:+.f}%</div><div class="perf-sub">Observed after alert</div></div>
-      <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.f}% max</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{hit1_rate:.1f}%</div><div class="perf-sub">Since tracking started</div></div>
+      <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{hit2_rate:.2f}%</div><div class="perf-sub">Momentum target test</div></div>
+      <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{avg_max:+.3f}%</div><div class="perf-sub">Observed after alert</div></div>
+      <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.1f}% max</div></div>
     </div>
     <div class="notice">{source_note}. Updated: {updated or 'waiting for scanner'}.</div>
     """, unsafe_allow_html=True)
