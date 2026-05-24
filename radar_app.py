@@ -136,17 +136,22 @@ def load_state():
         if local:
             return local
 
-    cfg = settings()
-    url = f"https://api.github.com/repos/{cfg['repo']}/contents/{cfg['path']}"
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "a-plus-radar-app", "X-GitHub-Api-Version": "2022-11-28"}
-    if cfg["token"]:
-        headers["Authorization"] = f"Bearer {cfg['token']}"
+        cfg = settings()
+
+    raw_url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['branch']}/{cfg['path']}?t={time.time()}"
+
     try:
-        r = requests.get(url, headers=headers, params={"ref": cfg["branch"], "_": time.time()}, timeout=10)
+        r = requests.get(
+            raw_url,
+            headers={"User-Agent": "a-plus-radar-app"},
+            timeout=10,
+        )
+
         if r.status_code == 200:
-            raw = base64.b64decode((r.json() or {}).get("content", "")).decode("utf-8")
-            return json.loads(raw), True, f"cloud:{cfg['repo']}"
-        cloud_error = f"GitHub {r.status_code}: {r.text[:120]}"
+            return r.json(), True, f"cloud: GitHub raw {cfg['repo']}/{cfg['path']}"
+
+        cloud_error = f"GitHub raw HTTP {r.status_code}: {r.text[:120]}"
+
     except Exception as e:
         cloud_error = f"cloud read error: {e}"
 
@@ -154,6 +159,7 @@ def load_state():
     if local:
         data, ok, src = local
         return data, ok, f"{src}; cloud failed: {cloud_error}"
+
     return sample_state(), False, cloud_error
 
 
