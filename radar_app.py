@@ -606,7 +606,7 @@ def _render_proof_bucket(title, rows, limit=6):
 def render_proof_analytics(summary):
     proof = summary.get("proof_read", {}) or {}
     html = f"""
-    <div class="section-title"><span>★ Proof Analytics ★</span></div>
+    <div class="section-title"><span> Proof Analytics </span></div>
     <div class="decision-banner">
       <div class="decision-tile"><div class="tile-k">Best Regime</div><div class="tile-v" style="color:#78FF2E;">{proof.get('best_regime','UNKNOWN')}</div><div class="tile-sub">Directional until sample size grows.</div></div>
       <div class="decision-tile"><div class="tile-k">Best Timing</div><div class="tile-v" style="color:#35A7FF;">{proof.get('best_timing','UNKNOWN')}</div><div class="tile-sub">Use this to refine alerts.</div></div>
@@ -737,7 +737,7 @@ def simple_setup_action(setup, market, updated):
 
 
 def render_top5_simple(setups, market, updated, membership):
-    st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title"><span> Top 5 Decision Setups </span></div>', unsafe_allow_html=True)
 
     if not setups:
         st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
@@ -809,7 +809,7 @@ def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="clo
     source_note = "Persistent scanner-side history" if perf_ok else f"Performance source issue: {perf_source}"
 
     st.markdown(f"""
-    <div class="section-title"><span>★ Performance Dashboard ★</span></div>
+    <div class="section-title"><span> Performance Dashboard </span></div>
     <div class="perf-grid">
       <div class="perf-card"><div class="perf-k">Tracked Signals</div><div class="perf-v">{total}</div><div class="perf-sub">Scanner-side history</div></div>
       <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{hit1_rate:.0f}%</div><div class="perf-sub">Since tracking started</div></div>
@@ -1131,7 +1131,7 @@ if not ok:
 render_billboard_dashboard(state)
 
 if has_tier(membership, "Premium"):
-    st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title"><span> Top 5 Decision Setups </span></div>', unsafe_allow_html=True)
     if setups:
         for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
             render_setup_card(setup, i, market, updated)
