@@ -1090,7 +1090,7 @@ st.markdown(f"""
     <div class="metric-row"><span>15M VWAP</span><b>{'YES' if btc.get('above_vwap_15m') else 'NO'}</b></div>
     <div class="metric-row"><span>1H VWAP</span><b>{'YES' if btc.get('above_vwap_60m') or btc.get('above_vwap_1h') else 'NO'}</b></div>
   </div>
-  <div class="bottom-panel"><div class="panel-title">Sector Flow</div>{sector_rows}<br/><div class="panel-title">State Counts</div>{counts_rows}</div>
+  <div class="bottom-panel"><div class="panel-title">State Counts</div>{counts_rows}</div>
   <div class="bottom-panel">
     <div class="panel-title">How To Read This</div>
     <div class="read-row"><div class="read-key" style="color:#78FF2E;">Projected</div><div class="read-desc">Estimated move range from volatility, impulse, scores, VWAP, and BTC regime.</div></div>
@@ -1101,37 +1101,3 @@ st.markdown(f"""
 </div>
 <div class="footer"><div><span class="left">🏆 Focus. Discipline. Execution.</span><br/><span class="small">Expected ranges are estimates, not guarantees. Trade risk first.</span></div><div class="small">Not financial advice. Live market-read journal.</div></div>
 """, unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-# === A+ SCANNER V3 LEADERBOARD CORE ===
-# Full upgrade:
-# - Keeps watch leaderboard as the core engine
-# - Adds rank-change tracking on leaderboard
-# - Adds time-on-board / cycle streak tracking
-# - Adds fresh breakout markers
-# - Adds top-3 summary line each cycle
-# - Premium alerts now promote strong leaderboard names
-# - Computes BTC regime once per cycle
-# - Keeps trend / volume / structure / acceleration filters
-# - Keeps scanner_log.txt logging
-# - v19 adds composite score, veteran decision, position size, relative strength
-# - v21 adds proof analytics buckets: regime, timing, sector, tag, RSI, VWAP distance, setup type, hour
-#
-# Notes:
-# - Discord main webhook = promoted leaderboard / TRADE READY alerts only
-# - Watch webhook = leaderboard/watch list pings
-# - Market cap gate uses CoinGecko cache with stale-cache fallback
-
-import os
-import time
-import math
-import json
-import base64
-import hashlib
-import re
-import datetime as dt
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
-import traceback
-
-import requests
-import numpy as np
