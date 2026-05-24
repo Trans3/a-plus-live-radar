@@ -82,11 +82,8 @@ def secret_or_env(name: str, default: str = "") -> str:
 
 
 def normalize_repo(repo: str) -> str:
-    """Protect against old Streamlit secrets/env using Trans3 instead of Trans3o."""
-    repo = (repo or DEFAULT_GITHUB_RADAR_REPO).strip()
-    if repo == "Trans3/a-plus-live-radar":
-        return "Trans3o/a-plus-live-radar"
-    return repo
+    """Keep the configured GitHub repo stable."""
+    return (repo or DEFAULT_GITHUB_RADAR_REPO).strip()
 
 
 def settings():
@@ -183,9 +180,8 @@ def sample_performance():
 @st.cache_data(ttl=8, show_spinner=False)
 def load_performance():
     """Cloud-first loader for radar_performance.json."""
-    cfg = settings()
     prefer_local = secret_or_env("PREFER_LOCAL_STATE", "0") == "1"
-    local_path = Path(cfg.get("performance_path", DEFAULT_GITHUB_PERFORMANCE_PATH))
+    local_path = Path(DEFAULT_GITHUB_PERFORMANCE_PATH)
 
     def read_local():
         if local_path.exists():
@@ -200,16 +196,20 @@ def load_performance():
         if local:
             return local
 
-    url = f"https://api.github.com/repos/{cfg['repo']}/contents/{cfg.get('performance_path', DEFAULT_GITHUB_PERFORMANCE_PATH)}"
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "a-plus-radar-app", "X-GitHub-Api-Version": "2022-11-28"}
-    if cfg["token"]:
-        headers["Authorization"] = f"Bearer {cfg['token']}"
+    raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_performance.json"
+
     try:
-        r = requests.get(url, headers=headers, params={"ref": cfg["branch"]}, timeout=10)
+        r = requests.get(
+            raw_url,
+            headers={"User-Agent": "a-plus-radar-app"},
+            timeout=10,
+        )
+
         if r.status_code == 200:
-            raw = base64.b64decode((r.json() or {}).get("content", "")).decode("utf-8")
-            return json.loads(raw), True, f"cloud:{cfg['repo']}"
-        cloud_error = f"GitHub performance {r.status_code}: {r.text[:120]}"
+            return r.json(), True, "cloud: GitHub raw radar_performance.json"
+
+        cloud_error = f"GitHub performance raw HTTP {r.status_code}: {r.text[:120]}"
+
     except Exception as e:
         cloud_error = f"cloud performance read error: {e}"
 
@@ -217,6 +217,7 @@ def load_performance():
     if local:
         data, ok, src = local
         return data, ok, f"{src}; cloud failed: {cloud_error}"
+
     return sample_performance(), False, cloud_error
 
 def state_color(state):
@@ -654,6 +655,96 @@ def render_billboard_dashboard(state):
     """, unsafe_allow_html=True)
 
 
+
+def tier_rank(tier):
+    ranks = {
+        "Free": 0,
+        "Basic": 1,
+        "Premium": 2,
+        "Pro Analytics": 3,
+    }
+    return ranks.get(tier, 0)
+
+
+def has_tier(tier, required):
+    return tier_rank(tier) >= tier_rank(required)
+
+
+def locked_panel(title, required_tier, body, cta="Get Full Radar"):
+    st.markdown(f"""
+    <div class="proof-panel" style="margin:12px 0 18px;">
+      <div class="proof-title">🔒 {title}</div>
+      <div class="small">{body}</div>
+      <div style="margin-top:12px;color:#FFD93D;font-weight:1000;">Requires {required_tier} · {cta}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def simple_setup_action(setup, market, updated):
+    clock = execution_clock(setup, market, updated)
+    return clock.get("status", "WATCH"), clock.get("window", "Needs trigger"), clock.get("message", "Wait for clean confirmation.")
+
+
+def render_top5_simple(setups, market, updated, membership):
+    st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
+
+    if not setups:
+        st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
+        return
+
+    rows = []
+    for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
+        pair = setup.get("pair", "UNKNOWN")
+        coin = setup.get("coin") or str(pair).split("/")[0]
+        tag = tag_for(setup)
+        cr = setup.get("chart_read", {}) or {}
+        timing = cr.get("timing", setup.get("entry_readiness_label", "WATCH"))
+        action, window, msg = simple_setup_action(setup, market, updated)
+        trigger = int(setup.get("trigger_score", 0) or 0)
+        trade = int(setup.get("trade_score", 0) or 0)
+        confidence = int(setup.get("confidence", 0) or 0)
+
+        if membership == "Free":
+            detail = "Upgrade for reason, entry zone, invalidation, and proof analytics."
+            scores = f"T{trigger}"
+        else:
+            detail = why_text(setup)
+            scores = f"T{trigger} / TR{trade} / C{confidence}"
+
+        rows.append(f"""
+        <div class="decision-tile" style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+            <div>
+              <div class="tile-k">#{i} · {tag}</div>
+              <div class="tile-v" style="font-size:26px;color:#F5F7FA;">{coin} <span class="small">{pair}</span></div>
+            </div>
+            <div style="text-align:right;">
+              <div class="tile-k">Action</div>
+              <div class="tile-v" style="font-size:22px;color:{timing_color(timing)};">{action}</div>
+              <div class="small">{window} · {scores}</div>
+            </div>
+          </div>
+          <div class="tile-sub">{msg}</div>
+          <div class="small" style="margin-top:6px;">{detail}</div>
+        </div>
+        """)
+
+    st.markdown("<div>" + "".join(rows) + "</div>", unsafe_allow_html=True)
+
+    if membership == "Free":
+        locked_panel(
+            "Full setup reasoning locked",
+            "Basic",
+            "Free view shows the top five names and simple action labels. Basic unlocks the reasoning behind each setup.",
+        )
+    elif membership == "Basic":
+        locked_panel(
+            "Execution details locked",
+            "Premium",
+            "Premium unlocks entry zone, invalidation, target estimate, environment score, execution clock, and decision chart.",
+        )
+
+
 def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="cloud"):
     perf_state = perf_state or sample_performance()
     summary = perf_state.get("summary", {}) or {}
@@ -882,6 +973,13 @@ with st.sidebar:
     manual = st.button("Refresh Now", key="sidebar_refresh_v22")
     reset_perf = st.button("Clear app cache", key="clear_app_cache_v22")
     st.caption("Scanner → GitHub JSON → Streamlit decision report")
+    membership = st.selectbox(
+        "Membership View",
+        ["Free", "Basic", "Premium", "Pro Analytics"],
+        index=0,
+        key="membership_view_v1",
+    )
+    cta_text = "Get Full Radar"
 
 # Prominent refresh control for the main page (sidebar can stay collapsed).
 st.markdown('<div class="refresh-row"><span>Live data source refreshes from GitHub JSON.</span></div>', unsafe_allow_html=True)
@@ -948,16 +1046,26 @@ if not ok:
 
 render_billboard_dashboard(state)
 
-render_performance_dashboard(perf_state, perf_ok, perf_source)
-
-st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
-if setups:
-    for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
-        render_setup_card(setup, i, market, updated)
+if has_tier(membership, "Premium"):
+    st.markdown('<div class="section-title"><span>★ Top 5 Decision Setups ★</span></div>', unsafe_allow_html=True)
+    if setups:
+        for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
+            render_setup_card(setup, i, market, updated)
+    else:
+        st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
+        for i in range(1, TOP_SETUP_LIMIT + 1):
+            render_setup_card({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i, market, updated)
 else:
-    st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
-    for i in range(1,TOP_SETUP_LIMIT+1):
-        render_setup_card({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i, market, updated)
+    render_top5_simple(setups, market, updated, membership)
+
+if has_tier(membership, "Pro Analytics"):
+    render_performance_dashboard(perf_state, perf_ok, perf_source)
+else:
+    locked_panel(
+        "Proof / Backtesting Analytics",
+        "Pro Analytics",
+        "Regime, timing, RSI zone, VWAP distance, setup type, sector, hour, and performance tables stay behind the analytics tier.",
+    )
 
 sector_rows = "".join([f'<div class="sector-row"><span>{k}</span><span>{fires(v)}</span></div>' for k,v in sorted(sector_counts.items(), key=lambda x:x[1], reverse=True)[:6]]) or '<div class="small">No sector flow yet.</div>'
 counts_rows = "".join([f'<div class="metric-row"><span>{k}</span><b>{v}</b></div>' for k,v in state_counts.items()]) or '<div class="small">No state counts yet.</div>'
