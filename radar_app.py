@@ -815,7 +815,7 @@ def render_performance_dashboard(perf_state=None, perf_ok=True, perf_source="clo
       <div class="perf-card"><div class="perf-k">Hit +1%</div><div class="perf-v">{hit1_rate:.f}%</div><div class="perf-sub">Since tracking started</div></div>
       <div class="perf-card"><div class="perf-k">Hit +2%</div><div class="perf-v">{hit2_rate:.f}%</div><div class="perf-sub">Momentum target test</div></div>
       <div class="perf-card"><div class="perf-k">Avg Max Move</div><div class="perf-v">{avg_max:+.f}%</div><div class="perf-sub">Observed after alert</div></div>
-      <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.2f}% max</div></div>
+      <div class="perf-card"><div class="perf-k">Best Signal</div><div class="perf-v" style="font-size:22px;">{best_pair}</div><div class="perf-sub">{best_gain:+.f}% max</div></div>
     </div>
     <div class="notice">{source_note}. Updated: {updated or 'waiting for scanner'}.</div>
     """, unsafe_allow_html=True)
