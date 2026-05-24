@@ -692,7 +692,6 @@ def render_top5_simple(setups, market, updated, membership):
         st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
         return
 
-    rows = []
     for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
         pair = setup.get("pair", "UNKNOWN")
         coin = setup.get("coin") or str(pair).split("/")[0]
@@ -711,26 +710,25 @@ def render_top5_simple(setups, market, updated, membership):
             detail = why_text(setup)
             scores = f"T{trigger} / TR{trade} / C{confidence}"
 
-        rows.append(f"""
-        <div class="decision-tile" style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-            <div>
-              <div class="tile-k">#{i} · {tag}</div>
-              <div class="tile-v" style="font-size:26px;color:#F5F7FA;">{coin} <span class="small">{pair}</span></div>
-            </div>
-            <div style="text-align:right;">
-              <div class="tile-k">Action</div>
-              <div class="tile-v" style="font-size:22px;color:{timing_color(timing)};">{action}</div>
-              <div class="small">{window} · {scores}</div>
-            </div>
-          </div>
-          <div class="tile-sub">{msg}</div>
-          <div class="small" style="margin-top:6px;">{detail}</div>
-        </div>
-        """)
-
-    html = "<div class='simple-top5'>" + "".join(rows) + "</div>"
-    st.markdown(html, unsafe_allow_html=True)
+        # Keep each HTML block starting at column 0. Indented HTML can render as a code block in Streamlit Markdown.
+        card_html = (
+            '<div class="decision-tile" style="margin-bottom:10px;">'
+            '<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">'
+            '<div>'
+            f'<div class="tile-k">#{i} · {tag}</div>'
+            f'<div class="tile-v" style="font-size:26px;color:#F5F7FA;">{coin} <span class="small">{pair}</span></div>'
+            '</div>'
+            '<div style="text-align:right;">'
+            '<div class="tile-k">Action</div>'
+            f'<div class="tile-v" style="font-size:22px;color:{timing_color(timing)};">{action}</div>'
+            f'<div class="small">{window} · {scores}</div>'
+            '</div>'
+            '</div>'
+            f'<div class="tile-sub">{msg}</div>'
+            f'<div class="small" style="margin-top:6px;">{detail}</div>'
+            '</div>'
+        )
+        st.markdown(card_html, unsafe_allow_html=True)
 
     if membership == "Free":
         locked_panel(
