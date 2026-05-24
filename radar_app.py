@@ -138,7 +138,7 @@ def load_state():
 
         cfg = settings()
 
-    raw_url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['branch']}/{cfg['path']}?t={time.time()}"
+    raw_url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['branch']}/{cfg['path']}"
 
     try:
         r = requests.get(
