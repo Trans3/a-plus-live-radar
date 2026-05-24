@@ -972,12 +972,19 @@ with st.sidebar:
     manual = st.button("Refresh Now", key="sidebar_refresh_v22")
     reset_perf = st.button("Clear app cache", key="clear_app_cache_v22")
     st.caption("Scanner → GitHub JSON → Streamlit decision report")
-    membership = st.selectbox(
-        "Membership View",
-        ["Free", "Basic", "Premium", "Pro Analytics"],
-        index=0,
-        key="membership_view_v1",
-    )
+
+    st.markdown(
+    '<div style="color:#FFD93D;font-weight:1000;text-transform:uppercase;margin:10px 0 6px;">Membership View</div>',
+    unsafe_allow_html=True
+)
+
+membership = st.radio(
+    "Membership View",
+    ["Free", "Basic", "Premium", "Pro Analytics"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="membership_view_main_v1",
+)
     cta_text = "Get Full Radar"
 
 # Prominent refresh control for the main page (sidebar can stay collapsed).
