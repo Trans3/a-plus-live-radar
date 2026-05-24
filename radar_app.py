@@ -684,7 +684,7 @@ def render_billboard_dashboard(state):
         Upgrade Access
     </div>
 </div>
-        st.markdown(f"""
+       
         <div class="section-title"><span>Kraken Billboard</span></div>
         <div class="notice">{note}</div>
         <div class="billboard-grid">
@@ -703,7 +703,7 @@ def render_billboard_dashboard(state):
         </table>
       </div>
     </div>
-
+    """, unsafe_allow_html=True)
 
 
 
