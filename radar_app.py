@@ -156,9 +156,9 @@ def load_state():
         cloud_error = f"cloud read error: {e}"
 
     local = read_local()
-        if local:
-            data, ok, src = local
-            return data, ok, f"{src}; cloud failed: {cloud_error}"
+    if local:
+        data, ok, src = local
+        return data, ok, f"{src}; cloud failed: {cloud_error}"
 
     return sample_state(), False, cloud_error
 
