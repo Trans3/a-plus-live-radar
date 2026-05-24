@@ -206,7 +206,7 @@ def load_performance():
     if cfg["token"]:
         headers["Authorization"] = f"Bearer {cfg['token']}"
     try:
-        r = requests.get(url, headers=headers, params={"ref": cfg["branch"], "_": time.time()}, timeout=10)
+        r = requests.get(url, headers=headers, params={"ref": cfg["branch"]}, timeout=10)
         if r.status_code == 200:
             raw = base64.b64decode((r.json() or {}).get("content", "")).decode("utf-8")
             return json.loads(raw), True, f"cloud:{cfg['repo']}"
