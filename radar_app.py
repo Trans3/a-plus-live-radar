@@ -670,41 +670,35 @@ def render_billboard_dashboard(state):
         one_hour = one_hour[:5]
         twenty_four = twenty_four[:5]
     note = billboard.get("note", "1H board is primary. 24H board is context only.")
-    st.markdown(f"""
-    <div class="sticky-upgrade">
-    <div>
-        <div style="font-weight:900;color:#FFD93D;">
-            PREBULL Momentum Detected
-        </div>
-        <div class="small">
-            Unlock execution reasoning, invalidations, and analytics engine.
-        </div>
-    </div>
 
-    <div class="sticky-btn">
-        Upgrade Access
-    </div>
+    st.markdown(f"""
+<div class="sticky-upgrade">
+  <div>
+    <div style="font-weight:900;color:#FFD93D;">PREBULL Momentum Detected</div>
+    <div class="small">Unlock execution reasoning, invalidations, and analytics engine.</div>
+  </div>
+  <div class="sticky-btn">Upgrade Access</div>
 </div>
-       
-        <div class="section-title"><span>Kraken Billboard</span></div>
-        <div class="notice">{note}</div>
-        <div class="billboard-grid">
-        <div class="billboard-panel">
-        <div class="billboard-title">ONE H Momentum Board | Primary Radar</div>
-        <table class="billboard-table">
-          <thead><tr><th>Pair</th><th>ONE H</th><th>TWENTY FOUR H</th><th>Vol</th><th>Score</th></tr></thead>
-          <tbody>{billboard_rows(one_hour, show_score=True)}</tbody>
-        </table>
-      </div>
-      <div class="billboard-panel">
-        <div class="billboard-title">TWENTY FOUR H Context Board | Not Entry Signal</div>
-        <table class="billboard-table">
-          <thead><tr><th>Pair</th><th>ONE H</th><th>TWENTY FOUR H</th><th>Vol</th></tr></thead>
-          <tbody>{billboard_rows(twenty_four, show_score=False)}</tbody>
-        </table>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+
+<div class="section-title"><span>Kraken Billboard</span></div>
+<div class="notice">{note}</div>
+<div class="billboard-grid">
+  <div class="billboard-panel">
+    <div class="billboard-title">ONE H Momentum Board | Primary Radar</div>
+    <table class="billboard-table">
+      <thead><tr><th>Pair</th><th>ONE H</th><th>TWENTY FOUR H</th><th>Vol</th><th>Score</th></tr></thead>
+      <tbody>{billboard_rows(one_hour, show_score=True)}</tbody>
+    </table>
+  </div>
+  <div class="billboard-panel">
+    <div class="billboard-title">TWENTY FOUR H Context Board | Not Entry Signal</div>
+    <table class="billboard-table">
+      <thead><tr><th>Pair</th><th>ONE H</th><th>TWENTY FOUR H</th><th>Vol</th></tr></thead>
+      <tbody>{billboard_rows(twenty_four, show_score=False)}</tbody>
+    </table>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 
