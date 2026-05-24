@@ -977,7 +977,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
             <div class="env-adj">{env_adj_html}</div>
           </div>
           <div class="riskgrid">
-            <div class="riskcell"><span>Entry Zone</span><b>{levels['entry_low']} – {levels['entry_high']}</b></div>
+            <div class="riskcell"><span>Entry Zone</span><b>{levels['entry_low']} | {levels['entry_high']}</b></div>
             <div class="riskcell"><span>Target</span><b class="green">{levels['target']}</b></div>
             <div class="riskcell"><span>Invalidation</span><b class="red">{levels['stop']}</b></div>
           </div>
