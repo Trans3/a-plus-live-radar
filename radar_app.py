@@ -989,6 +989,26 @@ membership = st.radio(
     key="membership_view_main_v1",
 )
 cta_text = "Get Full Radar"
+st.markdown("""
+<div class="proof-panel" style="margin:10px 0 18px;">
+  <div class="proof-title">How To Use</div>
+
+  <div class="read-row">
+    <div class="read-key" style="color:#78FF2E;">1</div>
+    <div class="read-desc">Check Market State</div>
+  </div>
+
+  <div class="read-row">
+    <div class="read-key" style="color:#FFD93D;">2</div>
+    <div class="read-desc">Watch Top Setups</div>
+  </div>
+
+  <div class="read-row">
+    <div class="read-key" style="color:#35A7FF;">3</div>
+    <div class="read-desc">Enter only during EXECUTE ZONE</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Prominent refresh control for the main page (sidebar can stay collapsed).
 st.markdown('<div class="refresh-row"><span>Live data source refreshes from GitHub JSON.</span></div>', unsafe_allow_html=True)
