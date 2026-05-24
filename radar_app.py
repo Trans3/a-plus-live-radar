@@ -703,7 +703,7 @@ def render_billboard_dashboard(state):
         </table>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+
 
 
 
