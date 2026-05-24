@@ -689,7 +689,7 @@ def render_billboard_dashboard(state):
     <div class="notice">{note}</div>
     <div class="billboard-grid">
       <div class="billboard-panel">
-        <div class="billboard-title">1H Momentum Board — Primary Radar</div>
+        <div class="billboard-title">ONE H Momentum Board — Primary Radar</div>
         <table class="billboard-table">
           <thead><tr><th>Pair</th><th>1H</th><th>24H</th><th>Vol</th><th>Score</th></tr></thead>
           <tbody>{billboard_rows(one_hour, show_score=True)}</tbody>
