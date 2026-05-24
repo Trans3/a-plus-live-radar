@@ -698,7 +698,7 @@ def render_billboard_dashboard(state):
       <div class="billboard-panel">
         <div class="billboard-title">TWENTY FOUR H Context Board | Not Entry Signal</div>
         <table class="billboard-table">
-          <thead><tr><th>Pair</th><th>1H</th><th>24H</th><th>Vol</th></tr></thead>
+          <thead><tr><th>Pair</th><th>ONE H</th><th>TWENTY FOUR H</th><th>Vol</th></tr></thead>
           <tbody>{billboard_rows(twenty_four, show_score=False)}</tbody>
         </table>
       </div>
