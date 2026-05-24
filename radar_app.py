@@ -685,7 +685,7 @@ def render_billboard_dashboard(state):
     </div>
 </div>
 """, unsafe_allow_html=True)
-    <div class="section-title"><span>★ Kraken Billboard ★</span></div>
+    <div class="section-title"><span>Kraken Billboard</span></div>
     <div class="notice">{note}</div>
     <div class="billboard-grid">
       <div class="billboard-panel">
