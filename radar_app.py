@@ -729,7 +729,8 @@ def render_top5_simple(setups, market, updated, membership):
         </div>
         """)
 
-    st.markdown("<div>" + "".join(rows) + "</div>", unsafe_allow_html=True)
+    html = "<div class='simple-top5'>" + "".join(rows) + "</div>"
+    st.markdown(html, unsafe_allow_html=True)
 
     if membership == "Free":
         locked_panel(
