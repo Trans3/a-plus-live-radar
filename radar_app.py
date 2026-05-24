@@ -1055,8 +1055,12 @@ st.markdown('<div class="report-shell">', unsafe_allow_html=True)
 st.markdown(f"""
 <div class="header">
   <div class="header-left">
-    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> DECISION RADAR</div><div class="subtitle">Visual Market Command Center</div></div></div>
+    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> DECISION RADAR</div><div class="subtitle">Momentum execution radar built to reduce emotional trading and identify high-probability continuation setups.</div></div></div>
     <div class="meta"><div>📅 <b>{str(updated)[:10] or 'waiting'}</b></div><div>🕒 <b>{str(updated)[11:19] or '--:--:--'}</b></div><div>🔄 Cycle: <b>{cycle}</b></div><div>🎯 Active Pairs: <b>{active}</b></div></div>
+<div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+  <div class="cta-main">⚡ LIVE RADAR ACTIVE</div>
+  <div class="cta-secondary">Upgrade For Full Execution Engine</div>
+</div>  
   </div>
   <div class="state-box">
     <div class="state-label">Market State</div>
