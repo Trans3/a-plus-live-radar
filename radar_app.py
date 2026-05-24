@@ -148,7 +148,7 @@ try:
     )
 
     if r.status_code == 200:
-    return r.json(), True, "cloud: GitHub raw radar_state.json"
+        return r.json(), True, "cloud: GitHub raw radar_state.json"
 
     cloud_error = f"GitHub raw HTTP {r.status_code}: {r.text[:120]}"
 
