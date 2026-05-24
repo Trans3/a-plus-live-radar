@@ -167,7 +167,7 @@ def load_state():
         cfg = settings()
 
     raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json"
-        st.caption("Radar Engine v2.2 • PREBULL Framework")
+    st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
