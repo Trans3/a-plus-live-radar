@@ -228,7 +228,7 @@ def load_performance():
             return local
 
     raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_performance.json"
-
+    st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
