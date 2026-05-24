@@ -557,9 +557,11 @@ def _render_proof_bucket(title, rows, limit=6):
     body = []
     for r in rows[:limit]:
         edge = safe_float(r.get("edge_score", 0))
+        total = int(r.get("total", 0) or 0)
+        sample_note = " <span style='color:#FFD93D;font-weight:900;'>LOW N</span>" if total < 20 else ""
         edge_cls = "edge-pos" if edge >= 0 else "edge-neg"
         body.append(
-            f"<tr><td>{r.get('name','')}</td><td>{int(r.get('total',0) or 0)}</td>"
+            f"<tr><td>{r.get('name','')}{sample_note}</td><td>{total}</td>"
             f"<td>{safe_float(r.get('hit_1pct_rate')):.0f}%</td><td>{safe_float(r.get('hit_2pct_rate')):.0f}%</td>"
             f"<td>{safe_float(r.get('avg_max_move_pct')):+.2f}%</td><td class='{edge_cls}'>{edge:+.1f}</td></tr>"
         )
