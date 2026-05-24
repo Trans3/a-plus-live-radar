@@ -138,7 +138,7 @@ def load_state():
 
         cfg = settings()
 
-    raw_url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['branch']}/{cfg['path']}"
+    raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json"
 
     try:
         r = requests.get(
@@ -148,7 +148,7 @@ def load_state():
         )
 
         if r.status_code == 200:
-            return r.json(), True, f"cloud: GitHub raw {cfg['repo']}/{cfg['path']}"
+            return r.json(), True, "cloud: GitHub raw radar_state.json"
 
         cloud_error = f"GitHub raw HTTP {r.status_code}: {r.text[:120]}"
 
