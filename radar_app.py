@@ -970,7 +970,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
         <div class="decision-box">
           <div class="decision-head">Expected Move Range</div>
           <div class="projected">+{low}% to +{high}%</div>
-          <div class="small">Model confidence: {pconf}% · range estimate, not certainty</div>
+          <div class="small">Model confidence: {pconf}% | range estimate, not certainty</div>
           <div class="env-box">
             <div class="env-k">Environment Weight</div>
             <div class="env-v">{env_score}/100 <span class="env-tier">{env_tier}</span></div>
