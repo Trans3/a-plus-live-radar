@@ -1,5 +1,6 @@
 import base64
 import json
+import html
 import os
 import time
 from datetime import datetime, timezone
@@ -101,6 +102,42 @@ div.stButton > button:first-child:hover{border-color:white;color:white;backgroun
 .exec-sub{font-size:13px;color:white;margin-top:3px;line-height:1.35;}
 .exec-now{color:var(--green)}.exec-wait{color:var(--yellow)}.exec-late{color:var(--red)}.exec-watch{color:var(--blue)}
 .countdown-pill{display:inline-block;border-radius:999px;border:1px solid currentColor;padding:3px 9px;margin-left:8px;font-size:12px;font-weight:1000;}
+/* Premium decision-card upgrades */
+.cta-main{border:1px solid var(--green);color:var(--green);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:1000;background:rgba(120,255,46,.08);}
+.cta-secondary{border:1px solid var(--yellow);color:var(--yellow);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:1000;background:rgba(255,217,61,.08);}
+.rank-wrap{height:142px;border:3px solid var(--green);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#05080C;}
+.rank-num{font-size:52px;font-weight:1000;color:white;line-height:1;}
+.rank-note{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:1000;margin-top:4px;}
+.rank-stars{font-size:16px;color:var(--yellow);letter-spacing:1px;margin-top:2px;}
+.coin-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.sector-chip{display:inline-block;border:1px solid #27343D;background:#05080C;border-radius:999px;color:white;padding:4px 9px;font-size:11px;font-weight:1000;text-transform:uppercase;}
+.score-block{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 18px;}
+.score-card{border-bottom:1px solid var(--line);padding:8px 0;}
+.score-card:last-child{border-bottom:0;}
+.score-head{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.score-name{font-size:11px;font-weight:1000;color:white;text-transform:uppercase;letter-spacing:.55px;}
+.score-val{font-size:28px;font-weight:1000;line-height:1;}
+.score-track{height:8px;background:#111B23;border-radius:999px;overflow:hidden;margin-top:7px;border:1px solid #23313A;}
+.score-fill{height:100%;border-radius:999px;background:currentColor;box-shadow:0 0 10px currentColor;}
+.verdict-box{border:1px solid #27343D;border-radius:12px;background:#05080C;padding:10px 12px;margin-bottom:10px;}
+.verdict-k{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.7px;}
+.verdict-v{font-size:28px;font-weight:1000;margin-top:2px;text-transform:uppercase;}
+.move-line{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;align-items:center;}
+.move-pill{border:1px solid #27343D;border-radius:10px;padding:8px;text-align:center;background:#05080C;}
+.move-pill span{display:block;font-size:10px;color:var(--muted);font-weight:1000;text-transform:uppercase;}
+.move-pill b{font-size:15px;color:white;}
+.why-score{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.why-chip{border:1px solid #27343D;border-radius:10px;background:#05080C;padding:8px 9px;font-size:12px;font-weight:800;color:white;}
+.why-chip b{float:right;}
+.why-pos b{color:var(--green);} .why-neg b{color:var(--red);} .why-warn b{color:var(--yellow);}
+.status-chip{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:1000;text-transform:uppercase;}
+@media(max-width:900px){
+  .setup-top{grid-template-columns:1fr;}
+  .rank-wrap{height:auto;padding:14px;}
+  .score-block{border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .decision-banner,.header,.tool-grid,.bottom-grid,.billboard-grid,.proof-grid,.perf-grid{grid-template-columns:1fr;}
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -671,7 +708,7 @@ def render_billboard_dashboard(state):
         twenty_four = twenty_four[:5]
     note = billboard.get("note", "1H board is primary. 24H board is context only.")
 
-    st.markdown(f"""
+    upgrade_html = "" if has_tier(membership, "Pro Analytics") else '''
 <div class="sticky-upgrade">
   <div>
     <div style="font-weight:900;color:#FFD93D;">PREBULL Momentum Detected</div>
@@ -679,7 +716,9 @@ def render_billboard_dashboard(state):
   </div>
   <div class="sticky-btn">Upgrade Access</div>
 </div>
-
+'''
+    st.markdown(f"""
+{upgrade_html}
 <div class="section-title"><span>Kraken Billboard</span></div>
 <div class="notice">{note}</div>
 <div class="billboard-grid">
@@ -903,6 +942,129 @@ def why_text(setup):
 
 
 
+
+def clean_text(value, default=""):
+    try:
+        return html.escape(str(value if value is not None else default))
+    except Exception:
+        return html.escape(str(default))
+
+
+def clamp_score(value):
+    return max(0, min(100, int(safe_float(value, 0))))
+
+
+def score_color(score):
+    score = clamp_score(score)
+    if score >= 80:
+        return "#78FF2E"
+    if score >= 60:
+        return "#FFD93D"
+    return "#FF4D4D"
+
+
+def score_bar_html(label, value, color=None):
+    score = clamp_score(value)
+    color = color or score_color(score)
+    return (
+        '<div class="score-card">'
+        '<div class="score-head">'
+        f'<div class="score-name">{clean_text(label)}</div>'
+        f'<div class="score-val" style="color:{color};">{score}</div>'
+        '</div>'
+        '<div class="score-track">'
+        f'<div class="score-fill" style="width:{score}%;color:{color};"></div>'
+        '</div>'
+        '</div>'
+    )
+
+
+def setup_sector_label(setup):
+    sector = (setup.get("sector") or "").upper()
+    if sector and sector != "OTHER":
+        return sector
+    pair = str(setup.get("pair", "") or setup.get("coin", "")).upper()
+    coin = (setup.get("coin") or pair.split("/")[0]).upper()
+    local_map = {
+        "TIA": "INFRA", "LINK": "INFRA", "GRT": "INFRA", "FIL": "INFRA",
+        "SOL": "L1", "ETH": "L1", "ADA": "L1", "AVAX": "L1", "ATOM": "L1",
+        "DOGE": "MEME", "SHIB": "MEME", "PEPE": "MEME", "BONK": "MEME", "WIF": "MEME",
+        "UNI": "DEFI", "AAVE": "DEFI", "MKR": "DEFI", "CRV": "DEFI",
+    }
+    return local_map.get(coin, "OTHER")
+
+
+def decision_label(setup, clock):
+    status = (clock.get("status") or "WATCH").upper()
+    if status in {"EXECUTE ZONE", "READY"}:
+        return "READY"
+    if status in {"WAIT", "WATCH", "CHECK AGAIN"}:
+        return "WATCH"
+    if status in {"TOO LATE", "NO ENTRY"}:
+        return "AVOID"
+    if "SHARPSHOOTER" in status:
+        return "SHARPSHOOTER"
+    return status
+
+
+def star_rating(*scores):
+    vals = [clamp_score(v) for v in scores if v is not None]
+    avg = sum(vals) / len(vals) if vals else 0
+    stars = max(1, min(5, round(avg / 20)))
+    return "★" * stars + "☆" * (5 - stars)
+
+
+def environment_tier_clean(setup, market):
+    tier = (setup.get("environment_tier") or "").upper()
+    if tier and tier != "UNKNOWN":
+        return tier
+    env = clamp_score(setup.get("environment_score", setup.get("composite_score", setup.get("trigger_score", 0))))
+    if env >= 85:
+        return "A+"
+    if env >= 75:
+        return "A"
+    if env >= 60:
+        return "B"
+    if str(market).upper() in {"BULL", "EXPANSION"}:
+        return "B"
+    if str(market).upper() in {"PREBULL", "WATCH", "ACCUMULATION"}:
+        return "C+"
+    return "C"
+
+
+def why_score_breakdown_html(setup, market, clock):
+    flags = setup.get("flags", {}) or {}
+    rows = []
+    def add(label, points, cls=None):
+        if cls is None:
+            cls = "why-pos" if points >= 0 else "why-neg"
+        sign = "+" if points >= 0 else ""
+        rows.append(f'<div class="why-chip {cls}">{clean_text(label)} <b>{sign}{int(points)}</b></div>')
+    if flags.get("vwap_accept"):
+        add("VWAP control", 15)
+    else:
+        add("Needs VWAP", -10)
+    if flags.get("pullback"):
+        add("Pullback formed", 12)
+    if flags.get("acceleration") or flags.get("impulse"):
+        add("Momentum impulse", 12)
+    if flags.get("structure_break"):
+        add("Structure break", 10)
+    if flags.get("volume_spike"):
+        add("Volume support", 8)
+    m = str(market).upper()
+    if m in {"BULL", "EXPANSION"}:
+        add("Market supportive", 10)
+    elif m in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}:
+        add("Market risk", -12)
+    else:
+        add("Market neutral", -4, "why-warn")
+    if clock.get("status") in {"TOO LATE", "NO ENTRY"}:
+        add("Timing penalty", -15)
+    elif clock.get("status") == "EXECUTE ZONE":
+        add("Timing active", 10)
+    return "".join(rows[:6]) or '<div class="why-chip why-warn">Waiting for proof <b>0</b></div>'
+
 def environment_adjustments_html(setup, limit=4):
     rows = []
     for adj in (setup.get("environment_adjustments") or [])[:limit]:
@@ -922,88 +1084,131 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
     accents = ["#78FF2E", "#FF8A3D", "#35A7FF", "#BF65FF", "#FFD93D"]
     accent = accents[(idx-1) % len(accents)]
     accent_class = "accent-orange" if idx in (2,5) else "accent-blue" if idx == 3 else ""
+
     coin = setup.get("coin") or str(setup.get("pair", "NONE")).split("/")[0]
     pair = setup.get("pair", "")
     tag = tag_for(setup)
+    sector = setup_sector_label(setup)
     cr = setup.get("chart_read", {}) or {}
     timing = cr.get("timing", setup.get("entry_readiness_label", "WATCH"))
-    b = bullets_for(setup)
-    bullet_html = "".join([f"<div>{x}</div>" for x in b])
-    t = int(setup.get("trigger_score", 0) or 0)
-    tr = int(setup.get("trade_score", 0) or 0)
-    c = int(setup.get("confidence", 0) or 0)
-    env_score = int(setup.get("environment_score", setup.get("composite_score", t)) or 0)
-    env_tier = setup.get("environment_tier", "UNKNOWN") or "UNKNOWN"
-    env_adj_html = environment_adjustments_html(setup)
+
+    t = clamp_score(setup.get("trigger_score", 0))
+    tr = clamp_score(setup.get("trade_score", 0))
+    c = clamp_score(setup.get("confidence", 0))
+    env_score = clamp_score(setup.get("environment_score", setup.get("composite_score", t)))
+    env_tier = environment_tier_clean(setup, market)
+
     low, high, pconf = projected_move(setup, market)
     levels = trade_levels(setup, market)
     clock = execution_clock(setup, market, state_generated_at)
+    verdict = decision_label(setup, clock)
+    verdict_color = "#78FF2E" if verdict == "READY" else "#FFD93D" if verdict in {"WATCH", "SHARPSHOOTER"} else "#FF4D4D"
+    stars = star_rating(t, tr, c, env_score)
+
+    b = bullets_for(setup)
+    bullet_html = "".join([f"<div>{clean_text(x)}</div>" for x in b])
+    score_html = (
+        score_bar_html("Trigger", t, "#78FF2E") +
+        score_bar_html("Trade", tr, "#BF65FF") +
+        score_bar_html("Confidence", c, "#35A7FF") +
+        score_bar_html("Environment", env_score, score_color(env_score))
+    )
+    why_html = why_score_breakdown_html(setup, market, clock)
+    env_adj_html = environment_adjustments_html(setup)
+
     stages, current = setup_stages(setup)
     stage_html = ""
     for i, (name, passed) in enumerate(stages):
         cls = "stage stage-on" if passed else "stage"
-        if i == current: cls += " stage-current"
-        stage_html += f"<span class='{cls}'>{name}</span>"
-        if i < len(stages)-1: stage_html += "<span class='arrow'>→</span>"
+        if i == current:
+            cls += " stage-current"
+        stage_html += f"<span class='{cls}'>{clean_text(name)}</span>"
+        if i < len(stages)-1:
+            stage_html += "<span class='arrow'>→</span>"
+
     pos = timing_position(timing)
     st.markdown(f"""
     <div class="setup-card {accent_class}">
       <div class="setup-top">
-        <div class="rank-badge" style="border-color:{accent};">{idx}</div>
+        <div class="rank-wrap" style="border-color:{accent};">
+          <div class="rank-num">#{idx}</div>
+          <div class="rank-note">Top Setup</div>
+          <div class="rank-stars">{stars}</div>
+        </div>
+
         <div>
-          <div class="coin-title">{coin}</div>
-          <div class="pair-small">{pair}</div>
-          <div class="{tag_class(tag)}">{tag}</div>
+          <div class="coin-title">{clean_text(coin)}</div>
+          <div class="pair-small">{clean_text(pair)}</div>
+          <div class="coin-meta">
+            <span class="{tag_class(tag)}">{clean_text(tag)}</span>
+            <span class="sector-chip">{clean_text(sector)}</span>
+            <span class="sector-chip">BTC {clean_text(market)}</span>
+          </div>
           <div class="bullets">{bullet_html}</div>
         </div>
-        <div class="scores">
-          <div class="score-line"><div class="score-label">Trigger<br/>Score</div><div class="score-num score-trigger">{t}</div></div>
-          <div class="score-line"><div class="score-label">Trade<br/>Score</div><div class="score-num score-trade">{tr}</div></div>
-          <div class="score-line"><div class="score-label">Confidence<br/>Score</div><div class="score-num score-conf">{c}</div></div>
-          <div class="score-line"><div class="score-label">Environment<br/>Score</div><div class="score-num score-trigger">{env_score}</div></div>
+
+        <div class="score-block">
+          {score_html}
         </div>
+
         <div class="decision-box">
+          <div class="verdict-box">
+            <div class="verdict-k">Radar Decision</div>
+            <div class="verdict-v" style="color:{verdict_color};">{verdict}</div>
+            <div class="small">{clean_text(clock.get('message','Wait for clean timing.'))}</div>
+          </div>
+
           <div class="decision-head">Expected Move Range</div>
-          <div class="projected">+{low}% to +{high}%</div>
+          <div class="projected">+{low}% → +{high}%</div>
           <div class="small">Model confidence: {pconf}% | range estimate, not certainty</div>
+
+          <div class="move-line">
+            <div class="move-pill"><span>Invalid</span><b style="color:#FF4D4D;">{levels['stop']}</b></div>
+            <div class="move-pill"><span>Entry Zone</span><b>{levels['entry_low']} — {levels['entry_high']}</b></div>
+            <div class="move-pill"><span>Target</span><b style="color:#78FF2E;">{levels['target']}</b></div>
+          </div>
+
           <div class="env-box">
             <div class="env-k">Environment Weight</div>
-            <div class="env-v">{env_score}/100 <span class="env-tier">{env_tier}</span></div>
+            <div class="env-v">{env_score}/100 <span class="env-tier">{clean_text(env_tier)}</span></div>
             <div class="env-adj">{env_adj_html}</div>
           </div>
-          <div class="riskgrid">
-            <div class="riskcell"><span>Entry Zone</span><b>{levels['entry_low']} | {levels['entry_high']}</b></div>
-            <div class="riskcell"><span>Target</span><b class="green">{levels['target']}</b></div>
-            <div class="riskcell"><span>Invalidation</span><b class="red">{levels['stop']}</b></div>
-          </div>
+
           <div class="exec-clock">
             <div class="exec-k">Execution Clock</div>
-            <div class="exec-v {clock['class']}">{clock['status']} <span class="countdown-pill">{clock['window']}</span></div>
-            <div class="exec-sub">{clock['message']}</div>
+            <div class="exec-v {clock['class']}">{clean_text(clock['status'])} <span class="countdown-pill">{clean_text(clock['window'])}</span></div>
+            <div class="exec-sub">{clean_text(clock['message'])}</div>
           </div>
         </div>
       </div>
+
       <div class="tool-grid">
         <div class="tool-panel">
           <div class="tool-title">Decision Map: Price vs VWAP / Target / Invalidation</div>
     """, unsafe_allow_html=True)
+
     st.plotly_chart(decision_chart(setup, market, accent), width="stretch", config={"displayModeBar": False})
+
     st.markdown(f"""
         </div>
         <div class="tool-panel">
-          <div class="tool-title">Veteran Read</div>
+          <div class="tool-title">Why It Scored This Way</div>
+          <div class="why-score">{why_html}</div>
+
+          <div class="tool-title" style="margin-top:14px;">Veteran Read</div>
           <div class="stage-row">{stage_html}</div>
+
           <div class="tool-title" style="margin-top:14px;color:{timing_color(timing)};">Timing Gauge</div>
           <div class="timing-track"><div class="timing-marker" style="left:{pos}%;background:{timing_color(timing)};box-shadow:0 0 12px {timing_color(timing)};"></div></div>
           <div class="timing-labels"><span>Early</span><span>On Time</span><span>Late</span></div>
-          <div class="next-box" style="margin-top:12px;"><b>Simple answer:</b> <span class="{clock['class']}">{clock['status']}</span> | {action_text(setup, timing)}</div>
-          <div class="next-box" style="margin-top:8px;"><b>Why:</b> {why_text(setup)}</div>
+
+          <div class="next-box" style="margin-top:12px;"><b>Simple answer:</b> <span class="{clock['class']}">{clean_text(clock['status'])}</span> | {clean_text(action_text(setup, timing))}</div>
+          <div class="next-box" style="margin-top:8px;"><b>Why:</b> {clean_text(why_text(setup))}</div>
           <div class="next-box fail" style="margin-top:8px;">Fail condition: VWAP loss / lower low invalidates the idea.</div>
         </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
-
 
 def fires(n):
     try: n = int(n)
