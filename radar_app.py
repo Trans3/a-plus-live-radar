@@ -144,6 +144,12 @@ div.stButton > button:first-child:hover{border-color:white;color:white;backgroun
 st.markdown(CSS, unsafe_allow_html=True)
 
 
+def normalize_streamlit_html(html: str) -> str:
+    """Prevent Streamlit Markdown from rendering indented HTML as code blocks."""
+    return "\n".join(line.lstrip() for line in str(html).splitlines()).strip()
+
+
+
 def secret_or_env(name: str, default: str = "") -> str:
     try:
         return str(st.secrets.get(name, os.getenv(name, default))).strip()
@@ -1128,7 +1134,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
             stage_html += "<span class='arrow'>→</span>"
 
     pos = timing_position(timing)
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(normalize_streamlit_html(f"""
     <div class="setup-card {accent_class}">
       <div class="setup-top">
         <div class="rank-wrap" style="border-color:{accent};">
@@ -1190,7 +1196,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
 
     st.plotly_chart(decision_chart(setup, market, accent), width="stretch", config={"displayModeBar": False})
 
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(normalize_streamlit_html(f"""
         </div>
         <div class="tool-panel">
           <div class="tool-title">Why It Scored This Way</div>
