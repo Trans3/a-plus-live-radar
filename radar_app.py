@@ -3,6 +3,7 @@ import json
 import html
 import os
 import time
+import textwrap
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1127,7 +1128,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
             stage_html += "<span class='arrow'>→</span>"
 
     pos = timing_position(timing)
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="setup-card {accent_class}">
       <div class="setup-top">
         <div class="rank-wrap" style="border-color:{accent};">
@@ -1185,11 +1186,11 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
       <div class="tool-grid">
         <div class="tool-panel">
           <div class="tool-title">Decision Map: Price vs VWAP / Target / Invalidation</div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     st.plotly_chart(decision_chart(setup, market, accent), width="stretch", config={"displayModeBar": False})
 
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
         </div>
         <div class="tool-panel">
           <div class="tool-title">Why It Scored This Way</div>
@@ -1208,7 +1209,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
         </div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def fires(n):
     try: n = int(n)
