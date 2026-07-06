@@ -199,6 +199,7 @@ def load_state():
     Set PREFER_LOCAL_STATE=1 only for local debugging.
     """
     prefer_local = secret_or_env("PREFER_LOCAL_STATE", "0") == "1"
+    cfg = settings()
 
     def read_local():
         if STATE_PATH.exists():
@@ -213,14 +214,11 @@ def load_state():
         if local:
             return local
 
-        cfg = settings()
     raw_url = (
-        f"https://raw.githubusercontent.com/"
+        "https://raw.githubusercontent.com/"
         f"{cfg['repo']}/{cfg['branch']}/{cfg['path']}?t={int(time.time())}"
     )
 
-    import time
-    st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
@@ -269,7 +267,8 @@ def sample_performance():
 def load_performance():
     """Cloud-first loader for radar_performance.json."""
     prefer_local = secret_or_env("PREFER_LOCAL_STATE", "0") == "1"
-    local_path = Path(DEFAULT_GITHUB_PERFORMANCE_PATH)
+    cfg = settings()
+    local_path = Path(cfg.get("performance_path") or DEFAULT_GITHUB_PERFORMANCE_PATH)
 
     def read_local():
         if local_path.exists():
@@ -284,26 +283,19 @@ def load_performance():
         if local:
             return local
 
-    cfg = settings()
     raw_url = (
-        f"https://raw.githubusercontent.com/"
+        "https://raw.githubusercontent.com/"
         f"{cfg['repo']}/{cfg['branch']}/{cfg['performance_path']}?t={int(time.time())}"
     )
 
-    r = requests.get(
-    raw_url,
-    headers={
-        "User-Agent": "a-plus-radar-app",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-    },
-    timeout=10,
-)
-    st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
-            headers={"User-Agent": "a-plus-radar-app"},
+            headers={
+                "User-Agent": "a-plus-radar-app",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+            },
             timeout=10,
         )
 
@@ -321,6 +313,7 @@ def load_performance():
         return data, ok, f"{src}; cloud failed: {cloud_error}"
 
     return sample_performance(), False, cloud_error
+
 
 def state_color(state):
     state = (state or "").upper()
