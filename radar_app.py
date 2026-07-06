@@ -19,6 +19,8 @@ DEFAULT_GITHUB_RADAR_BRANCH = "main"
 DEFAULT_GITHUB_RADAR_PATH = "radar_state.json"
 DEFAULT_GITHUB_PERFORMANCE_PATH = "radar_performance.json"
 
+st_autorefresh(interval=30000, key="radar_refresh")
+
 st.set_page_config(
     page_title="A+ Decision Radar",
     page_icon="📡",
