@@ -5,6 +5,7 @@ import os
 import time
 import textwrap
 import time
+from streamlit_autorefresh import st_autorefresh
 from datetime import datetime, timezone
 from pathlib import Path
 
