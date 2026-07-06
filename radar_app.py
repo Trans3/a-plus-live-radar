@@ -4,6 +4,7 @@ import html
 import os
 import time
 import textwrap
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -211,12 +212,16 @@ def load_state():
 
         cfg = settings()
 
-    raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json"
+    raw_url = f"https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json?nocache={int(time.time())}"
     st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
             raw_url,
-            headers={"User-Agent": "a-plus-radar-app"},
+            headers={
+                "User-Agent": "a-plus-radar-app",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+            },
             timeout=10,
         )
 
