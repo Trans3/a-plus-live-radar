@@ -214,6 +214,10 @@ def load_state():
             return local
 
         cfg = settings()
+    raw_url = (
+        f"https://raw.githubusercontent.com/"
+        f"{cfg['repo']}/{cfg['branch']}/{cfg['path']}?t={int(time.time())}"
+    )
 
     import time
     st.caption("Radar Engine v2.2 • PREBULL Framework")
@@ -279,6 +283,12 @@ def load_performance():
         local = read_local()
         if local:
             return local
+
+    cfg = settings()
+    raw_url = (
+        f"https://raw.githubusercontent.com/"
+        f"{cfg['repo']}/{cfg['branch']}/{cfg['performance_path']}?t={int(time.time())}"
+    )
 
     r = requests.get(
     raw_url,
