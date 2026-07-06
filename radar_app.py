@@ -215,7 +215,7 @@ def load_state():
 
         cfg = settings()
 
-    raw_url = f"https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_state.json?nocache={int(time.time())}"
+    import time
     st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
@@ -280,7 +280,15 @@ def load_performance():
         if local:
             return local
 
-    raw_url = "https://raw.githubusercontent.com/Trans3/a-plus-live-radar/main/radar_performance.json"
+    r = requests.get(
+    raw_url,
+    headers={
+        "User-Agent": "a-plus-radar-app",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+    },
+    timeout=10,
+)
     st.caption("Radar Engine v2.2 • PREBULL Framework")
     try:
         r = requests.get(
