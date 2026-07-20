@@ -1241,339 +1241,298 @@ def fires(n):
     return "🔥" * min(max(n,0),3) if n else "—"
 
 
+
 # ---------------------------------------------------------------------------
-# SIMPLE DECISION UI
-# The scanner may keep its technical scores internally, but the customer-facing
-# dashboard speaks in plain language: status, VWAP, time, and action.
+# SPACECRAFT COCKPIT UI
+# A calm mission-control interface focused on one question:
+# what should the pilot do right now?
 # ---------------------------------------------------------------------------
 
-SIMPLE_CSS = """
+COCKPIT_CSS = """
 <style>
-.simple-shell{max-width:1180px;margin:0 auto;}
-.simple-hero{border:1px solid #22303A;border-radius:20px;background:linear-gradient(135deg,#071017,#030609);padding:22px;margin-bottom:14px;}
-.simple-brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-.simple-logo{width:62px;height:62px;border:2px solid #78FF2E;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:28px;color:#78FF2E;}
-.simple-title{font-size:38px;line-height:1;font-weight:1000;color:#F5F7FA;letter-spacing:-1px;}
-.simple-sub{color:#9AA6B2;font-size:14px;margin-top:5px;}
-.market-strip{display:grid;grid-template-columns:1.25fr repeat(4,.75fr);gap:10px;margin:14px 0;}
-.market-cell{border:1px solid #22303A;border-radius:13px;background:#071017;padding:13px 14px;}
-.market-k{font-size:11px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;letter-spacing:.7px;}
-.market-v{font-size:23px;font-weight:1000;color:#F5F7FA;margin-top:3px;}
-.action-hero{border:2px solid currentColor;border-radius:18px;background:#05080C;padding:22px;margin:14px 0 20px;}
-.action-k{font-size:12px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;letter-spacing:1px;}
-.action-v{font-size:46px;line-height:1;font-weight:1000;margin:8px 0;}
-.action-message{font-size:17px;color:#F5F7FA;line-height:1.45;}
-.action-best{margin-top:13px;padding-top:12px;border-top:1px solid #22303A;color:#9AA6B2;}
-.action-best b{color:#F5F7FA;font-size:20px;}
-.simple-section{margin:22px 0 10px;font-size:25px;font-weight:1000;color:#F5F7FA;}
-.simple-table-wrap{border:1px solid #22303A;border-radius:16px;background:#071017;padding:10px 14px;overflow-x:auto;margin-bottom:18px;}
-.simple-table{width:100%;border-collapse:collapse;min-width:650px;}
-.simple-table th{font-size:11px;text-transform:uppercase;color:#9AA6B2;text-align:left;padding:10px 8px;border-bottom:1px solid #22303A;}
-.simple-table td{padding:12px 8px;border-bottom:1px solid #17232D;color:#F5F7FA;font-size:14px;}
-.simple-table tr:last-child td{border-bottom:0;}
-.coin-name{font-weight:1000;font-size:16px;}
-.state-pill,.vwap-pill,.time-pill{display:inline-block;padding:5px 9px;border-radius:999px;border:1px solid currentColor;font-size:11px;font-weight:1000;text-transform:uppercase;white-space:nowrap;}
-.pair-card{border:1px solid #22303A;border-radius:16px;background:#071017;padding:16px;margin-bottom:12px;}
-.pair-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
-.pair-title{font-size:25px;font-weight:1000;color:#F5F7FA;}
-.pair-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:13px 0;}
-.pair-cell{border:1px solid #22303A;border-radius:12px;background:#05080C;padding:11px;}
-.pair-cell-k{font-size:10px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;}
-.pair-cell-v{font-size:17px;font-weight:1000;margin-top:4px;color:#F5F7FA;}
-.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
-.reason-box{border-top:1px solid #22303A;padding-top:10px;color:#F5F7FA;font-size:14px;line-height:1.5;}
-.reason-head{font-size:11px;text-transform:uppercase;color:#9AA6B2;font-weight:1000;margin-bottom:4px;}
-.reason-good{color:#78FF2E}.reason-wait{color:#FFD93D}.reason-stop{color:#FF4D4D}
-.empty-simple{border:1px solid #22303A;border-radius:14px;background:#071017;padding:18px;color:#9AA6B2;}
-.footer-simple{margin:22px 0 8px;padding-top:14px;border-top:1px solid #22303A;color:#9AA6B2;font-size:13px;}
-@media(max-width:850px){
-  .market-strip{grid-template-columns:1fr 1fr;}
-  .market-cell:first-child{grid-column:1/-1;}
-  .pair-grid,.reason-grid{grid-template-columns:1fr;}
-  .simple-title{font-size:31px;}
-  .action-v{font-size:38px;}
+:root{
+  --space:#03060a;
+  --panel:#071018;
+  --panel2:#040a0f;
+  --line:#18303d;
+  --text:#f4f8fb;
+  --muted:#7f94a2;
+  --green:#72ff9a;
+  --yellow:#ffd85a;
+  --red:#ff6262;
+  --blue:#55bfff;
+}
+.stApp{
+  background:
+    radial-gradient(circle at 50% -10%, rgba(50,120,150,.14), transparent 34%),
+    linear-gradient(rgba(30,60,74,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,60,74,.08) 1px, transparent 1px),
+    var(--space);
+  background-size:auto, 54px 54px, 54px 54px, auto;
+  color:var(--text);
+}
+.block-container{max-width:1180px;padding-top:.7rem;padding-bottom:2rem;}
+#MainMenu,footer,header{visibility:hidden;}
+[data-testid="stSidebar"]{background:#071018;}
+.cockpit{max-width:1120px;margin:0 auto;}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 2px 16px;border-bottom:1px solid var(--line);}
+.brandmark{display:flex;align-items:center;gap:12px;}
+.badge{width:42px;height:42px;border:1px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:16px;font-weight:1000;box-shadow:0 0 20px rgba(114,255,154,.12);}
+.brandname{font-size:20px;font-weight:1000;letter-spacing:.12em;}
+.brandtag{font-size:11px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-top:2px;}
+.sync{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;font-weight:800;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 1.8s infinite;}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.command-grid{display:grid;grid-template-columns:1.55fr .75fr;gap:14px;margin-top:16px;}
+.mission{border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(7,16,24,.98),rgba(3,8,12,.98));padding:28px;min-height:310px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;}
+.mission:before{content:"";position:absolute;inset:18px;border:1px solid rgba(85,191,255,.08);border-radius:14px;pointer-events:none;}
+.eyebrow{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.18em;}
+.mission-action{font-size:68px;line-height:.95;font-weight:1000;letter-spacing:-.04em;margin:12px 0 14px;}
+.mission-copy{font-size:18px;color:var(--text);line-height:1.45;max-width:650px;}
+.target-line{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+.target-name{font-size:25px;font-weight:1000;}
+.chip{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:1000;text-transform:uppercase;}
+.telemetry{border:1px solid var(--line);border-radius:20px;background:rgba(7,16,24,.94);padding:20px;}
+.telemetry-title{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.18em;margin-bottom:10px;}
+.telemetry-row{display:flex;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+.telemetry-row:last-child{border-bottom:0;}
+.telemetry-k{font-size:12px;color:var(--muted);font-weight:800;}
+.telemetry-v{font-size:16px;color:var(--text);font-weight:1000;text-align:right;}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:26px 0 10px;}
+.section-title{font-size:18px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;}
+.section-note{font-size:12px;color:var(--muted);}
+.mission-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.target-card{border:1px solid var(--line);border-radius:16px;background:rgba(7,16,24,.92);padding:16px;min-height:184px;position:relative;}
+.target-card:after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;background:currentColor;opacity:.65;}
+.target-top{display:flex;justify-content:space-between;align-items:start;gap:10px;}
+.target-pair{font-size:20px;font-weight:1000;}
+.target-state{font-size:11px;font-weight:1000;text-transform:uppercase;}
+.target-data{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px;}
+.data-box{border:1px solid #142b36;border-radius:11px;background:#040a0f;padding:10px;}
+.data-k{font-size:10px;color:var(--muted);font-weight:1000;text-transform:uppercase;}
+.data-v{font-size:15px;color:var(--text);font-weight:1000;margin-top:4px;}
+.target-foot{margin-top:13px;font-size:12px;color:var(--muted);line-height:1.4;}
+.empty{border:1px dashed var(--line);border-radius:15px;padding:22px;color:var(--muted);text-align:center;}
+.detail-shell{border:1px solid var(--line);border-radius:18px;background:rgba(7,16,24,.94);padding:20px;}
+.detail-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px;}
+.detail-status{border-right:1px solid var(--line);padding-right:18px;}
+.detail-action{font-size:38px;font-weight:1000;margin:8px 0;}
+.checklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.check{border:1px solid #142b36;border-radius:10px;background:#040a0f;padding:10px 12px;font-size:13px;}
+.footerline{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:11px;}
+div.stButton > button:first-child{background:#071018;border:1px solid var(--line);color:var(--text);border-radius:999px;font-weight:900;}
+div.stButton > button:first-child:hover{border-color:var(--green);color:var(--green);}
+@media(max-width:900px){
+  .command-grid,.detail-grid{grid-template-columns:1fr;}
+  .mission-grid{grid-template-columns:1fr;}
+  .detail-status{border-right:0;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:16px;}
+  .mission-action{font-size:52px;}
+  .mission{min-height:260px;padding:22px;}
+  .checklist{grid-template-columns:1fr;}
 }
 </style>
 """
-st.markdown(SIMPLE_CSS, unsafe_allow_html=True)
+st.markdown(COCKPIT_CSS, unsafe_allow_html=True)
 
 
-def pair_vwap_read(setup):
+def cockpit_vwap(setup):
     flags = setup.get("flags", {}) or {}
     price = safe_float(setup.get("price"))
     vwap = safe_float(setup.get("vwap"))
-    accepted = bool(flags.get("vwap_accept"))
-
-    if vwap <= 0 or price <= 0:
-        return "Unknown", "#9AA6B2", 0.0
-
+    if price <= 0 or vwap <= 0:
+        return "Unknown", "#7f94a2", 0.0
     distance = (price - vwap) / vwap * 100.0
-    if accepted and abs(distance) <= 0.65:
-        return "Holding", "#78FF2E", distance
+    if flags.get("vwap_accept") and abs(distance) <= 0.65:
+        return "Holding", "#72ff9a", distance
     if distance > 0.65:
-        return "Above", "#78FF2E", distance
+        return "Above", "#72ff9a", distance
     if abs(distance) <= 0.35:
-        return "Testing", "#FFD93D", distance
-    return "Below", "#FF4D4D", distance
+        return "Testing", "#ffd85a", distance
+    return "Below", "#ff6262", distance
 
 
-def simple_time_read(setup, market="", generated_at=""):
+def cockpit_time(setup, market, generated_at):
     clock = execution_clock(setup, market, generated_at)
     status = str(clock.get("status", "WATCH")).upper()
     timing = str(setup_timing(setup) or "WATCH").upper()
     age = setup_age_minutes(setup, generated_at)
-
     if status in {"TOO LATE", "NO ENTRY"}:
-        return "Too Late", "#FF4D4D"
+        return "Late", "#ff6262"
     if status == "EXECUTE ZONE":
-        return "Now", "#78FF2E"
-    if status == "CHECK AGAIN":
-        return "Refresh", "#FFD93D"
-    if timing == "EARLY":
-        return "Early", "#35A7FF"
-    if age <= 5:
-        return "Fresh", "#78FF2E"
+        return "Now", "#72ff9a"
+    if timing == "EARLY" or age <= 5:
+        return "Fresh", "#55bfff"
     if age <= 15:
-        return "Developing", "#35A7FF"
+        return "Developing", "#55bfff"
     if age <= 30:
-        return "Maturing", "#FFD93D"
-    if age > 30:
-        return "Late", "#FF4D4D"
-    return "Watch", "#FFD93D"
+        return "Maturing", "#ffd85a"
+    return "Watch", "#ffd85a"
 
 
-def simple_pair_state(setup, market="", generated_at=""):
+def cockpit_state(setup, market, generated_at):
     flags = setup.get("flags", {}) or {}
     clock = execution_clock(setup, market, generated_at)
     status = str(clock.get("status", "WATCH")).upper()
-    vwap_label, _, distance = pair_vwap_read(setup)
-
-    change_1h = safe_float(
+    vwap_label, _, distance = cockpit_vwap(setup)
+    ch1 = safe_float(
         setup.get("change_1h_pct",
         setup.get("pct_1h",
         setup.get("one_hour_change", pct_change(setup.get("close_1h", [])))))
     )
-
     if status in {"TOO LATE", "NO ENTRY"} or distance > 2.2:
-        return "Cooling", "❄", "#FF4D4D"
+        return "Mission Over", "#ff6262"
     if status == "EXECUTE ZONE":
-        return "Ready", "⚡", "#78FF2E"
-    if abs(change_1h) >= 1.0 and (flags.get("impulse") or flags.get("acceleration")):
-        return "Moving", "🚀", "#78FF2E"
+        return "Mission Ready", "#72ff9a"
+    if abs(ch1) >= 1.0 and (flags.get("impulse") or flags.get("acceleration")):
+        return "In Flight", "#72ff9a"
     if vwap_label in {"Above", "Holding"} and (
-        flags.get("compression")
-        or flags.get("pullback")
-        or flags.get("acceleration")
-        or flags.get("impulse")
+        flags.get("compression") or flags.get("pullback")
+        or flags.get("impulse") or flags.get("acceleration")
     ):
-        return "Building", "👀", "#FFD93D"
-    return "Sleeping", "😴", "#9AA6B2"
+        return "Building", "#ffd85a"
+    return "Idle", "#7f94a2"
 
 
-def simple_reason_lines(setup):
-    flags = setup.get("flags", {}) or {}
-    vwap_label, _, _ = pair_vwap_read(setup)
-    positives = []
-    waits = []
-
-    if vwap_label == "Holding":
-        positives.append("Buyers are defending VWAP")
-    elif vwap_label == "Above":
-        positives.append("Price is above VWAP")
-    elif vwap_label == "Testing":
-        waits.append("Needs a clean VWAP hold")
-    else:
-        waits.append("Needs to reclaim VWAP")
-
-    if flags.get("pullback"):
-        positives.append("Pullback has formed")
-    else:
-        waits.append("Wait for a controlled pullback")
-
-    if flags.get("acceleration") or flags.get("impulse"):
-        positives.append("Momentum is increasing")
-    else:
-        waits.append("Momentum still needs proof")
-
-    if flags.get("structure_break"):
-        positives.append("Price structure is improving")
-    else:
-        waits.append("Wait for a clean structure break")
-
-    if flags.get("volume_spike"):
-        positives.append("Volume is supporting the move")
-    else:
-        waits.append("Volume is still average")
-
-    return positives[:3], waits[:3]
-
-
-def build_simple_rows(state, market, generated_at):
+def build_cockpit_rows(state, market, generated_at):
     billboard = (state or {}).get("billboard", {}) or {}
-    billboard_1h = billboard.get("one_hour", []) or []
+    board = billboard.get("one_hour", []) or []
     setups = (state or {}).get("top_setups", []) or []
-
-    billboard_map = {str(r.get("pair", "")).upper(): r for r in billboard_1h}
-    rows = []
-    seen = set()
+    board_map = {str(x.get("pair", "")).upper(): x for x in board}
+    rows, seen = [], set()
 
     for setup in setups:
         pair = str(setup.get("pair", "UNKNOWN"))
-        key = pair.upper()
-        merged = dict(billboard_map.get(key, {}))
+        merged = dict(board_map.get(pair.upper(), {}))
         merged.update(setup)
-        state_label, emoji, state_color_value = simple_pair_state(merged, market, generated_at)
-        vwap_label, vwap_color, _ = pair_vwap_read(merged)
-        time_label, time_color_value = simple_time_read(merged, market, generated_at)
-        change_1h = safe_float(
+        label, color = cockpit_state(merged, market, generated_at)
+        vwap, vwap_color, _ = cockpit_vwap(merged)
+        timing, time_color = cockpit_time(merged, market, generated_at)
+        ch1 = safe_float(
             merged.get("change_1h_pct",
             merged.get("pct_1h",
             merged.get("one_hour_change", pct_change(merged.get("close_1h", [])))))
         )
         rows.append({
-            "setup": merged,
-            "pair": pair,
-            "state": state_label,
-            "emoji": emoji,
-            "state_color": state_color_value,
-            "vwap": vwap_label,
-            "vwap_color": vwap_color,
-            "time": time_label,
-            "time_color": time_color_value,
-            "change_1h": change_1h,
+            "pair": pair, "setup": merged, "state": label, "color": color,
+            "vwap": vwap, "vwap_color": vwap_color,
+            "time": timing, "time_color": time_color, "change_1h": ch1,
         })
-        seen.add(key)
+        seen.add(pair.upper())
 
-    for board_row in billboard_1h:
-        pair = str(board_row.get("pair", "UNKNOWN"))
+    for x in board:
+        pair = str(x.get("pair", "UNKNOWN"))
         if pair.upper() in seen:
             continue
-        synthetic = dict(board_row)
-        change_1h = safe_float(board_row.get("change_1h_pct", 0))
-        if change_1h >= 1.0:
-            state_label, emoji, state_color_value = "Moving", "🚀", "#78FF2E"
-            time_label, time_color_value = ("Fresh", "#78FF2E") if change_1h < 3 else ("Late", "#FF4D4D")
-        else:
-            state_label, emoji, state_color_value = "Sleeping", "😴", "#9AA6B2"
-            time_label, time_color_value = "Watch", "#FFD93D"
+        ch1 = safe_float(x.get("change_1h_pct", 0))
+        state_label = "In Flight" if ch1 >= 1 else "Idle"
+        state_color = "#72ff9a" if ch1 >= 1 else "#7f94a2"
         rows.append({
-            "setup": synthetic,
-            "pair": pair,
-            "state": state_label,
-            "emoji": emoji,
-            "state_color": state_color_value,
-            "vwap": "Unknown",
-            "vwap_color": "#9AA6B2",
-            "time": time_label,
-            "time_color": time_color_value,
-            "change_1h": change_1h,
+            "pair": pair, "setup": dict(x), "state": state_label, "color": state_color,
+            "vwap": "Unknown", "vwap_color": "#7f94a2",
+            "time": "Fresh" if 1 <= ch1 < 3 else "Late" if ch1 >= 3 else "Watch",
+            "time_color": "#55bfff" if 1 <= ch1 < 3 else "#ff6262" if ch1 >= 3 else "#ffd85a",
+            "change_1h": ch1,
         })
 
-    order = {"Ready": 0, "Building": 1, "Moving": 2, "Cooling": 3, "Sleeping": 4}
+    order = {"Mission Ready": 0, "Building": 1, "In Flight": 2, "Mission Over": 3, "Idle": 4}
     rows.sort(key=lambda r: (order.get(r["state"], 9), -r["change_1h"]))
     return rows
 
 
-def simple_global_action(rows, market):
-    ready = [r for r in rows if r["state"] == "Ready"]
+def cockpit_command(rows, market):
+    ready = [r for r in rows if r["state"] == "Mission Ready"]
     building = [r for r in rows if r["state"] == "Building"]
-    moving = [r for r in rows if r["state"] == "Moving"]
-    cooling = [r for r in rows if r["state"] == "Cooling"]
+    flying = [r for r in rows if r["state"] == "In Flight"]
+    over = [r for r in rows if r["state"] == "Mission Over"]
+    bad_market = str(market).upper() in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}
 
-    market_upper = str(market).upper()
-    if ready and market_upper not in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}:
-        best = ready[0]
-        return "GO", "#78FF2E", "A fresh setup is holding VWAP. Confirm continuation before acting.", best
+    if ready and not bad_market:
+        return "GO", "#72ff9a", "A target is aligned. Confirm continuation and defend VWAP.", ready[0]
     if building:
-        best = building[0]
-        return "WATCH", "#FFD93D", f"{len(building)} pair{'s are' if len(building) != 1 else ' is'} building. Let the setup finish forming.", best
-    if moving:
-        best = moving[0]
-        return "WAIT", "#FFD93D", "Moves are already underway. Do not chase; wait for a fresh pullback or base.", best
-    if cooling:
-        return "STAND DOWN", "#FF4D4D", "The visible moves are cooling or extended. Wait for the market to reset.", cooling[0]
-    return "WAIT", "#35A7FF", "No qualified setup is active. Preserve capital and wait for clearer conditions.", None
+        return "HOLD", "#ffd85a", "Targets are forming. Stay patient and wait for the final confirmation.", building[0]
+    if flying:
+        return "DO NOT CHASE", "#ffd85a", "Missions are already in flight. Wait for a fresh setup.", flying[0]
+    if over:
+        return "ABORT", "#ff6262", "Visible moves are extended or losing control. Stand down.", over[0]
+    return "STANDBY", "#55bfff", "No qualified target is active. Preserve capital.", None
 
 
-def render_simple_table(rows, columns=("pair", "state", "vwap", "time"), include_change=False, limit=10):
-    if not rows:
-        return '<div class="empty-simple">No pairs in this state right now.</div>'
-
-    headers = ["Pair", "Status", "VWAP", "Time"]
-    if include_change:
-        headers.insert(1, "1H")
-
-    body = []
-    for row in rows[:limit]:
-        cells = [f'<td><span class="coin-name">{clean_text(row["pair"])}</span></td>']
-        if include_change:
-            change = safe_float(row.get("change_1h"))
-            change_color = "#78FF2E" if change >= 0 else "#FF4D4D"
-            cells.append(f'<td style="color:{change_color};font-weight:1000;">{change:+.2f}%</td>')
-        cells.extend([
-            f'<td><span class="state-pill" style="color:{row["state_color"]};">{row["emoji"]} {clean_text(row["state"])}</span></td>',
-            f'<td><span class="vwap-pill" style="color:{row["vwap_color"]};">{clean_text(row["vwap"])}</span></td>',
-            f'<td><span class="time-pill" style="color:{row["time_color"]};">{clean_text(row["time"])}</span></td>',
-        ])
-        body.append("<tr>" + "".join(cells) + "</tr>")
-
-    return (
-        '<div class="simple-table-wrap"><table class="simple-table">'
-        '<thead><tr>' + "".join(f"<th>{h}</th>" for h in headers) + '</tr></thead>'
-        '<tbody>' + "".join(body) + '</tbody></table></div>'
-    )
+def market_read(market):
+    return {
+        "BULL": ("Trending", "#72ff9a"),
+        "EXPANSION": ("Trending", "#72ff9a"),
+        "PREBULL": ("Building", "#ffd85a"),
+        "ACCUMULATION": ("Building", "#ffd85a"),
+        "CHOP": ("Choppy", "#7f94a2"),
+        "BEAR": ("Weak", "#ff6262"),
+        "DISTRIBUTION": ("Cooling", "#ff6262"),
+        "EXHAUSTION": ("Cooling", "#ff6262"),
+        "WAITING": ("Waiting", "#7f94a2"),
+    }.get(str(market).upper(), (str(market).title(), "#7f94a2"))
 
 
-def render_pair_card(row, market, generated_at):
-    setup = row["setup"]
-    positives, waits = simple_reason_lines(setup)
-    status = row["state"]
-    action_map = {
-        "Ready": ("GO", "#78FF2E", "Confirm continuation. Leave immediately if VWAP fails."),
-        "Building": ("WATCH", "#FFD93D", "Let the pullback, VWAP hold, and breakout proof develop."),
-        "Moving": ("DO NOT CHASE", "#FFD93D", "Wait for a fresh base or controlled return toward VWAP."),
-        "Cooling": ("SKIP", "#FF4D4D", "The move is extended or losing control."),
-        "Sleeping": ("WAIT", "#9AA6B2", "No actionable movement yet."),
-    }
-    action, action_color, action_note = action_map.get(status, ("WATCH", "#FFD93D", "Wait for proof."))
+def reason_lines(setup):
+    flags = setup.get("flags", {}) or {}
+    vwap, _, _ = cockpit_vwap(setup)
+    passed, waiting = [], []
 
-    positive_html = "".join(f"<div>✓ {clean_text(x)}</div>" for x in positives) or "<div>— No confirmation yet</div>"
-    wait_html = "".join(f"<div>• {clean_text(x)}</div>" for x in waits) or "<div>• Continue to monitor VWAP</div>"
+    if vwap == "Holding":
+        passed.append("VWAP defended")
+    elif vwap == "Above":
+        passed.append("Above VWAP")
+    else:
+        waiting.append("VWAP control")
 
-    st.markdown(f"""
-<div class="pair-card">
-  <div class="pair-top">
-    <div>
-      <div class="pair-title">{clean_text(row['pair'])}</div>
-      <span class="state-pill" style="color:{row['state_color']};">{row['emoji']} {clean_text(status)}</span>
-    </div>
-    <div style="text-align:right;">
-      <div class="market-k">Radar says</div>
-      <div style="font-size:24px;font-weight:1000;color:{action_color};">{action}</div>
-    </div>
+    if flags.get("pullback"):
+        passed.append("Pullback complete")
+    else:
+        waiting.append("Controlled pullback")
+
+    if flags.get("structure_break"):
+        passed.append("Structure break")
+    else:
+        waiting.append("Breakout confirmation")
+
+    if flags.get("volume_spike"):
+        passed.append("Volume confirmed")
+    else:
+        waiting.append("Volume expansion")
+
+    return passed[:4], waiting[:4]
+
+
+def render_target_card(row):
+    state_note = {
+        "Mission Ready": "Final confirmation only.",
+        "Building": "Target is forming.",
+        "In Flight": "Do not chase this move.",
+        "Mission Over": "Wait for a new base.",
+        "Idle": "No action.",
+    }.get(row["state"], "Monitor.")
+    return f"""
+<div class="target-card" style="color:{row['color']};">
+  <div class="target-top">
+    <div class="target-pair">{clean_text(row['pair'])}</div>
+    <div class="target-state">{clean_text(row['state'])}</div>
   </div>
-  <div class="pair-grid">
-    <div class="pair-cell"><div class="pair-cell-k">VWAP</div><div class="pair-cell-v" style="color:{row['vwap_color']};">{clean_text(row['vwap'])}</div></div>
-    <div class="pair-cell"><div class="pair-cell-k">Time</div><div class="pair-cell-v" style="color:{row['time_color']};">{clean_text(row['time'])}</div></div>
-    <div class="pair-cell"><div class="pair-cell-k">1H Move</div><div class="pair-cell-v">{safe_float(row['change_1h']):+.2f}%</div></div>
+  <div class="target-data">
+    <div class="data-box"><div class="data-k">VWAP</div><div class="data-v" style="color:{row['vwap_color']};">{clean_text(row['vwap'])}</div></div>
+    <div class="data-box"><div class="data-k">Time</div><div class="data-v" style="color:{row['time_color']};">{clean_text(row['time'])}</div></div>
+    <div class="data-box"><div class="data-k">1H</div><div class="data-v">{safe_float(row['change_1h']):+.2f}%</div></div>
+    <div class="data-box"><div class="data-k">Command</div><div class="data-v">{clean_text(state_note)}</div></div>
   </div>
-  <div class="reason-grid">
-    <div class="reason-box"><div class="reason-head">Why it is here</div><div class="reason-good">{positive_html}</div></div>
-    <div class="reason-box"><div class="reason-head">Wait for / risk</div><div class="reason-wait">{wait_html}</div></div>
-  </div>
-  <div style="margin-top:12px;color:#F5F7FA;"><b style="color:{action_color};">{action}:</b> {clean_text(action_note)}</div>
 </div>
-""", unsafe_allow_html=True)
+"""
 
 
 with st.sidebar:
-    st.markdown("### Radar Controls")
-    auto = st.toggle("Auto refresh", value=True, key="simple_auto_refresh")
-    manual = st.button("Refresh Now", key="simple_manual_refresh")
-    clear_cache = st.button("Clear Cache", key="simple_clear_cache")
-    st.caption("Simple UI: Status · VWAP · Time · Action")
+    st.markdown("### Flight Controls")
+    auto = st.toggle("Auto sync", value=True, key="cockpit_auto")
+    manual = st.button("Sync Radar", key="cockpit_manual")
+    clear_cache = st.button("Clear Cache", key="cockpit_clear")
+    st.caption("Mission Control · VWAP · Time · Command")
 
-if clear_cache or manual:
+if manual or clear_cache:
     st.cache_data.clear()
     st.rerun()
 
@@ -1585,81 +1544,119 @@ market = state.get("market_state") or state.get("regime_name") or "WAITING"
 updated = state.get("generated_at") or state.get("timestamp") or ""
 cycle = state.get("cycle_number", state.get("cycle", 0))
 active = int(state.get("active_pairs", 0) or 0)
-rows = build_simple_rows(state, market, updated)
+rows = build_cockpit_rows(state, market, updated)
 
-watch_rows = [r for r in rows if r["state"] in {"Ready", "Building"}]
-live_rows = [r for r in rows if r["state"] == "Moving"]
-finished_rows = [r for r in rows if r["state"] == "Cooling"]
-sleeping_rows = [r for r in rows if r["state"] == "Sleeping"]
+ready_rows = [r for r in rows if r["state"] == "Mission Ready"]
+queue_rows = [r for r in rows if r["state"] in {"Mission Ready", "Building"}]
+flight_rows = [r for r in rows if r["state"] == "In Flight"]
+ended_rows = [r for r in rows if r["state"] == "Mission Over"]
+idle_rows = [r for r in rows if r["state"] == "Idle"]
 
-action, action_color, action_message, best = simple_global_action(rows, market)
-market_display = {
-    "BULL": "Moving",
-    "EXPANSION": "Moving",
-    "PREBULL": "Building",
-    "ACCUMULATION": "Building",
-    "BEAR": "Weak",
-    "DISTRIBUTION": "Cooling",
-    "EXHAUSTION": "Cooling",
-    "WAITING": "Waiting",
-}.get(str(market).upper(), str(market).title())
+command, command_color, command_copy, best = cockpit_command(rows, market)
+market_label, market_color = market_read(market)
 
-st.markdown('<div class="simple-shell">', unsafe_allow_html=True)
+st.markdown('<div class="cockpit">', unsafe_allow_html=True)
+
 st.markdown(f"""
-<div class="simple-hero">
-  <div class="simple-brand">
-    <div class="simple-logo">A+</div>
+<div class="topline">
+  <div class="brandmark">
+    <div class="badge">A+</div>
     <div>
-      <div class="simple-title">DECISION RADAR</div>
-      <div class="simple-sub">What is happening · What to do · Whether you are too late</div>
+      <div class="brandname">DECISION RADAR</div>
+      <div class="brandtag">Mission Control</div>
     </div>
   </div>
-  <div class="market-strip">
-    <div class="market-cell"><div class="market-k">Market Status</div><div class="market-v" style="color:{state_color(market)};">{clean_text(market_display)}</div></div>
-    <div class="market-cell"><div class="market-k">Pairs Live</div><div class="market-v">{active}</div></div>
-    <div class="market-cell"><div class="market-k">Watching</div><div class="market-v">{len(watch_rows)}</div></div>
-    <div class="market-cell"><div class="market-k">Moving</div><div class="market-v">{len(live_rows)}</div></div>
-    <div class="market-cell"><div class="market-k">Cooling</div><div class="market-v">{len(finished_rows)}</div></div>
-  </div>
-  <div class="simple-sub">Updated {clean_text(str(updated)[11:19] or "--:--:--")} · Cycle {cycle} · Source: {clean_text(source)}</div>
+  <div class="sync"><span class="sync-dot"></span> RADAR SYNCED · CYCLE {cycle}</div>
 </div>
 
-<div class="action-hero" style="color:{action_color};">
-  <div class="action-k">What should I do?</div>
-  <div class="action-v">{clean_text(action)}</div>
-  <div class="action-message">{clean_text(action_message)}</div>
-  <div class="action-best">{'Best pair: <b>' + clean_text(best['pair']) + '</b> · VWAP: <b>' + clean_text(best['vwap']) + '</b> · Time: <b>' + clean_text(best['time']) + '</b>' if best else 'No best pair yet. Waiting for a qualified setup.'}</div>
+<div class="command-grid">
+  <div class="mission" style="color:{command_color};">
+    <div class="eyebrow">Mission Command</div>
+    <div class="mission-action">{clean_text(command)}</div>
+    <div class="mission-copy">{clean_text(command_copy)}</div>
+    <div class="target-line">
+      <div>
+        <div class="eyebrow">Primary Target</div>
+        <div class="target-name">{clean_text(best['pair']) if best else 'NONE'}</div>
+      </div>
+      {f'<span class="chip" style="color:{best["vwap_color"]};">VWAP {clean_text(best["vwap"])}</span><span class="chip" style="color:{best["time_color"]};">TIME {clean_text(best["time"])}</span>' if best else '<span class="chip" style="color:#7f94a2;">NO ACTIVE TARGET</span>'}
+    </div>
+  </div>
+
+  <div class="telemetry">
+    <div class="telemetry-title">Ship Telemetry</div>
+    <div class="telemetry-row"><div class="telemetry-k">Sector Status</div><div class="telemetry-v" style="color:{market_color};">● {clean_text(market_label)}</div></div>
+    <div class="telemetry-row"><div class="telemetry-k">Active Targets</div><div class="telemetry-v">{len(queue_rows)}</div></div>
+    <div class="telemetry-row"><div class="telemetry-k">In Flight</div><div class="telemetry-v">{len(flight_rows)}</div></div>
+    <div class="telemetry-row"><div class="telemetry-k">Pairs Scanned</div><div class="telemetry-v">{active}</div></div>
+    <div class="telemetry-row"><div class="telemetry-k">Last Sync</div><div class="telemetry-v">{clean_text(str(updated)[11:19] or '--:--:--')}</div></div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
 if not ok:
-    st.markdown(f'<div class="notice">Radar data is unavailable: {clean_text(source)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="empty" style="margin-top:14px;color:#ff6262;">Radar link unavailable: {clean_text(source)}</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="simple-section">👀 Watchlist</div>', unsafe_allow_html=True)
-st.markdown(render_simple_table(watch_rows, limit=10), unsafe_allow_html=True)
-
-st.markdown('<div class="simple-section">🚀 Moving Now</div>', unsafe_allow_html=True)
-st.markdown(render_simple_table(live_rows, include_change=True, limit=10), unsafe_allow_html=True)
-
-st.markdown('<div class="simple-section">❄ Cooling / Finished</div>', unsafe_allow_html=True)
-st.markdown(render_simple_table(finished_rows, include_change=True, limit=8), unsafe_allow_html=True)
-
-st.markdown('<div class="simple-section">Pair Read</div>', unsafe_allow_html=True)
-detail_candidates = watch_rows + live_rows + finished_rows
-if detail_candidates:
-    pair_options = [r["pair"] for r in detail_candidates]
-    selected_pair = st.selectbox("Select a pair", pair_options, key="simple_pair_select")
-    selected_row = next(r for r in detail_candidates if r["pair"] == selected_pair)
-    render_pair_card(selected_row, market, updated)
+st.markdown('<div class="section-head"><div class="section-title">Mission Queue</div><div class="section-note">Targets still forming or ready</div></div>', unsafe_allow_html=True)
+if queue_rows:
+    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in queue_rows[:6]) + '</div>', unsafe_allow_html=True)
 else:
-    st.markdown('<div class="empty-simple">No active pair detail is available yet.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="empty">No targets in the mission queue.</div>', unsafe_allow_html=True)
 
-with st.expander("Sleeping pairs"):
-    st.markdown(render_simple_table(sleeping_rows, limit=15), unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Active Missions</div><div class="section-note">Already moving — chase protection active</div></div>', unsafe_allow_html=True)
+if flight_rows:
+    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in flight_rows[:6]) + '</div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="empty">No missions currently in flight.</div>', unsafe_allow_html=True)
 
-st.markdown("""
-<div class="footer-simple">
-The radar keeps the technical calculations underneath the hood. The main screen only shows information that helps with a decision: status, VWAP, time, and action. No signal is a guarantee.
+st.markdown('<div class="section-head"><div class="section-title">Target Readout</div><div class="section-note">Open one target for the pre-flight checklist</div></div>', unsafe_allow_html=True)
+detail_rows = queue_rows + flight_rows + ended_rows
+if detail_rows:
+    selected_pair = st.selectbox("Target", [r["pair"] for r in detail_rows], key="cockpit_target")
+    selected = next(r for r in detail_rows if r["pair"] == selected_pair)
+    passed, waiting = reason_lines(selected["setup"])
+
+    detail_action = {
+        "Mission Ready": ("GO", "#72ff9a"),
+        "Building": ("HOLD", "#ffd85a"),
+        "In Flight": ("DO NOT CHASE", "#ffd85a"),
+        "Mission Over": ("ABORT", "#ff6262"),
+        "Idle": ("STANDBY", "#7f94a2"),
+    }.get(selected["state"], ("HOLD", "#ffd85a"))
+
+    checks = "".join(f'<div class="check" style="color:#72ff9a;">✓ {clean_text(x)}</div>' for x in passed)
+    checks += "".join(f'<div class="check" style="color:#ffd85a;">□ {clean_text(x)}</div>' for x in waiting)
+
+    st.markdown(f"""
+<div class="detail-shell">
+  <div class="detail-grid">
+    <div class="detail-status">
+      <div class="eyebrow">Target</div>
+      <div class="target-name">{clean_text(selected['pair'])}</div>
+      <div class="detail-action" style="color:{detail_action[1]};">{detail_action[0]}</div>
+      <span class="chip" style="color:{selected['color']};">{clean_text(selected['state'])}</span>
+    </div>
+    <div>
+      <div class="eyebrow">Pre-Flight Checklist</div>
+      <div class="checklist" style="margin-top:10px;">{checks or '<div class="check">No checklist data yet.</div>'}</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+else:
+    st.markdown('<div class="empty">No target readout available.</div>', unsafe_allow_html=True)
+
+with st.expander("Mission archive"):
+    archive = ended_rows + idle_rows
+    if archive:
+        st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in archive[:9]) + '</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="empty">Archive is empty.</div>', unsafe_allow_html=True)
+
+st.markdown(f"""
+<div class="footerline">
+  <div>Source: {clean_text(source)}</div>
+  <div>Signals are decision support, not guarantees.</div>
 </div>
 </div>
 """, unsafe_allow_html=True)
