@@ -61,7 +61,6 @@ table{
     border-radius:10px;
     font-weight:900;
 }
-<style>
 :root{
   --bg:#05080C; --panel:#091119; --panel2:#071017; --line:#22303A;
   --green:#78FF2E; --yellow:#FFD93D; --red:#FF4D4D; --orange:#FF8A3D;
@@ -1242,163 +1241,425 @@ def fires(n):
     return "🔥" * min(max(n,0),3) if n else "—"
 
 
-with st.sidebar:
-    st.markdown("### Radar Controls")
-    auto = st.toggle("Auto refresh", value=True, key="auto_refresh_toggle_v22")
-    refresh = 20  # fixed refresh interval; no user slider to avoid duplicate Streamlit widget IDs
-    manual = st.button("Refresh Now", key="sidebar_refresh_v22")
-    reset_perf = st.button("Clear app cache", key="clear_app_cache_v22")
-    st.caption("Scanner → GitHub JSON → Streamlit decision report")
+# ---------------------------------------------------------------------------
+# SIMPLE DECISION UI
+# The scanner may keep its technical scores internally, but the customer-facing
+# dashboard speaks in plain language: status, VWAP, time, and action.
+# ---------------------------------------------------------------------------
 
-    st.markdown(
-    '<div style="color:#FFD93D;font-weight:1000;text-transform:uppercase;margin:10px 0 6px;">Membership View</div>',
-    unsafe_allow_html=True
-)
+SIMPLE_CSS = """
+<style>
+.simple-shell{max-width:1180px;margin:0 auto;}
+.simple-hero{border:1px solid #22303A;border-radius:20px;background:linear-gradient(135deg,#071017,#030609);padding:22px;margin-bottom:14px;}
+.simple-brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.simple-logo{width:62px;height:62px;border:2px solid #78FF2E;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:28px;color:#78FF2E;}
+.simple-title{font-size:38px;line-height:1;font-weight:1000;color:#F5F7FA;letter-spacing:-1px;}
+.simple-sub{color:#9AA6B2;font-size:14px;margin-top:5px;}
+.market-strip{display:grid;grid-template-columns:1.25fr repeat(4,.75fr);gap:10px;margin:14px 0;}
+.market-cell{border:1px solid #22303A;border-radius:13px;background:#071017;padding:13px 14px;}
+.market-k{font-size:11px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;letter-spacing:.7px;}
+.market-v{font-size:23px;font-weight:1000;color:#F5F7FA;margin-top:3px;}
+.action-hero{border:2px solid currentColor;border-radius:18px;background:#05080C;padding:22px;margin:14px 0 20px;}
+.action-k{font-size:12px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;letter-spacing:1px;}
+.action-v{font-size:46px;line-height:1;font-weight:1000;margin:8px 0;}
+.action-message{font-size:17px;color:#F5F7FA;line-height:1.45;}
+.action-best{margin-top:13px;padding-top:12px;border-top:1px solid #22303A;color:#9AA6B2;}
+.action-best b{color:#F5F7FA;font-size:20px;}
+.simple-section{margin:22px 0 10px;font-size:25px;font-weight:1000;color:#F5F7FA;}
+.simple-table-wrap{border:1px solid #22303A;border-radius:16px;background:#071017;padding:10px 14px;overflow-x:auto;margin-bottom:18px;}
+.simple-table{width:100%;border-collapse:collapse;min-width:650px;}
+.simple-table th{font-size:11px;text-transform:uppercase;color:#9AA6B2;text-align:left;padding:10px 8px;border-bottom:1px solid #22303A;}
+.simple-table td{padding:12px 8px;border-bottom:1px solid #17232D;color:#F5F7FA;font-size:14px;}
+.simple-table tr:last-child td{border-bottom:0;}
+.coin-name{font-weight:1000;font-size:16px;}
+.state-pill,.vwap-pill,.time-pill{display:inline-block;padding:5px 9px;border-radius:999px;border:1px solid currentColor;font-size:11px;font-weight:1000;text-transform:uppercase;white-space:nowrap;}
+.pair-card{border:1px solid #22303A;border-radius:16px;background:#071017;padding:16px;margin-bottom:12px;}
+.pair-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+.pair-title{font-size:25px;font-weight:1000;color:#F5F7FA;}
+.pair-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:13px 0;}
+.pair-cell{border:1px solid #22303A;border-radius:12px;background:#05080C;padding:11px;}
+.pair-cell-k{font-size:10px;color:#9AA6B2;text-transform:uppercase;font-weight:1000;}
+.pair-cell-v{font-size:17px;font-weight:1000;margin-top:4px;color:#F5F7FA;}
+.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.reason-box{border-top:1px solid #22303A;padding-top:10px;color:#F5F7FA;font-size:14px;line-height:1.5;}
+.reason-head{font-size:11px;text-transform:uppercase;color:#9AA6B2;font-weight:1000;margin-bottom:4px;}
+.reason-good{color:#78FF2E}.reason-wait{color:#FFD93D}.reason-stop{color:#FF4D4D}
+.empty-simple{border:1px solid #22303A;border-radius:14px;background:#071017;padding:18px;color:#9AA6B2;}
+.footer-simple{margin:22px 0 8px;padding-top:14px;border-top:1px solid #22303A;color:#9AA6B2;font-size:13px;}
+@media(max-width:850px){
+  .market-strip{grid-template-columns:1fr 1fr;}
+  .market-cell:first-child{grid-column:1/-1;}
+  .pair-grid,.reason-grid{grid-template-columns:1fr;}
+  .simple-title{font-size:31px;}
+  .action-v{font-size:38px;}
+}
+</style>
+"""
+st.markdown(SIMPLE_CSS, unsafe_allow_html=True)
 
-membership = st.radio(
-    "Membership View",
-    ["Free", "Basic", "Premium", "Pro Analytics"],
-    horizontal=True,
-    label_visibility="collapsed",
-    key="membership_view_main_v1",
-)
-cta_text = "Get Full Radar"
-st.markdown("""
-<div class="proof-panel" style="margin:10px 0 18px;">
-  <div class="proof-title">How To Use</div>
 
-  <div class="read-row">
-    <div class="read-key" style="color:#78FF2E;">1</div>
-    <div class="read-desc">Check Market State</div>
+def pair_vwap_read(setup):
+    flags = setup.get("flags", {}) or {}
+    price = safe_float(setup.get("price"))
+    vwap = safe_float(setup.get("vwap"))
+    accepted = bool(flags.get("vwap_accept"))
+
+    if vwap <= 0 or price <= 0:
+        return "Unknown", "#9AA6B2", 0.0
+
+    distance = (price - vwap) / vwap * 100.0
+    if accepted and abs(distance) <= 0.65:
+        return "Holding", "#78FF2E", distance
+    if distance > 0.65:
+        return "Above", "#78FF2E", distance
+    if abs(distance) <= 0.35:
+        return "Testing", "#FFD93D", distance
+    return "Below", "#FF4D4D", distance
+
+
+def simple_time_read(setup, market="", generated_at=""):
+    clock = execution_clock(setup, market, generated_at)
+    status = str(clock.get("status", "WATCH")).upper()
+    timing = str(setup_timing(setup) or "WATCH").upper()
+    age = setup_age_minutes(setup, generated_at)
+
+    if status in {"TOO LATE", "NO ENTRY"}:
+        return "Too Late", "#FF4D4D"
+    if status == "EXECUTE ZONE":
+        return "Now", "#78FF2E"
+    if status == "CHECK AGAIN":
+        return "Refresh", "#FFD93D"
+    if timing == "EARLY":
+        return "Early", "#35A7FF"
+    if age <= 5:
+        return "Fresh", "#78FF2E"
+    if age <= 15:
+        return "Developing", "#35A7FF"
+    if age <= 30:
+        return "Maturing", "#FFD93D"
+    if age > 30:
+        return "Late", "#FF4D4D"
+    return "Watch", "#FFD93D"
+
+
+def simple_pair_state(setup, market="", generated_at=""):
+    flags = setup.get("flags", {}) or {}
+    clock = execution_clock(setup, market, generated_at)
+    status = str(clock.get("status", "WATCH")).upper()
+    vwap_label, _, distance = pair_vwap_read(setup)
+
+    change_1h = safe_float(
+        setup.get("change_1h_pct",
+        setup.get("pct_1h",
+        setup.get("one_hour_change", pct_change(setup.get("close_1h", [])))))
+    )
+
+    if status in {"TOO LATE", "NO ENTRY"} or distance > 2.2:
+        return "Cooling", "❄", "#FF4D4D"
+    if status == "EXECUTE ZONE":
+        return "Ready", "⚡", "#78FF2E"
+    if abs(change_1h) >= 1.0 and (flags.get("impulse") or flags.get("acceleration")):
+        return "Moving", "🚀", "#78FF2E"
+    if vwap_label in {"Above", "Holding"} and (
+        flags.get("compression")
+        or flags.get("pullback")
+        or flags.get("acceleration")
+        or flags.get("impulse")
+    ):
+        return "Building", "👀", "#FFD93D"
+    return "Sleeping", "😴", "#9AA6B2"
+
+
+def simple_reason_lines(setup):
+    flags = setup.get("flags", {}) or {}
+    vwap_label, _, _ = pair_vwap_read(setup)
+    positives = []
+    waits = []
+
+    if vwap_label == "Holding":
+        positives.append("Buyers are defending VWAP")
+    elif vwap_label == "Above":
+        positives.append("Price is above VWAP")
+    elif vwap_label == "Testing":
+        waits.append("Needs a clean VWAP hold")
+    else:
+        waits.append("Needs to reclaim VWAP")
+
+    if flags.get("pullback"):
+        positives.append("Pullback has formed")
+    else:
+        waits.append("Wait for a controlled pullback")
+
+    if flags.get("acceleration") or flags.get("impulse"):
+        positives.append("Momentum is increasing")
+    else:
+        waits.append("Momentum still needs proof")
+
+    if flags.get("structure_break"):
+        positives.append("Price structure is improving")
+    else:
+        waits.append("Wait for a clean structure break")
+
+    if flags.get("volume_spike"):
+        positives.append("Volume is supporting the move")
+    else:
+        waits.append("Volume is still average")
+
+    return positives[:3], waits[:3]
+
+
+def build_simple_rows(state, market, generated_at):
+    billboard = (state or {}).get("billboard", {}) or {}
+    billboard_1h = billboard.get("one_hour", []) or []
+    setups = (state or {}).get("top_setups", []) or []
+
+    billboard_map = {str(r.get("pair", "")).upper(): r for r in billboard_1h}
+    rows = []
+    seen = set()
+
+    for setup in setups:
+        pair = str(setup.get("pair", "UNKNOWN"))
+        key = pair.upper()
+        merged = dict(billboard_map.get(key, {}))
+        merged.update(setup)
+        state_label, emoji, state_color_value = simple_pair_state(merged, market, generated_at)
+        vwap_label, vwap_color, _ = pair_vwap_read(merged)
+        time_label, time_color_value = simple_time_read(merged, market, generated_at)
+        change_1h = safe_float(
+            merged.get("change_1h_pct",
+            merged.get("pct_1h",
+            merged.get("one_hour_change", pct_change(merged.get("close_1h", [])))))
+        )
+        rows.append({
+            "setup": merged,
+            "pair": pair,
+            "state": state_label,
+            "emoji": emoji,
+            "state_color": state_color_value,
+            "vwap": vwap_label,
+            "vwap_color": vwap_color,
+            "time": time_label,
+            "time_color": time_color_value,
+            "change_1h": change_1h,
+        })
+        seen.add(key)
+
+    for board_row in billboard_1h:
+        pair = str(board_row.get("pair", "UNKNOWN"))
+        if pair.upper() in seen:
+            continue
+        synthetic = dict(board_row)
+        change_1h = safe_float(board_row.get("change_1h_pct", 0))
+        if change_1h >= 1.0:
+            state_label, emoji, state_color_value = "Moving", "🚀", "#78FF2E"
+            time_label, time_color_value = ("Fresh", "#78FF2E") if change_1h < 3 else ("Late", "#FF4D4D")
+        else:
+            state_label, emoji, state_color_value = "Sleeping", "😴", "#9AA6B2"
+            time_label, time_color_value = "Watch", "#FFD93D"
+        rows.append({
+            "setup": synthetic,
+            "pair": pair,
+            "state": state_label,
+            "emoji": emoji,
+            "state_color": state_color_value,
+            "vwap": "Unknown",
+            "vwap_color": "#9AA6B2",
+            "time": time_label,
+            "time_color": time_color_value,
+            "change_1h": change_1h,
+        })
+
+    order = {"Ready": 0, "Building": 1, "Moving": 2, "Cooling": 3, "Sleeping": 4}
+    rows.sort(key=lambda r: (order.get(r["state"], 9), -r["change_1h"]))
+    return rows
+
+
+def simple_global_action(rows, market):
+    ready = [r for r in rows if r["state"] == "Ready"]
+    building = [r for r in rows if r["state"] == "Building"]
+    moving = [r for r in rows if r["state"] == "Moving"]
+    cooling = [r for r in rows if r["state"] == "Cooling"]
+
+    market_upper = str(market).upper()
+    if ready and market_upper not in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}:
+        best = ready[0]
+        return "GO", "#78FF2E", "A fresh setup is holding VWAP. Confirm continuation before acting.", best
+    if building:
+        best = building[0]
+        return "WATCH", "#FFD93D", f"{len(building)} pair{'s are' if len(building) != 1 else ' is'} building. Let the setup finish forming.", best
+    if moving:
+        best = moving[0]
+        return "WAIT", "#FFD93D", "Moves are already underway. Do not chase; wait for a fresh pullback or base.", best
+    if cooling:
+        return "STAND DOWN", "#FF4D4D", "The visible moves are cooling or extended. Wait for the market to reset.", cooling[0]
+    return "WAIT", "#35A7FF", "No qualified setup is active. Preserve capital and wait for clearer conditions.", None
+
+
+def render_simple_table(rows, columns=("pair", "state", "vwap", "time"), include_change=False, limit=10):
+    if not rows:
+        return '<div class="empty-simple">No pairs in this state right now.</div>'
+
+    headers = ["Pair", "Status", "VWAP", "Time"]
+    if include_change:
+        headers.insert(1, "1H")
+
+    body = []
+    for row in rows[:limit]:
+        cells = [f'<td><span class="coin-name">{clean_text(row["pair"])}</span></td>']
+        if include_change:
+            change = safe_float(row.get("change_1h"))
+            change_color = "#78FF2E" if change >= 0 else "#FF4D4D"
+            cells.append(f'<td style="color:{change_color};font-weight:1000;">{change:+.2f}%</td>')
+        cells.extend([
+            f'<td><span class="state-pill" style="color:{row["state_color"]};">{row["emoji"]} {clean_text(row["state"])}</span></td>',
+            f'<td><span class="vwap-pill" style="color:{row["vwap_color"]};">{clean_text(row["vwap"])}</span></td>',
+            f'<td><span class="time-pill" style="color:{row["time_color"]};">{clean_text(row["time"])}</span></td>',
+        ])
+        body.append("<tr>" + "".join(cells) + "</tr>")
+
+    return (
+        '<div class="simple-table-wrap"><table class="simple-table">'
+        '<thead><tr>' + "".join(f"<th>{h}</th>" for h in headers) + '</tr></thead>'
+        '<tbody>' + "".join(body) + '</tbody></table></div>'
+    )
+
+
+def render_pair_card(row, market, generated_at):
+    setup = row["setup"]
+    positives, waits = simple_reason_lines(setup)
+    status = row["state"]
+    action_map = {
+        "Ready": ("GO", "#78FF2E", "Confirm continuation. Leave immediately if VWAP fails."),
+        "Building": ("WATCH", "#FFD93D", "Let the pullback, VWAP hold, and breakout proof develop."),
+        "Moving": ("DO NOT CHASE", "#FFD93D", "Wait for a fresh base or controlled return toward VWAP."),
+        "Cooling": ("SKIP", "#FF4D4D", "The move is extended or losing control."),
+        "Sleeping": ("WAIT", "#9AA6B2", "No actionable movement yet."),
+    }
+    action, action_color, action_note = action_map.get(status, ("WATCH", "#FFD93D", "Wait for proof."))
+
+    positive_html = "".join(f"<div>✓ {clean_text(x)}</div>" for x in positives) or "<div>— No confirmation yet</div>"
+    wait_html = "".join(f"<div>• {clean_text(x)}</div>" for x in waits) or "<div>• Continue to monitor VWAP</div>"
+
+    st.markdown(f"""
+<div class="pair-card">
+  <div class="pair-top">
+    <div>
+      <div class="pair-title">{clean_text(row['pair'])}</div>
+      <span class="state-pill" style="color:{row['state_color']};">{row['emoji']} {clean_text(status)}</span>
+    </div>
+    <div style="text-align:right;">
+      <div class="market-k">Radar says</div>
+      <div style="font-size:24px;font-weight:1000;color:{action_color};">{action}</div>
+    </div>
   </div>
-
-  <div class="read-row">
-    <div class="read-key" style="color:#FFD93D;">2</div>
-    <div class="read-desc">Watch Top Setups</div>
+  <div class="pair-grid">
+    <div class="pair-cell"><div class="pair-cell-k">VWAP</div><div class="pair-cell-v" style="color:{row['vwap_color']};">{clean_text(row['vwap'])}</div></div>
+    <div class="pair-cell"><div class="pair-cell-k">Time</div><div class="pair-cell-v" style="color:{row['time_color']};">{clean_text(row['time'])}</div></div>
+    <div class="pair-cell"><div class="pair-cell-k">1H Move</div><div class="pair-cell-v">{safe_float(row['change_1h']):+.2f}%</div></div>
   </div>
-
-  <div class="read-row">
-    <div class="read-key" style="color:#35A7FF;">3</div>
-    <div class="read-desc">Enter only during EXECUTE ZONE</div>
+  <div class="reason-grid">
+    <div class="reason-box"><div class="reason-head">Why it is here</div><div class="reason-good">{positive_html}</div></div>
+    <div class="reason-box"><div class="reason-head">Wait for / risk</div><div class="reason-wait">{wait_html}</div></div>
   </div>
+  <div style="margin-top:12px;color:#F5F7FA;"><b style="color:{action_color};">{action}:</b> {clean_text(action_note)}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# Prominent refresh control for the main page (sidebar can stay collapsed).
-st.markdown('<div class="refresh-row"><span>Live data source refreshes from GitHub JSON.</span></div>', unsafe_allow_html=True)
-top_left, top_mid, top_right = st.columns([6, 1.5, 1.5])
-with top_right:
-    top_refresh = st.button("↻ Refresh Radar", key="top_refresh_v22")
 
-if reset_perf:
+with st.sidebar:
+    st.markdown("### Radar Controls")
+    auto = st.toggle("Auto refresh", value=True, key="simple_auto_refresh")
+    manual = st.button("Refresh Now", key="simple_manual_refresh")
+    clear_cache = st.button("Clear Cache", key="simple_clear_cache")
+    st.caption("Simple UI: Status · VWAP · Time · Action")
+
+if clear_cache or manual:
     st.cache_data.clear()
     st.rerun()
-if manual or top_refresh:
-    st.cache_data.clear()
-    st.rerun()
+
 if auto:
-    st.markdown(f"<script>setTimeout(function(){{window.location.reload();}}, {refresh*1000});</script>", unsafe_allow_html=True)
+    st.markdown("<script>setTimeout(function(){window.location.reload();}, 20000);</script>", unsafe_allow_html=True)
 
 state, ok, source = load_state()
-
-# Expose the active source so stale local/GitHub issues are obvious on the site.
-st.caption(f"Data source: {source}")
-
 market = state.get("market_state") or state.get("regime_name") or "WAITING"
-color = state_color(market)
-btc = state.get("btc", {}) or {}
-setups = state.get("top_setups", []) or []
-sector_counts = state.get("sector_counts", {}) or {}
-state_counts = state.get("state_counts", {}) or {}
 updated = state.get("generated_at") or state.get("timestamp") or ""
 cycle = state.get("cycle_number", state.get("cycle", 0))
-active = state.get("active_pairs", 0)
-perf_state, perf_ok, perf_source = load_performance()
+active = int(state.get("active_pairs", 0) or 0)
+rows = build_simple_rows(state, market, updated)
 
-# Decision banner values
-best = setups[0] if setups else {}
-best_coin = best.get("pair", "None yet")
-best_timing = (best.get("chart_read", {}) or {}).get("timing", "WAIT") if best else "WAIT"
-global_clock = global_execution_decision(setups, market, updated)
-action = global_clock.get("status", "WAIT")
-action_color = "#78FF2E" if global_clock.get("class") == "exec-now" else "#FFD93D" if global_clock.get("class") in {"exec-wait", "exec-watch"} else "#FF4D4D"
+watch_rows = [r for r in rows if r["state"] in {"Ready", "Building"}]
+live_rows = [r for r in rows if r["state"] == "Moving"]
+finished_rows = [r for r in rows if r["state"] == "Cooling"]
+sleeping_rows = [r for r in rows if r["state"] == "Sleeping"]
 
-st.markdown('<div class="report-shell">', unsafe_allow_html=True)
+action, action_color, action_message, best = simple_global_action(rows, market)
+market_display = {
+    "BULL": "Moving",
+    "EXPANSION": "Moving",
+    "PREBULL": "Building",
+    "ACCUMULATION": "Building",
+    "BEAR": "Weak",
+    "DISTRIBUTION": "Cooling",
+    "EXHAUSTION": "Cooling",
+    "WAITING": "Waiting",
+}.get(str(market).upper(), str(market).title())
+
+st.markdown('<div class="simple-shell">', unsafe_allow_html=True)
 st.markdown(f"""
-<div class="header">
-  <div class="header-left">
-    <div class="brand"><div class="logo">A+</div><div><div class="title"><span>A+</span> DECISION RADAR</div><div class="subtitle">Momentum execution radar built to reduce emotional trading and identify high-probability continuation setups.</div></div></div>
-    <div class="small">
-Built using live Kraken market data, momentum structure analysis, VWAP positioning, and execution-based filtering.
-</div>
-    <div class="meta"><div>📅 <b>{str(updated)[:10] or 'waiting'}</b></div><div>🕒 <b>{str(updated)[11:19] or '--:--:--'}</b></div><div>🔄 Cycle: <b>{cycle}</b></div><div>🎯 Active Pairs: <b>{active}</b></div></div>
-<div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
-  <div class="cta-main">⚡ LIVE RADAR ACTIVE</div>
-  <div class="cta-secondary">Upgrade For Full Execution Engine</div>
-</div>  
+<div class="simple-hero">
+  <div class="simple-brand">
+    <div class="simple-logo">A+</div>
+    <div>
+      <div class="simple-title">DECISION RADAR</div>
+      <div class="simple-sub">What is happening · What to do · Whether you are too late</div>
+    </div>
   </div>
-  <div class="state-box">
-    <div class="state-label">Market State</div>
-    <div class="state-value" style="color:{color};">{market}</div>
-    <div class="state-sub" style="color:{color};">{'Market warming up' if market=='PREBULL' else 'Trade-ready conditions' if market=='BULL' else 'Weak tape' if market=='BEAR' else 'Waiting for data'}</div>
-    <div class="state-reason">{btc.get('reason','Start scanner')}</div>
+  <div class="market-strip">
+    <div class="market-cell"><div class="market-k">Market Status</div><div class="market-v" style="color:{state_color(market)};">{clean_text(market_display)}</div></div>
+    <div class="market-cell"><div class="market-k">Pairs Live</div><div class="market-v">{active}</div></div>
+    <div class="market-cell"><div class="market-k">Watching</div><div class="market-v">{len(watch_rows)}</div></div>
+    <div class="market-cell"><div class="market-k">Moving</div><div class="market-v">{len(live_rows)}</div></div>
+    <div class="market-cell"><div class="market-k">Cooling</div><div class="market-v">{len(finished_rows)}</div></div>
   </div>
+  <div class="simple-sub">Updated {clean_text(str(updated)[11:19] or "--:--:--")} · Cycle {cycle} · Source: {clean_text(source)}</div>
 </div>
-<div class="decision-banner">
-  <div class="decision-tile"><div class="tile-k">What To Do Now</div><div class="tile-v" style="color:{action_color};">{action}</div><div class="tile-sub">{global_clock.get('message','Wait for clean timing.')}</div></div>
-  <div class="decision-tile"><div class="tile-k">Execution Window</div><div class="tile-v" style="color:{action_color};">{global_clock.get('window','Needs trigger')}</div><div class="tile-sub">Best setup: <b>{best_coin}</b> · Timing: <b style="color:{timing_color(best_timing)};">{best_timing}</b></div></div>
-  <div class="decision-tile"><div class="tile-k">Too Late Rule</div><div class="tile-v" style="color:#FF4D4D;">Skip Chases</div><div class="tile-sub">Too far from VWAP, RSI hot, or no pullback = no entry.</div></div>
+
+<div class="action-hero" style="color:{action_color};">
+  <div class="action-k">What should I do?</div>
+  <div class="action-v">{clean_text(action)}</div>
+  <div class="action-message">{clean_text(action_message)}</div>
+  <div class="action-best">{'Best pair: <b>' + clean_text(best['pair']) + '</b> · VWAP: <b>' + clean_text(best['vwap']) + '</b> · Time: <b>' + clean_text(best['time']) + '</b>' if best else 'No best pair yet. Waiting for a qualified setup.'}</div>
 </div>
 """, unsafe_allow_html=True)
 
 if not ok:
-    st.markdown(f'<div class="notice">Data source: {source}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="notice">Radar data is unavailable: {clean_text(source)}</div>', unsafe_allow_html=True)
 
-render_billboard_dashboard(state)
+st.markdown('<div class="simple-section">👀 Watchlist</div>', unsafe_allow_html=True)
+st.markdown(render_simple_table(watch_rows, limit=10), unsafe_allow_html=True)
 
-if has_tier(membership, "Premium"):
-    st.markdown('<div class="section-title"><span> Top 5 Decision Setups </span></div>', unsafe_allow_html=True)
-    if setups:
-        for i, setup in enumerate(setups[:TOP_SETUP_LIMIT], start=1):
-            render_setup_card(setup, i, market, updated)
-    else:
-        st.markdown('<div class="notice">No live setups yet. Start the scanner and wait for the next cycle.</div>', unsafe_allow_html=True)
-        for i in range(1, TOP_SETUP_LIMIT + 1):
-            render_setup_card({"coin":"WAIT", "pair":"WAITING", "tag":"PREBUILD", "trigger_score":0,"trade_score":0,"confidence":0,"chart_read":{"timing":"WAIT","read_30m":"Waiting","read_1h":"Waiting"},"flags":{}}, i, market, updated)
+st.markdown('<div class="simple-section">🚀 Moving Now</div>', unsafe_allow_html=True)
+st.markdown(render_simple_table(live_rows, include_change=True, limit=10), unsafe_allow_html=True)
+
+st.markdown('<div class="simple-section">❄ Cooling / Finished</div>', unsafe_allow_html=True)
+st.markdown(render_simple_table(finished_rows, include_change=True, limit=8), unsafe_allow_html=True)
+
+st.markdown('<div class="simple-section">Pair Read</div>', unsafe_allow_html=True)
+detail_candidates = watch_rows + live_rows + finished_rows
+if detail_candidates:
+    pair_options = [r["pair"] for r in detail_candidates]
+    selected_pair = st.selectbox("Select a pair", pair_options, key="simple_pair_select")
+    selected_row = next(r for r in detail_candidates if r["pair"] == selected_pair)
+    render_pair_card(selected_row, market, updated)
 else:
-    render_top5_simple(setups, market, updated, membership)
+    st.markdown('<div class="empty-simple">No active pair detail is available yet.</div>', unsafe_allow_html=True)
 
-if has_tier(membership, "Pro Analytics"):
-    render_performance_dashboard(perf_state, perf_ok, perf_source)
-else:
-    locked_panel(
-        "Proof / Backtesting Analytics",
-        "Pro Analytics",
-        "Regime, timing, RSI zone, VWAP distance, setup type, sector, hour, and performance tables stay behind the analytics tier.",
-    )
+with st.expander("Sleeping pairs"):
+    st.markdown(render_simple_table(sleeping_rows, limit=15), unsafe_allow_html=True)
 
-sector_rows = "".join([f'<div class="sector-row"><span>{k}</span><span>{fires(v)}</span></div>' for k,v in sorted(sector_counts.items(), key=lambda x:x[1], reverse=True)[:6]]) or '<div class="small">No sector flow yet.</div>'
-counts_rows = "".join([f'<div class="metric-row"><span>{k}</span><b>{v}</b></div>' for k,v in state_counts.items()]) or '<div class="small">No state counts yet.</div>'
-btc_state = market if market != "PREBULL" else "WATCH"
-st.markdown(f"""
-<div class="bottom-grid">
-  <div class="bottom-panel">
-    <div class="panel-title">Market Snapshot</div>
-    <div class="btc-big" style="color:{color};">BTC {btc_state}</div>
-    <div class="small">{btc.get('reason','Higher-timeframe read')}</div>
-    <div class="metric-row"><span>BTC 15M RSI</span><b>{btc.get('rsi_15m',0)}</b></div>
-    <div class="metric-row"><span>BTC 1H RSI</span><b>{btc.get('rsi_60m', btc.get('rsi_1h',0))}</b></div>
-    <div class="metric-row"><span>15M VWAP</span><b>{'YES' if btc.get('above_vwap_15m') else 'NO'}</b></div>
-    <div class="metric-row"><span>1H VWAP</span><b>{'YES' if btc.get('above_vwap_60m') or btc.get('above_vwap_1h') else 'NO'}</b></div>
-  </div>
-  <div class="bottom-panel"><div class="panel-title">State Counts</div>{counts_rows}</div>
-  <div class="bottom-panel">
-    <div class="panel-title">How To Read This</div>
-    <div class="read-row"><div class="read-key" style="color:#78FF2E;">Projected</div><div class="read-desc">Estimated move range from volatility, impulse, scores, VWAP, and BTC regime.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#FFD93D;">Entry Zone</div><div class="read-desc">Area where risk can be defined. Not a blind buy signal.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#FF4D4D;">Invalid</div><div class="read-desc">Where the trade idea is wrong. Respect this first.</div></div>
-    <div class="read-row"><div class="read-key" style="color:#35A7FF;">Timing</div><div class="read-desc">EXECUTE ZONE = next few minutes only. WAIT = let setup form. TOO LATE = skip chase.</div></div>
-  </div>
+st.markdown("""
+<div class="footer-simple">
+The radar keeps the technical calculations underneath the hood. The main screen only shows information that helps with a decision: status, VWAP, time, and action. No signal is a guarantee.
 </div>
-<span class="left">🏆 Built to reduce emotional trading and improve momentum execution discipline.</span>
+</div>
 """, unsafe_allow_html=True)
