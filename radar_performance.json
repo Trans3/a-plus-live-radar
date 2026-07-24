@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-23T20:43:46",
-  "cycle_number": 2648,
+  "generated_at": "2026-07-23T20:46:03",
+  "cycle_number": 2649,
   "settings": {
     "hit_1pct": 1.0,
     "hit_2pct": 2.0,
@@ -11,7 +11,7 @@
   },
   "summary": {
     "total_signals": 250,
-    "open_signals": 19,
+    "open_signals": 18,
     "hit_1pct_count": 27,
     "hit_2pct_count": 4,
     "drawdown_count": 1,
@@ -29,7 +29,7 @@
         "drawdown_rate": 0.4,
         "avg_max_move_pct": 0.351,
         "avg_drawdown_pct": -0.119,
-        "avg_current_pct": 0.201,
+        "avg_current_pct": 0.202,
         "edge_score": 4.48
       },
       {
@@ -53,7 +53,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.436,
         "avg_drawdown_pct": -0.126,
-        "avg_current_pct": 0.278,
+        "avg_current_pct": 0.28,
         "edge_score": 5.45
       },
       {
@@ -75,7 +75,7 @@
         "drawdown_rate": 0.88,
         "avg_max_move_pct": 0.351,
         "avg_drawdown_pct": -0.14,
-        "avg_current_pct": 0.203,
+        "avg_current_pct": 0.204,
         "edge_score": 4.31
       },
       {
@@ -110,7 +110,7 @@
         "drawdown_rate": 0.54,
         "avg_max_move_pct": 0.401,
         "avg_drawdown_pct": -0.128,
-        "avg_current_pct": 0.247,
+        "avg_current_pct": 0.248,
         "edge_score": 5.3
       },
       {
@@ -176,7 +176,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.0,
         "avg_drawdown_pct": -0.041,
-        "avg_current_pct": -0.041,
+        "avg_current_pct": -0.015,
         "edge_score": -0.16
       },
       {
@@ -200,7 +200,7 @@
         "drawdown_rate": 0.4,
         "avg_max_move_pct": 0.352,
         "avg_drawdown_pct": -0.12,
-        "avg_current_pct": 0.201,
+        "avg_current_pct": 0.203,
         "edge_score": 4.5
       },
       {
@@ -224,7 +224,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.869,
         "avg_drawdown_pct": -0.189,
-        "avg_current_pct": 0.678,
+        "avg_current_pct": 0.685,
         "edge_score": 15.56
       },
       {
@@ -246,7 +246,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.388,
         "avg_drawdown_pct": -0.091,
-        "avg_current_pct": 0.232,
+        "avg_current_pct": 0.237,
         "edge_score": 4.29
       },
       {
@@ -303,7 +303,7 @@
         "drawdown_rate": 1.85,
         "avg_max_move_pct": 0.395,
         "avg_drawdown_pct": -0.14,
-        "avg_current_pct": 0.234,
+        "avg_current_pct": 0.237,
         "edge_score": 5.57
       },
       {
@@ -314,7 +314,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.361,
         "avg_drawdown_pct": -0.134,
-        "avg_current_pct": 0.209,
+        "avg_current_pct": 0.211,
         "edge_score": 4.28
       },
       {
@@ -404,7 +404,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.269,
         "avg_drawdown_pct": -0.083,
-        "avg_current_pct": 0.155,
+        "avg_current_pct": 0.158,
         "edge_score": 3.67
       },
       {
@@ -582,7 +582,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.071,
         "avg_drawdown_pct": -0.087,
-        "avg_current_pct": -0.056,
+        "avg_current_pct": -0.038,
         "edge_score": 0.5
       },
       {
@@ -617,7 +617,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.436,
         "avg_drawdown_pct": -0.126,
-        "avg_current_pct": 0.278,
+        "avg_current_pct": 0.28,
         "edge_score": 5.45
       },
       {
@@ -639,7 +639,7 @@
         "drawdown_rate": 0.75,
         "avg_max_move_pct": 0.324,
         "avg_drawdown_pct": -0.105,
-        "avg_current_pct": 0.178,
+        "avg_current_pct": 0.18,
         "edge_score": 4.03
       },
       {
@@ -674,7 +674,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.424,
         "avg_drawdown_pct": -0.152,
-        "avg_current_pct": 0.236,
+        "avg_current_pct": 0.238,
         "edge_score": 5.92
       },
       {
@@ -685,7 +685,7 @@
         "drawdown_rate": 0.57,
         "avg_max_move_pct": 0.317,
         "avg_drawdown_pct": -0.104,
-        "avg_current_pct": 0.184,
+        "avg_current_pct": 0.185,
         "edge_score": 3.82
       }
     ],
@@ -698,7 +698,7 @@
         "drawdown_rate": 0.4,
         "avg_max_move_pct": 0.35,
         "avg_drawdown_pct": -0.119,
-        "avg_current_pct": 0.2,
+        "avg_current_pct": 0.201,
         "edge_score": 4.46
       }
     ],
@@ -723,9 +723,9 @@
       "entry_price": 0.0461,
       "max_price_after": 0.0461,
       "min_price_after": 0.046,
-      "last_price": 0.046,
-      "last_seen": "2026-07-23T20:43:46",
-      "last_seen_ts": 1784853826.782029,
+      "last_price": 0.04607,
+      "last_seen": "2026-07-23T20:46:03",
+      "last_seen_ts": 1784853963.9582348,
       "rank_first": 4,
       "rank_best": 3,
       "rank_last": 3,
@@ -734,7 +734,7 @@
       "timing_first": "LATE",
       "timing_last": "ON TIME",
       "trigger_score": 75,
-      "trade_score": 51,
+      "trade_score": 42,
       "confidence": 75,
       "environment_score_first": 74,
       "environment_tier_first": "UNKNOWN",
@@ -755,12 +755,12 @@
       "status": "OPEN",
       "environment_score_last": 74,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 22.17,
+      "age_minutes": 24.45,
       "max_gain_pct": 0.0,
       "max_move_pct": 0.0,
       "max_drawdown_pct": -0.217,
       "drawdown_pct": -0.217,
-      "current_pct": -0.217,
+      "current_pct": -0.065,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -776,9 +776,9 @@
       "entry_price": 5.236,
       "max_price_after": 5.257,
       "min_price_after": 5.236,
-      "last_price": 5.24,
-      "last_seen": "2026-07-23T20:43:46",
-      "last_seen_ts": 1784853826.782029,
+      "last_price": 5.25,
+      "last_seen": "2026-07-23T20:46:03",
+      "last_seen_ts": 1784853963.9582348,
       "rank_first": 2,
       "rank_best": 1,
       "rank_last": 1,
@@ -786,9 +786,9 @@
       "regime_last": "CHOP",
       "timing_first": "ON TIME",
       "timing_last": "ON TIME",
-      "trigger_score": 90,
-      "trade_score": 47,
-      "confidence": 90,
+      "trigger_score": 100,
+      "trade_score": 54,
+      "confidence": 100,
       "environment_score_first": 58,
       "environment_tier_first": "UNKNOWN",
       "sector": "OTHER",
@@ -808,12 +808,12 @@
       "status": "OPEN",
       "environment_score_last": 58,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 14.26,
+      "age_minutes": 16.54,
       "max_gain_pct": 0.401,
       "max_move_pct": 0.401,
       "max_drawdown_pct": 0.0,
       "drawdown_pct": 0.0,
-      "current_pct": 0.076,
+      "current_pct": 0.267,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -830,18 +830,18 @@
       "max_price_after": 0.07677,
       "min_price_after": 0.07633,
       "last_price": 0.07644,
-      "last_seen": "2026-07-23T20:43:46",
-      "last_seen_ts": 1784853826.782029,
+      "last_seen": "2026-07-23T20:46:03",
+      "last_seen_ts": 1784853963.9582348,
       "rank_first": 2,
       "rank_best": 1,
-      "rank_last": 2,
+      "rank_last": 4,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "LATE",
       "timing_last": "ON TIME",
-      "trigger_score": 75,
-      "trade_score": 40,
-      "confidence": 75,
+      "trigger_score": 60,
+      "trade_score": 27,
+      "confidence": 60,
       "environment_score_first": 74,
       "environment_tier_first": "UNKNOWN",
       "sector": "OTHER",
@@ -861,7 +861,7 @@
       "status": "OPEN",
       "environment_score_last": 74,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 38.08,
+      "age_minutes": 40.36,
       "max_gain_pct": 0.143,
       "max_move_pct": 0.143,
       "max_drawdown_pct": -0.43,
@@ -883,8 +883,8 @@
       "max_price_after": 0.328803,
       "min_price_after": 0.328709,
       "last_price": 0.328746,
-      "last_seen": "2026-07-23T20:43:46",
-      "last_seen_ts": 1784853826.782029,
+      "last_seen": "2026-07-23T20:46:03",
+      "last_seen_ts": 1784853963.9582348,
       "rank_first": 3,
       "rank_best": 3,
       "rank_last": 5,
@@ -914,7 +914,7 @@
       "status": "OPEN",
       "environment_score_last": 49,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 11.56,
+      "age_minutes": 13.85,
       "max_gain_pct": 0.0,
       "max_move_pct": 0.0,
       "max_drawdown_pct": -0.029,
@@ -936,18 +936,18 @@
       "max_price_after": 0.62971,
       "min_price_after": 0.62803,
       "last_price": 0.62838,
-      "last_seen": "2026-07-23T20:43:46",
-      "last_seen_ts": 1784853826.782029,
+      "last_seen": "2026-07-23T20:46:03",
+      "last_seen_ts": 1784853963.9582348,
       "rank_first": 3,
       "rank_best": 2,
-      "rank_last": 4,
+      "rank_last": 2,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "EARLY",
       "timing_last": "ON TIME",
-      "trigger_score": 70,
-      "trade_score": 27,
-      "confidence": 70,
+      "trigger_score": 75,
+      "trade_score": 49,
+      "confidence": 75,
       "environment_score_first": 62,
       "environment_tier_first": "UNKNOWN",
       "sector": "OTHER",
@@ -967,7 +967,7 @@
       "status": "OPEN",
       "environment_score_last": 62,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 38.08,
+      "age_minutes": 40.36,
       "max_gain_pct": 0.268,
       "max_move_pct": 0.268,
       "max_drawdown_pct": 0.0,
@@ -1759,7 +1759,7 @@
       "trigger_score_zone": "60-69",
       "trade_score_zone": "<60",
       "confidence_zone": "60-69",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 49,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 10.93,
@@ -1769,7 +1769,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-07-23T20:46:03"
     },
     {
       "key": "KAS/USD|WATCHLIST|cycle-2633|1784851542",
