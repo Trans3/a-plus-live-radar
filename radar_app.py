@@ -1337,12 +1337,20 @@ st.markdown(COCKPIT_CSS, unsafe_allow_html=True)
 
 
 def cockpit_vwap(setup):
+    """Return VWAP status using any supported scanner field."""
     flags = setup.get("flags", {}) or {}
-    price = safe_float(setup.get("price"))
-    vwap = safe_float(setup.get("vwap"))
-    if price <= 0 or vwap <= 0:
-        return "Unknown", "#7f94a2", 0.0
-    distance = (price - vwap) / vwap * 100.0
+    price = safe_float(setup.get("price", setup.get("last_price", setup.get("close", setup.get("current_price", 0)))))
+    vwap = safe_float(setup.get("vwap", setup.get("vwap_1m", setup.get("session_vwap", setup.get("vwap_session", 0)))))
+
+    if setup.get("vwap_distance_pct") is not None:
+        distance = safe_float(setup.get("vwap_distance_pct"))
+    elif price > 0 and vwap > 0:
+        distance = (price - vwap) / vwap * 100.0
+    else:
+        distance = None
+
+    if distance is None:
+        return "Not Available", "#7f94a2", None
     if flags.get("vwap_accept") and abs(distance) <= 0.65:
         return "Holding", "#72ff9a", distance
     if distance > 0.65:
@@ -1350,7 +1358,6 @@ def cockpit_vwap(setup):
     if abs(distance) <= 0.35:
         return "Testing", "#ffd85a", distance
     return "Below", "#ff6262", distance
-
 
 def cockpit_time(setup, market, generated_at):
     clock = execution_clock(setup, market, generated_at)
@@ -1375,24 +1382,24 @@ def cockpit_state(setup, market, generated_at):
     clock = execution_clock(setup, market, generated_at)
     status = str(clock.get("status", "WATCH")).upper()
     vwap_label, _, distance = cockpit_vwap(setup)
-    ch1 = safe_float(
-        setup.get("change_1h_pct",
-        setup.get("pct_1h",
-        setup.get("one_hour_change", pct_change(setup.get("close_1h", [])))))
-    )
+    ch1 = safe_float(setup.get("change_1h_pct", setup.get("pct_1h", setup.get("one_hour_change", pct_change(setup.get("close_1h", []))))))
+
+    has_vwap = distance is not None
+    recovering = ch1 < 0 and has_vwap and vwap_label in {"Testing", "Holding", "Above"}
+
+    if not has_vwap:
+        return ("Momentum Detected", "#55bfff") if abs(ch1) >= 1.0 else ("Idle", "#7f94a2")
     if status in {"TOO LATE", "NO ENTRY"} or distance > 2.2:
         return "Mission Over", "#ff6262"
-    if status == "EXECUTE ZONE":
+    if recovering:
+        return "Reclaiming", "#55bfff"
+    if status == "EXECUTE ZONE" and flags.get("vwap_accept") and (flags.get("pullback") or flags.get("structure_break")):
         return "Mission Ready", "#72ff9a"
-    if abs(ch1) >= 1.0 and (flags.get("impulse") or flags.get("acceleration")):
+    if ch1 >= 1.0 and flags.get("vwap_accept") and (flags.get("impulse") or flags.get("acceleration")):
         return "In Flight", "#72ff9a"
-    if vwap_label in {"Above", "Holding"} and (
-        flags.get("compression") or flags.get("pullback")
-        or flags.get("impulse") or flags.get("acceleration")
-    ):
+    if vwap_label in {"Above", "Holding"} and ch1 >= 0 and (flags.get("compression") or flags.get("pullback") or flags.get("structure_break")):
         return "Building", "#ffd85a"
     return "Idle", "#7f94a2"
-
 
 def build_cockpit_rows(state, market, generated_at):
     billboard = (state or {}).get("billboard", {}) or {}
@@ -1406,17 +1413,17 @@ def build_cockpit_rows(state, market, generated_at):
         merged = dict(board_map.get(pair.upper(), {}))
         merged.update(setup)
         label, color = cockpit_state(merged, market, generated_at)
-        vwap, vwap_color, _ = cockpit_vwap(merged)
+        vwap, vwap_color, distance = cockpit_vwap(merged)
         timing, time_color = cockpit_time(merged, market, generated_at)
-        ch1 = safe_float(
-            merged.get("change_1h_pct",
-            merged.get("pct_1h",
-            merged.get("one_hour_change", pct_change(merged.get("close_1h", [])))))
-        )
+        ch1 = safe_float(merged.get("change_1h_pct", merged.get("pct_1h", merged.get("one_hour_change", pct_change(merged.get("close_1h", []))))))
+        rel_vol = safe_float(merged.get("relative_volume", merged.get("volume_ratio", merged.get("rel_volume", 0))))
+        age_min = setup_age_minutes(merged, generated_at)
+
         rows.append({
             "pair": pair, "setup": merged, "state": label, "color": color,
-            "vwap": vwap, "vwap_color": vwap_color,
+            "vwap": vwap, "vwap_color": vwap_color, "vwap_distance": distance,
             "time": timing, "time_color": time_color, "change_1h": ch1,
+            "relative_volume": rel_vol, "age_min": age_min, "verified_setup": True,
         })
         seen.add(pair.upper())
 
@@ -1425,38 +1432,39 @@ def build_cockpit_rows(state, market, generated_at):
         if pair.upper() in seen:
             continue
         ch1 = safe_float(x.get("change_1h_pct", 0))
-        state_label = "In Flight" if ch1 >= 1 else "Idle"
-        state_color = "#72ff9a" if ch1 >= 1 else "#7f94a2"
         rows.append({
-            "pair": pair, "setup": dict(x), "state": state_label, "color": state_color,
-            "vwap": "Unknown", "vwap_color": "#7f94a2",
-            "time": "Fresh" if 1 <= ch1 < 3 else "Late" if ch1 >= 3 else "Watch",
-            "time_color": "#55bfff" if 1 <= ch1 < 3 else "#ff6262" if ch1 >= 3 else "#ffd85a",
-            "change_1h": ch1,
+            "pair": pair, "setup": dict(x),
+            "state": "Momentum Detected" if abs(ch1) >= 1 else "Idle",
+            "color": "#55bfff" if abs(ch1) >= 1 else "#7f94a2",
+            "vwap": "Not Available", "vwap_color": "#7f94a2", "vwap_distance": None,
+            "time": "Context", "time_color": "#7f94a2", "change_1h": ch1,
+            "relative_volume": safe_float(x.get("relative_volume", x.get("volume_ratio", 0))),
+            "age_min": 0.0, "verified_setup": False,
         })
 
-    order = {"Mission Ready": 0, "Building": 1, "In Flight": 2, "Mission Over": 3, "Idle": 4}
+    order = {"Mission Ready": 0, "Building": 1, "Reclaiming": 2, "In Flight": 3, "Momentum Detected": 4, "Mission Over": 5, "Idle": 6}
     rows.sort(key=lambda r: (order.get(r["state"], 9), -r["change_1h"]))
     return rows
-
 
 def cockpit_command(rows, market):
     ready = [r for r in rows if r["state"] == "Mission Ready"]
     building = [r for r in rows if r["state"] == "Building"]
+    reclaiming = [r for r in rows if r["state"] == "Reclaiming"]
     flying = [r for r in rows if r["state"] == "In Flight"]
     over = [r for r in rows if r["state"] == "Mission Over"]
     bad_market = str(market).upper() in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}
 
     if ready and not bad_market:
-        return "GO", "#72ff9a", "A target is aligned. Confirm continuation and defend VWAP.", ready[0]
+        return "GO", "#72ff9a", "A verified target is aligned. Confirm continuation and defend VWAP.", ready[0]
     if building:
-        return "HOLD", "#ffd85a", "Targets are forming. Stay patient and wait for the final confirmation.", building[0]
+        return "HOLD", "#ffd85a", "Verified targets are forming. Wait for the final confirmation.", building[0]
+    if reclaiming:
+        return "MONITOR", "#55bfff", "Targets are recovering toward control. They are not ready yet.", reclaiming[0]
     if flying:
-        return "DO NOT CHASE", "#ffd85a", "Missions are already in flight. Wait for a fresh setup.", flying[0]
+        return "DO NOT CHASE", "#ffd85a", "Verified missions are already in flight. Wait for a fresh setup.", flying[0]
     if over:
         return "ABORT", "#ff6262", "Visible moves are extended or losing control. Stand down.", over[0]
-    return "STANDBY", "#55bfff", "No qualified target is active. Preserve capital.", None
-
+    return "STANDBY", "#55bfff", "No verified target is active. Preserve capital.", None
 
 def market_read(market):
     return {
@@ -1504,12 +1512,21 @@ def reason_lines(setup):
 
 def render_target_card(row):
     state_note = {
-        "Mission Ready": "Final confirmation only.",
-        "Building": "Target is forming.",
-        "In Flight": "Do not chase this move.",
+        "Mission Ready": "Confirm continuation.",
+        "Building": "Wait for confirmation.",
+        "Reclaiming": "Recovery only. Not ready.",
+        "In Flight": "Do not chase.",
+        "Momentum Detected": "Context only.",
         "Mission Over": "Wait for a new base.",
         "Idle": "No action.",
     }.get(row["state"], "Monitor.")
+
+    vwap_display = row["vwap"] if row.get("vwap_distance") is None else f'{row["vwap"]} {row["vwap_distance"]:+.2f}%'
+    age = row.get("age_min", 0)
+    age_display = f"{int(round(age))} min" if age > 0 else row["time"]
+    rel_vol = row.get("relative_volume", 0)
+    volume_display = f"{rel_vol:.1f}×" if rel_vol > 0 else "Not Available"
+
     return f"""
 <div class="target-card" style="color:{row['color']};">
   <div class="target-top">
@@ -1517,11 +1534,12 @@ def render_target_card(row):
     <div class="target-state">{clean_text(row['state'])}</div>
   </div>
   <div class="target-data">
-    <div class="data-box"><div class="data-k">VWAP</div><div class="data-v" style="color:{row['vwap_color']};">{clean_text(row['vwap'])}</div></div>
-    <div class="data-box"><div class="data-k">Time</div><div class="data-v" style="color:{row['time_color']};">{clean_text(row['time'])}</div></div>
-    <div class="data-box"><div class="data-k">1H</div><div class="data-v">{safe_float(row['change_1h']):+.2f}%</div></div>
-    <div class="data-box"><div class="data-k">Command</div><div class="data-v">{clean_text(state_note)}</div></div>
+    <div class="data-box"><div class="data-k">VWAP</div><div class="data-v" style="color:{row['vwap_color']};">{clean_text(vwap_display)}</div></div>
+    <div class="data-box"><div class="data-k">Setup Age</div><div class="data-v" style="color:{row['time_color']};">{clean_text(age_display)}</div></div>
+    <div class="data-box"><div class="data-k">1H Move</div><div class="data-v">{safe_float(row['change_1h']):+.2f}%</div></div>
+    <div class="data-box"><div class="data-k">Relative Volume</div><div class="data-v">{clean_text(volume_display)}</div></div>
   </div>
+  <div class="target-foot"><b style="color:{row['color']};">COMMAND:</b> {clean_text(state_note)}</div>
 </div>
 """
 
@@ -1591,8 +1609,9 @@ active = int(state.get("active_pairs", 0) or 0)
 rows = build_cockpit_rows(state, market, updated)
 
 ready_rows = [r for r in rows if r["state"] == "Mission Ready"]
-queue_rows = [r for r in rows if r["state"] in {"Mission Ready", "Building"}]
+queue_rows = [r for r in rows if r["state"] in {"Mission Ready", "Building", "Reclaiming"}]
 flight_rows = [r for r in rows if r["state"] == "In Flight"]
+context_rows = [r for r in rows if r["state"] == "Momentum Detected"]
 ended_rows = [r for r in rows if r["state"] == "Mission Over"]
 idle_rows = [r for r in rows if r["state"] == "Idle"]
 
@@ -1643,13 +1662,13 @@ if not ok:
 
 st.markdown('<div class="section-head"><div class="section-title">Mission Queue</div><div class="section-note">Targets still forming or ready</div></div>', unsafe_allow_html=True)
 if queue_rows:
-    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in queue_rows[:6]) + '</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in queue_rows[:5]) + '</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div class="empty">No targets in the mission queue.</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="section-head"><div class="section-title">Active Missions</div><div class="section-note">Already moving — chase protection active</div></div>', unsafe_allow_html=True)
 if flight_rows:
-    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in flight_rows[:6]) + '</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in flight_rows[:5]) + '</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div class="empty">No missions currently in flight.</div>', unsafe_allow_html=True)
 
@@ -1666,6 +1685,8 @@ if detail_rows:
     detail_action = {
         "Mission Ready": ("GO", "#72ff9a"),
         "Building": ("HOLD", "#ffd85a"),
+        "Reclaiming": ("MONITOR", "#55bfff"),
+        "Momentum Detected": ("CONTEXT", "#55bfff"),
         "In Flight": ("DO NOT CHASE", "#ffd85a"),
         "Mission Over": ("ABORT", "#ff6262"),
         "Idle": ("STANDBY", "#7f94a2"),
@@ -1694,7 +1715,7 @@ else:
     st.markdown('<div class="empty">No target readout available.</div>', unsafe_allow_html=True)
 
 with st.expander("Mission archive"):
-    archive = ended_rows + idle_rows
+    archive = ended_rows[:3] + context_rows[:3]
     if archive:
         st.markdown('<div class="mission-grid">' + "".join(render_target_card(r) for r in archive[:9]) + '</div>', unsafe_allow_html=True)
     else:
