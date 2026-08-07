@@ -4,9 +4,11 @@ import html
 import os
 import time
 import textwrap
+import xml.etree.ElementTree as ET
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote_plus
 
 import requests
 import streamlit as st
@@ -1431,6 +1433,17 @@ ATC_CSS = """
   margin-left:6px;
 }
 
+
+.news-rail{position:fixed;right:14px;top:220px;width:275px;max-height:68vh;overflow-y:auto;z-index:20;border:1px solid var(--line);border-radius:16px;background:rgba(7,19,27,.97);padding:14px;backdrop-filter:blur(8px);}
+.news-title{font-size:11px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px;}
+.news-sub{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.35;}
+.news-item{display:block;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none!important;}
+.news-item:last-child{border-bottom:0;}
+.news-symbol{display:inline-block;color:var(--cyan);font-size:9px;font-weight:1000;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.news-headline{color:var(--text);font-size:12px;line-height:1.35;font-weight:800;}
+.news-meta{color:var(--muted);font-size:10px;margin-top:4px;}
+@media(max-width:1550px){.news-rail{position:relative;right:auto;top:auto;width:auto;max-height:none;margin:14px 0 18px;}}
+
 </style>
 """
 st.markdown(ATC_CSS, unsafe_allow_html=True)
@@ -1881,6 +1894,15 @@ def render_flight_card(f):
         clean_text(f.get("invalidation", "Stand down if setup fails.")) +
         '</div>'
     )
+    sharp_html = ""
+    if f in sharpshooter_candidates([f]):
+        sharp_label = "Sharpshooter Ready" if f["action"] == "ENTER" else "Sharpshooter Watch"
+        sharp_html = f'<span class="sharp-badge">{clean_text(sharp_label)}</span>'
+    read_html = (
+        f'<span class="read-state" style="color:{f.get("read_color","#8498a6")};">'
+        f'{clean_text(f.get("read_state","STANDARD WATCH"))}</span>'
+    )
+    badge_row_html = f'<div style="margin-top:10px;">{sharp_html}{read_html}</div>'
 
     return f"""
 <div class="flight-card" style="color:{f['color']};">
@@ -1892,10 +1914,7 @@ def render_flight_card(f):
     <div class="flight-phase">{clean_text(f['phase'])}</div>
   </div>
 
-  <div style="margin-top:10px;">
-    {('<span class="sharp-badge">' + ('Sharpshooter Ready' if f['action'] == 'ENTER' else 'Sharpshooter Watch') + '</span>' if f in sharpshooter_candidates([f]) else '')}
-    <span class="read-state" style="color:{f.get('read_color','#8498a6')};">{clean_text(f.get('read_state','STANDARD WATCH'))}</span>
-  </div>
+{badge_row_html}
   <div class="flight-action">{clean_text(f['action'])}</div>
   <div class="flight-reason">{clean_text(f['tower_note'])}</div>
 
@@ -2021,6 +2040,90 @@ def render_traffic_feed(flights, sectors, updated):
     return f'<div class="traffic-feed"><div class="traffic-title">Tower Traffic Feed</div>{rows}</div>'
 
 
+COIN_NEWS_NAMES = {
+    "BTC":"Bitcoin","XBT":"Bitcoin","ETH":"Ethereum","SOL":"Solana","FET":"Artificial Superintelligence Alliance",
+    "TAO":"Bittensor","WLD":"Worldcoin","RENDER":"Render","DOGE":"Dogecoin","SHIB":"Shiba Inu",
+    "PEPE":"Pepe crypto","BONK":"Bonk crypto","LINK":"Chainlink","AVAX":"Avalanche crypto",
+    "NEAR":"NEAR Protocol","HBAR":"Hedera","XRP":"XRP","ADA":"Cardano","ONDO":"Ondo Finance",
+    "TRX":"TRON crypto","LTC":"Litecoin","XMR":"Monero","SUI":"Sui crypto","APT":"Aptos crypto",
+}
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_pair_news(symbol, limit=2):
+    sym = str(symbol).upper().strip()
+    name = COIN_NEWS_NAMES.get(sym, sym)
+    query = f'{name} crypto OR cryptocurrency'
+    url = "https://news.google.com/rss/search?q=" + quote_plus(query) + "&hl=en-US&gl=US&ceid=US:en"
+    try:
+        r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        items = []
+        for item in root.findall(".//item")[:limit]:
+            title = clean_text(item.findtext("title") or "")
+            link = item.findtext("link") or ""
+            pub = clean_text(item.findtext("pubDate") or "")
+            source_node = item.find("source")
+            source = clean_text(source_node.text if source_node is not None and source_node.text else "")
+            if title and link:
+                items.append({"symbol":sym,"title":title,"link":link,"pub":pub,"source":source})
+        return items
+    except Exception:
+        return []
+
+def relevant_news_flights(flights, limit_pairs=4):
+    chosen, seen = [], set()
+    groups = [
+        sharpshooter_candidates(flights),
+        [f for f in flights if f["action"] == "ENTER"],
+        [f for f in flights if f["action"] == "WAIT"],
+        [f for f in flights if f["action"] == "WATCH"],
+    ]
+    for group in groups:
+        for f in group:
+            symbol = str(f["pair"]).split("/")[0].upper()
+            if symbol and symbol not in seen:
+                chosen.append(f); seen.add(symbol)
+            if len(chosen) >= limit_pairs:
+                return chosen
+    return chosen
+
+def render_news_rail(flights):
+    focus = relevant_news_flights(flights, 4)
+    stories, seen_titles = [], set()
+    for f in focus:
+        symbol = str(f["pair"]).split("/")[0].upper()
+        for story in fetch_pair_news(symbol, 2):
+            key = story["title"].lower()
+            if key not in seen_titles:
+                story["pair"] = f["pair"]
+                story["action"] = f["action"]
+                stories.append(story)
+                seen_titles.add(key)
+    stories = stories[:7]
+
+    if not stories:
+        body = '<div class="news-sub">No directly related headlines found on this sweep.</div>'
+    else:
+        parts = []
+        for s in stories:
+            meta = " · ".join([x for x in [s.get("source"), s.get("pub")] if x])
+            parts.append(
+                f'<a class="news-item" href="{html.escape(s["link"])}" target="_blank" rel="noopener noreferrer">'
+                f'<span class="news-symbol">{clean_text(s["pair"])} · {clean_text(s["action"])}</span>'
+                f'<div class="news-headline">{clean_text(s["title"])}</div>'
+                f'<div class="news-meta">{clean_text(meta)}</div></a>'
+            )
+        body = "".join(parts)
+
+    focus_names = ", ".join(clean_text(f["pair"]) for f in focus[:3]) or "current radar options"
+    return (
+        '<aside class="news-rail"><div class="news-title">Relevant News</div>'
+        f'<div class="news-sub">Headlines prioritized for {focus_names}. News is context, not an entry signal.</div>'
+        + body + '</aside>'
+    )
+
+
 with st.sidebar:
     st.markdown("### Tower Controls")
     auto = st.toggle("Auto sync", value=True, key="atc_auto")
@@ -2080,6 +2183,7 @@ climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
 landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
 
+st.markdown(render_news_rail(flights), unsafe_allow_html=True)
 st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
 
 st.markdown(f"""
