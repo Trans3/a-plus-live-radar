@@ -9,11 +9,13 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote_plus
-from market_engine import build_market_state
+from engines import *
 
 import requests
 import streamlit as st
 import plotly.graph_objects as go
+
+print("✅ All Radar engines loaded.")
 
 STATE_PATH = Path("radar_state.json")
 DEFAULT_GITHUB_RADAR_REPO = "Trans3/a-plus-live-radar"
