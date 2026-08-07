@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote_plus
+from engines.market_engine import build_market_state
 
 import requests
 import streamlit as st
