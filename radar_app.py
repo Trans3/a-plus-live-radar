@@ -344,6 +344,101 @@ def safe_float(x, default=0.0):
     except Exception:
         return default
 
+# ============================================================
+# A+ RADAR 8-PHASE ENGINE PIPELINE
+# ============================================================
+
+engine_pairs = [
+    setup_to_engine_pair(s)
+    for s in setups
+]
+
+# Phase 1 — Market Engine
+engine_market = build_market_state(
+    engine_pairs,
+    market,
+)
+
+# Phase 2 — Pair Engine
+engine_pairs_ranked = build_pair_rankings(
+    engine_pairs,
+    engine_market,
+)
+
+# Phase 3 — Entry Engine
+engine_entries = evaluate_entries(
+    engine_pairs_ranked.get("watchlist")
+    or engine_pairs_ranked.get("top_5")
+    or [],
+    engine_market,
+)
+
+# Phase 4 — Replay Engine
+replay_engine = ReplayEngine(
+    "radar_replay.db"
+)
+
+# Phase 5 — Analyst Engine
+engine_analysis = []
+
+ranked_lookup = {
+    row["pair"]: row
+    for row in engine_pairs_ranked.get(
+        "ranked_pairs",
+        [],
+    )
+}
+
+for entry in engine_entries.get("evaluated", []):
+    pair_row = ranked_lookup.get(
+        entry.get("pair"),
+        {"pair": entry.get("pair")},
+    )
+
+    engine_analysis.append(
+        analyze_setup(
+            pair_row,
+            entry,
+            engine_market,
+        )
+    )
+
+# Phase 6 — Confidence Calibration
+confidence_calibrator = ConfidenceCalibrator(
+    replay_engine
+)
+
+# Phase 7 — Radar AI
+radar_ai_engine = RadarAI(
+    market_builder=build_market_state,
+    pair_builder=build_pair_rankings,
+    entry_builder=evaluate_entries,
+    analyst=analyze_setup,
+    calibrator=confidence_calibrator,
+    replay=replay_engine,
+)
+
+radar_ai_state = radar_ai_engine.run(
+    engine_pairs,
+    market,
+)
+
+# Phase 8 — Learning Engine
+learning_engine = LearningEngine(
+    replay_engine
+)
+
+learning_report = learning_engine.build_learning_report()
+
+print(
+    "✅ Radar 8-phase pipeline active:",
+    engine_market.get("market_mode"),
+    radar_ai_state.get(
+        "command_brief",
+        {},
+    ).get("best_pair"),
+)
+
 
 def pct_change(values):
     vals = [safe_float(v) for v in (values or []) if safe_float(v) > 0]
