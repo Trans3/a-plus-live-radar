@@ -1295,8 +1295,8 @@ ATC_CSS = """
 .sector-name{font-size:12px;font-weight:1000;text-transform:uppercase;}
 .sector-read{font-size:18px;font-weight:1000;margin-top:5px;}
 .sector-sub{font-size:11px;color:var(--muted);margin-top:4px;}
-.flight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.flight-card{border:1px solid var(--line);border-radius:16px;background:#07131b;padding:16px;position:relative;min-height:330px;}
+.flight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch;}
+.flight-card{border:1px solid var(--line);border-radius:16px;background:#07131b;padding:16px;position:relative;min-height:330px;min-width:0;overflow:hidden;}
 .flight-card:after{content:"";position:absolute;left:15px;right:15px;bottom:0;height:2px;background:currentColor;}
 .flight-top{display:flex;justify-content:space-between;align-items:start;gap:10px;}
 .flight-pair{font-size:20px;font-weight:1000;}
@@ -1673,7 +1673,17 @@ def atc_metrics(setup, market, generated_at):
     opportunity += 6 if macd15 > 0 else -5 if macd15 < 0 else 0
     opportunity += 5 if ch24 > 0 else -5 if ch24 < 0 else 0
     opportunity -= 18 if phase in {"Cruising", "Descending"} else 30 if phase == "Landing" else 0
-    opportunity = max(0, min(100, opportunity))
+    opportunity = max(0, min(95, opportunity))
+
+    # A setup that has not earned entry cannot display near-perfect opportunity.
+    if action == "WAIT":
+        opportunity = min(opportunity, 84)
+    elif action == "WATCH":
+        opportunity = min(opportunity, 72)
+    elif action == "HOLD / SKIP":
+        opportunity = min(opportunity, 48)
+    elif action == "SKIP":
+        opportunity = min(opportunity, 25)
 
     # Keep the top pair briefing concise and unique.
     briefing_reasons = reasons[:3]
@@ -1784,6 +1794,16 @@ def render_flight_card(f):
         f'<div class="brief-line" style="color:#ffd85a;"><b>Risk</b>{clean_text(x)}</div>'
         for x in (f.get("risks") or [])
     )
+    best_entry_html = (
+        '<div class="brief-line"><b>Best Entry</b>' +
+        clean_text(f.get("entry_condition", "Wait for confirmation.")) +
+        '</div>'
+    )
+    invalidation_html = (
+        '<div class="brief-line" style="color:#ff8f8f;"><b>Invalidation</b>' +
+        clean_text(f.get("invalidation", "Stand down if setup fails.")) +
+        '</div>'
+    )
 
     return f"""
 <div class="flight-card" style="color:{f['color']};">
@@ -1795,7 +1815,7 @@ def render_flight_card(f):
     <div class="flight-phase">{clean_text(f['phase'])}</div>
   </div>
 
-  <div style="margin-top:10px;">{('<span class="sharp-badge">Sharpshooter</span>' if f in sharpshooter_candidates([f]) else '')}</div>
+  <div style="margin-top:10px;">{('<span class="sharp-badge">' + ('Sharpshooter Ready' if f['action'] == 'ENTER' else 'Sharpshooter Watch') + '</span>' if f in sharpshooter_candidates([f]) else '')}</div>
   <div class="flight-action">{clean_text(f['action'])}</div>
   <div class="flight-reason">{clean_text(f['tower_note'])}</div>
 
@@ -1810,12 +1830,7 @@ def render_flight_card(f):
     <div class="data-box"><div class="data-k">Radar Timing</div><div class="data-v">{clean_text(f.get('timing','WATCH'))}</div></div>
   </div>
 
-  <div class="briefing">
-    {reason_lines}
-    {risk_lines}
-    <div class="brief-line"><b>Best Entry</b>{clean_text(f['entry_condition'])}</div>
-    <div class="brief-line" style="color:#ff8f8f;"><b>Invalidation</b>{clean_text(f['invalidation'])}</div>
-  </div>
+  <div class="briefing">{reason_lines}{risk_lines}{best_entry_html}{invalidation_html}</div>
 </div>
 """
 
@@ -1861,8 +1876,8 @@ def render_live_ticker(flights):
     items = []
     for f in source_rows:
         if f in sharps:
-            status = "SHARPSHOOTER"
-            status_color = "#72ff9a"
+            status = "SHARPSHOOTER READY" if f["action"] == "ENTER" else "SHARPSHOOTER WATCH"
+            status_color = "#72ff9a" if f["action"] == "ENTER" else "#ffd85a"
         else:
             status = f["action"]
             status_color = f["color"]
