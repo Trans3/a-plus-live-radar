@@ -1444,6 +1444,139 @@ ATC_CSS = """
 .news-meta{color:var(--muted);font-size:10px;margin-top:4px;}
 @media(max-width:1550px){.news-rail{position:relative;right:auto;top:auto;width:auto;max-height:none;margin:14px 0 18px;}}
 
+
+.market-command-rail{
+  position:fixed;
+  left:14px;
+  top:220px;
+  width:275px;
+  max-height:68vh;
+  overflow-y:auto;
+  z-index:20;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(7,19,27,.97);
+  padding:14px;
+  backdrop-filter:blur(8px);
+}
+.market-command-title{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  margin-bottom:10px;
+}
+.control-block{
+  padding:11px 0;
+  border-bottom:1px solid var(--line);
+}
+.control-block:last-child{border-bottom:0;}
+.control-label{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+}
+.control-value{
+  font-size:22px;
+  font-weight:1000;
+  color:var(--text);
+  margin-top:4px;
+}
+.control-sub{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+  margin-top:4px;
+}
+.control-track{
+  height:8px;
+  border:1px solid #17313d;
+  border-radius:999px;
+  background:#03080c;
+  overflow:hidden;
+  margin-top:8px;
+}
+.control-fill{
+  height:100%;
+  border-radius:999px;
+}
+.balance-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  margin-top:7px;
+  font-size:10px;
+  font-weight:900;
+}
+.weather-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:8px;
+}
+.weather-cell{
+  border:1px solid #142c38;
+  border-radius:9px;
+  background:#040b11;
+  padding:8px;
+}
+.weather-k{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.weather-v{
+  color:var(--text);
+  font-size:12px;
+  font-weight:1000;
+  margin-top:3px;
+}
+.flow-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:5px 0;
+  font-size:11px;
+}
+.strategy-box{
+  margin-top:8px;
+  border:1px solid #142c38;
+  border-radius:10px;
+  background:#040b11;
+  padding:9px;
+}
+.strategy-name{
+  font-size:13px;
+  font-weight:1000;
+  color:var(--text);
+}
+.strategy-note{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.35;
+  margin-top:3px;
+}
+@media(max-width:1550px){
+  .market-command-rail{
+    position:relative;
+    left:auto;
+    top:auto;
+    width:auto;
+    max-height:none;
+    margin:14px 0 18px;
+  }
+}
+
 </style>
 """
 st.markdown(ATC_CSS, unsafe_allow_html=True)
@@ -2124,6 +2257,233 @@ def render_news_rail(flights):
     )
 
 
+def market_command_metrics(flights, sectors, market):
+    """Build current market-wide context from the same radar reads users see."""
+    verified = [f for f in flights if f.get("vwap_dist") is not None]
+    sample = verified if verified else flights
+
+    if not sample:
+        return {
+            "buyers":50, "sellers":50, "opportunity":0, "health":0,
+            "breadth":0, "momentum":"Quiet", "visibility":"Low",
+            "wind":"Neutral", "turbulence":"Low", "strategy":"Stand By",
+            "strategy_note":"Not enough live radar data yet.",
+        }
+
+    # Buyer control: market structure, not raw trade volume.
+    buyer_points = 0.0
+    total_points = 0.0
+    positive_1h = 0
+    actionable = 0
+    clean_structure = 0
+
+    for f in sample:
+        # VWAP structure
+        total_points += 2
+        if f.get("vwap") in {"Holding", "Above"}:
+            buyer_points += 2
+        elif f.get("vwap") == "Testing":
+            buyer_points += 1
+
+        # 1H direction
+        total_points += 1
+        if safe_float(f.get("change_1h")) > 0:
+            buyer_points += 1
+            positive_1h += 1
+
+        # Short timeframe momentum
+        total_points += 2
+        r1 = safe_float(f.get("rsi_1m"), 50)
+        r5 = safe_float(f.get("rsi_5m"), 50)
+        if r5 >= 55:
+            buyer_points += 1
+        if r1 >= 50:
+            buyer_points += 1
+
+        # Current radar read
+        total_points += 1
+        if f.get("action") in {"ENTER", "WAIT"}:
+            buyer_points += 1
+            actionable += 1
+
+        if f.get("read_state") in {"RELOAD READY", "RELOAD WATCH", "CONTINUATION WATCH", "PRESSURE BUILDING"}:
+            clean_structure += 1
+
+    buyers = int(round((buyer_points / total_points) * 100)) if total_points else 50
+    buyers = max(0, min(100, buyers))
+    sellers = 100 - buyers
+
+    breadth = int(round((positive_1h / len(sample)) * 100)) if sample else 0
+
+    # Overall opportunity: current actionable quality, not trend direction.
+    opp_vals = [
+        safe_float(f.get("remaining"))
+        for f in sample
+        if f.get("action") not in {"SKIP", "HOLD / SKIP"}
+    ]
+    opportunity = int(round(sum(opp_vals) / len(opp_vals))) if opp_vals else 0
+    opportunity = max(0, min(100, opportunity))
+
+    # Health rewards coherent, early structure and penalizes late traffic.
+    late_count = sum(1 for f in sample if f.get("phase") in {"Descending", "Landing"})
+    structure_pct = clean_structure / len(sample) if sample else 0
+    late_pct = late_count / len(sample) if sample else 0
+    health = int(round(
+        0.36 * buyers
+        + 0.24 * breadth
+        + 0.25 * opportunity
+        + 15 * structure_pct
+        - 18 * late_pct
+    ))
+    health = max(0, min(100, health))
+
+    # Momentum label
+    avg_1h = sum(safe_float(f.get("change_1h")) for f in sample) / len(sample)
+    if avg_1h >= 0.75 and breadth >= 60:
+        momentum = "Rising Fast"
+    elif avg_1h > 0.15:
+        momentum = "Rising"
+    elif avg_1h < -0.75:
+        momentum = "Falling Fast"
+    elif avg_1h < -0.15:
+        momentum = "Falling"
+    else:
+        momentum = "Mixed"
+
+    # ATC weather translations.
+    if health >= 75 and breadth >= 60:
+        visibility = "Excellent"
+    elif health >= 55:
+        visibility = "Good"
+    elif health >= 40:
+        visibility = "Fair"
+    else:
+        visibility = "Poor"
+
+    if buyers >= 65:
+        wind = "Tailwind"
+    elif buyers <= 35:
+        wind = "Headwind"
+    else:
+        wind = "Crosswind"
+
+    # Use spread of 1H moves as a simple turbulence proxy.
+    vals = [safe_float(f.get("change_1h")) for f in sample]
+    avg = sum(vals) / len(vals)
+    variance = sum((x - avg) ** 2 for x in vals) / len(vals)
+    spread = variance ** 0.5
+    if spread >= 2.0:
+        turbulence = "High"
+    elif spread >= 0.9:
+        turbulence = "Medium"
+    else:
+        turbulence = "Low"
+
+    # Recommended operating style.
+    market_upper = str(market).upper()
+    reload_count = sum(1 for f in sample if f.get("read_state") in {"RELOAD WATCH", "RELOAD READY"})
+    enter_count = sum(1 for f in sample if f.get("action") == "ENTER")
+
+    if market_upper in {"BEAR", "DISTRIBUTION", "EXHAUSTION"} or buyers < 38:
+        strategy = "Defensive"
+        strategy_note = "Protect capital. Avoid forcing long momentum entries."
+    elif reload_count >= 2 and buyers >= 50:
+        strategy = "Sharpshooter Reloads"
+        strategy_note = "Favor 1m reloads that rejoin stronger 5m structure."
+    elif enter_count >= 2 and buyers >= 60 and opportunity >= 60:
+        strategy = "Continuation"
+        strategy_note = "Conditions support selective confirmed momentum entries."
+    elif opportunity < 40:
+        strategy = "Wait for Reset"
+        strategy_note = "Control may exist, but clean entry opportunity is limited."
+    else:
+        strategy = "Selective"
+        strategy_note = "Trade only the strongest confirmed departures."
+
+    return {
+        "buyers":buyers, "sellers":sellers, "opportunity":opportunity,
+        "health":health, "breadth":breadth, "momentum":momentum,
+        "visibility":visibility, "wind":wind, "turbulence":turbulence,
+        "strategy":strategy, "strategy_note":strategy_note,
+    }
+
+
+def render_market_command_rail(flights, sectors, market):
+    m = market_command_metrics(flights, sectors, market)
+
+    buyer_color = "#72ff9a" if m["buyers"] >= 55 else "#ffd85a" if m["buyers"] >= 45 else "#ff6262"
+    opp_color = "#72ff9a" if m["opportunity"] >= 65 else "#ffd85a" if m["opportunity"] >= 40 else "#ff6262"
+    health_color = "#79e7ff" if m["health"] >= 80 else "#72ff9a" if m["health"] >= 60 else "#ffd85a" if m["health"] >= 40 else "#ff6262"
+
+    flow_html = ""
+    for s in sectors[:4]:
+        if s["avg"] > 0.5:
+            arrow, color = "▲▲", "#72ff9a"
+        elif s["avg"] > 0:
+            arrow, color = "▲", "#72ff9a"
+        elif s["avg"] < -0.5:
+            arrow, color = "▼▼", "#ff6262"
+        elif s["avg"] < 0:
+            arrow, color = "▼", "#ff6262"
+        else:
+            arrow, color = "→", "#8498a6"
+        flow_html += (
+            f'<div class="flow-row"><span>{clean_text(s["sector"])}</span>'
+            f'<span style="color:{color};font-weight:1000;">{arrow} {s["avg"]:+.2f}%</span></div>'
+        )
+
+    return f"""
+<aside class="market-command-rail">
+  <div class="market-command-title">Market Command Center</div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Airspace Control</span><span style="color:{buyer_color};">{m['buyers']}% Buyers</span></div>
+    <div class="control-track">
+      <div class="control-fill" style="width:{m['buyers']}%;background:{buyer_color};"></div>
+    </div>
+    <div class="balance-row"><span style="color:#ff6262;">Sellers {m['sellers']}%</span><span style="color:#72ff9a;">Buyers {m['buyers']}%</span></div>
+    <div class="control-sub">Weighted from VWAP control, 1H direction, RSI structure, and live radar state.</div>
+  </div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Overall Opportunity</span><span>{m['opportunity']}%</span></div>
+    <div class="control-track"><div class="control-fill" style="width:{m['opportunity']}%;background:{opp_color};"></div></div>
+    <div class="control-sub">How much clean entry quality remains across active traffic.</div>
+  </div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Radar Health</span><span style="color:{health_color};">{m['health']}/100</span></div>
+    <div class="control-track"><div class="control-fill" style="width:{m['health']}%;background:{health_color};"></div></div>
+    <div class="control-sub">Combines breadth, buyer control, opportunity, and lifecycle quality.</div>
+  </div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Market Weather</span><span>{clean_text(m['momentum'])}</span></div>
+    <div class="weather-grid">
+      <div class="weather-cell"><div class="weather-k">Visibility</div><div class="weather-v">{clean_text(m['visibility'])}</div></div>
+      <div class="weather-cell"><div class="weather-k">Wind</div><div class="weather-v">{clean_text(m['wind'])}</div></div>
+      <div class="weather-cell"><div class="weather-k">Turbulence</div><div class="weather-v">{clean_text(m['turbulence'])}</div></div>
+      <div class="weather-cell"><div class="weather-k">Breadth</div><div class="weather-v">{m['breadth']}%</div></div>
+    </div>
+  </div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Sector Flow</span><span>1H</span></div>
+    {flow_html or '<div class="control-sub">No sector traffic yet.</div>'}
+  </div>
+
+  <div class="control-block">
+    <div class="control-label"><span>Recommended Mode</span></div>
+    <div class="strategy-box">
+      <div class="strategy-name">{clean_text(m['strategy'])}</div>
+      <div class="strategy-note">{clean_text(m['strategy_note'])}</div>
+    </div>
+  </div>
+</aside>
+"""
+
+
+
 with st.sidebar:
     st.markdown("### Tower Controls")
     auto = st.toggle("Auto sync", value=True, key="atc_auto")
@@ -2183,6 +2543,7 @@ climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
 landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
 
+st.markdown(render_market_command_rail(flights, sectors, market), unsafe_allow_html=True)
 st.markdown(render_news_rail(flights), unsafe_allow_html=True)
 st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
 
