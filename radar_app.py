@@ -1330,6 +1330,94 @@ ATC_CSS = """
   .detail-left{border-right:0;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:15px;}
   .command-action{font-size:50px;}
 }
+
+.live-tape-wrap{
+  margin:14px 0 18px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#040b11;
+  overflow:hidden;
+  position:relative;
+}
+.live-tape-label{
+  display:inline-block;
+  padding:8px 12px;
+  border-right:1px solid var(--line);
+  color:var(--cyan);
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  background:#07131b;
+  position:absolute;
+  left:0;top:0;bottom:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+}
+.live-tape-track{
+  margin-left:118px;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.live-tape-inner{
+  display:inline-block;
+  padding:9px 0;
+  animation:atcTicker 34s linear infinite;
+}
+.live-tape-item{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:0 22px;
+  border-right:1px solid #17313d;
+  font-size:12px;
+  color:var(--text);
+}
+.live-tape-item b{font-size:12px;}
+.live-tape-item .status{font-weight:1000;text-transform:uppercase;}
+@keyframes atcTicker{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+.traffic-feed{
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#07131b;
+  padding:14px;
+  margin-top:14px;
+}
+.traffic-title{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  margin-bottom:8px;
+}
+.traffic-row{
+  display:grid;
+  grid-template-columns:62px 1fr;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid var(--line);
+  font-size:12px;
+}
+.traffic-row:last-child{border-bottom:0;}
+.traffic-time{color:var(--muted);font-weight:900;}
+.traffic-event{color:var(--text);}
+.sharp-badge{
+  display:inline-block;
+  border:1px solid var(--green);
+  color:var(--green);
+  border-radius:999px;
+  padding:2px 7px;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
 </style>
 """
 st.markdown(ATC_CSS, unsafe_allow_html=True)
@@ -1707,6 +1795,7 @@ def render_flight_card(f):
     <div class="flight-phase">{clean_text(f['phase'])}</div>
   </div>
 
+  <div style="margin-top:10px;">{('<span class="sharp-badge">Sharpshooter</span>' if f in sharpshooter_candidates([f]) else '')}</div>
   <div class="flight-action">{clean_text(f['action'])}</div>
   <div class="flight-reason">{clean_text(f['tower_note'])}</div>
 
@@ -1729,6 +1818,112 @@ def render_flight_card(f):
   </div>
 </div>
 """
+
+
+def sharpshooter_candidates(flights):
+    """Use existing radar timing + structure to identify top sharpshooter options."""
+    candidates = []
+    for f in flights:
+        s = f["setup"]
+        flags = s.get("flags", {}) or {}
+        timing = str(f.get("timing", "")).upper()
+        score = 0
+        if f["vwap_dist"] is not None and f["vwap"] in {"Holding", "Above"}:
+            score += 2
+        if flags.get("pullback"):
+            score += 2
+        if flags.get("structure_break"):
+            score += 2
+        if flags.get("compression"):
+            score += 1
+        if flags.get("acceleration") or flags.get("impulse"):
+            score += 1
+        if 55 <= safe_float(f.get("rsi_1m", 0)) < 72:
+            score += 1
+        if timing in {"ON TIME", "OPTIMAL", "READY SOON"}:
+            score += 2
+        if f["action"] == "ENTER":
+            score += 2
+        if f["action"] == "SKIP":
+            score -= 4
+        if score >= 5:
+            candidates.append((score, f))
+    candidates.sort(key=lambda x: (x[0], x[1]["remaining"]), reverse=True)
+    return [f for _, f in candidates[:8]]
+
+
+def render_live_ticker(flights):
+    sharps = sharpshooter_candidates(flights)
+    source_rows = sharps if sharps else flights[:8]
+    if not source_rows:
+        return '<div class="live-tape-wrap"><div class="live-tape-label">LIVE TAPE</div><div class="live-tape-track"><div class="live-tape-inner"><span class="live-tape-item">Waiting for radar traffic...</span></div></div></div>'
+
+    items = []
+    for f in source_rows:
+        if f in sharps:
+            status = "SHARPSHOOTER"
+            status_color = "#72ff9a"
+        else:
+            status = f["action"]
+            status_color = f["color"]
+        reason = (f.get("reasons") or [f.get("tower_note", "")])[0]
+        items.append(
+            f'<span class="live-tape-item">'
+            f'<span class="status" style="color:{status_color};">{clean_text(status)}</span>'
+            f'<b>{clean_text(f["pair"])}</b>'
+            f'<span>{clean_text(f["phase"])}</span>'
+            f'<span>VWAP {clean_text(f["vwap"])}</span>'
+            f'<span>{clean_text(f["window"])}</span>'
+            f'<span>{clean_text(reason)}</span>'
+            f'</span>'
+        )
+
+    # Duplicate contents for seamless marquee loop.
+    tape = "".join(items)
+    return (
+        '<div class="live-tape-wrap">'
+        '<div class="live-tape-label">LIVE TAPE</div>'
+        '<div class="live-tape-track"><div class="live-tape-inner">'
+        + tape + tape +
+        '</div></div></div>'
+    )
+
+
+def traffic_events(flights, sectors, updated):
+    """Create a compact event feed from current live radar state."""
+    events = []
+    base_time = str(updated)[11:16] if updated else "--:--"
+
+    sharps = sharpshooter_candidates(flights)
+    for f in sharps[:3]:
+        events.append((base_time, f"{f['pair']} entered Sharpshooter watch — {f['entry_condition']}"))
+
+    entering = [f for f in flights if f["action"] == "ENTER"]
+    for f in entering[:2]:
+        events.append((base_time, f"{f['pair']} cleared for entry — {f['window']} window."))
+
+    waiting = [f for f in flights if f["action"] == "WAIT"]
+    for f in waiting[:2]:
+        events.append((base_time, f"{f['pair']} holding short — {f['entry_condition']}"))
+
+    if sectors:
+        leader = sectors[0]
+        events.append((base_time, f"{leader['sector']} sector leading traffic with {leader['departures']} departures."))
+
+    landing = [f for f in flights if f["phase"] in {"Descending", "Landing"}]
+    for f in landing[:1]:
+        events.append((base_time, f"{f['pair']} approaching landing — fresh entry closed."))
+
+    return events[:7]
+
+
+def render_traffic_feed(flights, sectors, updated):
+    events = traffic_events(flights, sectors, updated)
+    rows = "".join(
+        f'<div class="traffic-row"><div class="traffic-time">{clean_text(t)}</div><div class="traffic-event">{clean_text(e)}</div></div>'
+        for t, e in events
+    ) or '<div class="traffic-row"><div class="traffic-time">--:--</div><div class="traffic-event">No notable traffic changes yet.</div></div>'
+    return f'<div class="traffic-feed"><div class="traffic-title">Tower Traffic Feed</div>{rows}</div>'
 
 
 with st.sidebar:
@@ -1801,6 +1996,8 @@ st.markdown(f"""
   <div class="atc-sync">RADAR SYNCED · CYCLE {cycle}</div>
 </div>
 
+{render_live_ticker(flights)}
+
 <div class="tower-grid">
   <div class="tower-command">
     <div class="kicker">Tower Command</div>
@@ -1823,6 +2020,8 @@ st.markdown(f"""
   </div>
 </div>
 """, unsafe_allow_html=True)
+
+st.markdown(render_traffic_feed(flights, sectors, updated), unsafe_allow_html=True)
 
 st.markdown('<div class="section-head"><div class="section-title">Sector Traffic</div><div class="section-note">Where departures are concentrating</div></div>', unsafe_allow_html=True)
 if sectors:
