@@ -1296,7 +1296,7 @@ ATC_CSS = """
 .sector-read{font-size:18px;font-weight:1000;margin-top:5px;}
 .sector-sub{font-size:11px;color:var(--muted);margin-top:4px;}
 .flight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.flight-card{border:1px solid var(--line);border-radius:16px;background:#07131b;padding:16px;position:relative;min-height:244px;}
+.flight-card{border:1px solid var(--line);border-radius:16px;background:#07131b;padding:16px;position:relative;min-height:330px;}
 .flight-card:after{content:"";position:absolute;left:15px;right:15px;bottom:0;height:2px;background:currentColor;}
 .flight-top{display:flex;justify-content:space-between;align-items:start;gap:10px;}
 .flight-pair{font-size:20px;font-weight:1000;}
@@ -1308,7 +1308,7 @@ ATC_CSS = """
 .data-box{border:1px solid #142c38;border-radius:10px;background:#040b11;padding:9px;}
 .data-k{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;}
 .data-v{font-size:14px;color:var(--text);font-weight:1000;margin-top:3px;}
-.next-step{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.4;}
+.next-step{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.45;}.briefing{margin-top:12px;display:grid;grid-template-columns:1fr;gap:7px;}.brief-line{border-left:2px solid currentColor;padding-left:9px;font-size:12px;color:var(--text);line-height:1.4;}.brief-line b{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:2px;}
 .next-step b{color:var(--text);}
 .progress-track{height:7px;border:1px solid #17313d;border-radius:999px;background:#03080c;overflow:hidden;margin-top:10px;}
 .progress-fill{height:100%;background:currentColor;border-radius:999px;}
@@ -1374,93 +1374,249 @@ def atc_vwap(setup):
 
 def atc_metrics(setup, market, generated_at):
     flags = setup.get("flags", {}) or {}
+    cr = setup.get("chart_read", {}) or {}
+
     ch1 = safe_float(setup.get("change_1h_pct", setup.get("pct_1h", pct_change(setup.get("close_1h", [])))))
     ch24 = safe_float(setup.get("change_24h_pct", setup.get("pct_24h", setup.get("twenty_four_hour_change", 0))))
-    rsi = safe_float(setup.get("rsi_1m", setup.get("rsi", 50)))
-    macd = safe_float(setup.get("macd_hist_1m", setup.get("macd_hist", 0)))
-    rel_vol = safe_float(setup.get("relative_volume", setup.get("volume_ratio", setup.get("rel_volume", 0))))
+    rsi1 = safe_float(setup.get("rsi_1m", setup.get("rsi", 50)), 50)
+    rsi5 = safe_float(setup.get("rsi_5m", 50), 50)
+    macd1 = safe_float(setup.get("macd_hist_1m", setup.get("macd_hist", 0)))
+    macd15 = safe_float(setup.get("macd_hist_15m", 0))
     age = setup_age_minutes(setup, generated_at)
+    timing = str(cr.get("timing") or setup.get("entry_readiness_label") or "WATCH").upper()
     vwap_label, vwap_dist = atc_vwap(setup)
     sector = atc_sector(setup)
+    market_upper = str(market).upper()
+    market_bad = market_upper in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}
+    market_supportive = market_upper in {"BULL", "PREBULL", "EXPANSION", "ACCUMULATION"}
 
-    # Flight progress estimates lifecycle maturity, not quality.
-    progress = 10.0
-    progress += min(24, max(0, age / 2.5))
-    progress += min(22, max(0, ch1 * 5.0))
-    if vwap_dist is not None:
-        progress += min(18, max(0, vwap_dist * 5.0))
-    progress += min(12, max(0, (rsi - 50) * .6))
-    if flags.get("impulse") or flags.get("acceleration"):
-        progress += 10
-    if flags.get("pullback"):
-        progress -= 8
-    if flags.get("compression"):
-        progress -= 8
-    if macd < 0:
-        progress += 8
-    progress = max(0, min(100, progress))
+    verified = vwap_dist is not None
+    impulse = bool(flags.get("impulse") or flags.get("acceleration"))
+    pullback = bool(flags.get("pullback"))
+    structure_break = bool(flags.get("structure_break"))
+    compression = bool(flags.get("compression"))
+    vwap_accept = bool(flags.get("vwap_accept"))
+    volume_spike = bool(flags.get("volume_spike"))
 
-    remaining = max(0, min(100, 100 - progress))
+    # ------------------------------------------------------------
+    # Lifecycle: only a visual translation of actual radar readings.
+    # ------------------------------------------------------------
+    maturity = 8.0
+    if verified:
+        maturity += max(0, min(22, (vwap_dist or 0) * 6))
+    maturity += max(0, min(20, ch1 * 5))
+    maturity += max(0, min(14, (rsi1 - 50) * .55))
+    if impulse:
+        maturity += 12
+    if structure_break:
+        maturity += 8
+    if pullback:
+        maturity -= 7
+    if compression:
+        maturity -= 9
+    if macd1 < 0 and rsi1 > 55:
+        maturity += 6
+    maturity = max(0, min(100, maturity))
 
-    # Estimated opportunity window: shorter as progress matures.
-    base_window = 32 - progress * .26
-    if flags.get("pullback") and flags.get("vwap_accept"):
-        base_window += 5
-    if rel_vol > 1.5:
-        base_window += 3
-    if str(market).upper() in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}:
-        base_window -= 5
-    window_min = max(0, int(round(base_window)))
-
-    if progress < 18:
+    if maturity < 18:
         phase = "Taxiing"
-    elif progress < 34:
+    elif maturity < 34:
         phase = "Takeoff"
-    elif progress < 55:
+    elif maturity < 55:
         phase = "Climbing"
-    elif progress < 72:
+    elif maturity < 72:
         phase = "Cruising"
-    elif progress < 88:
+    elif maturity < 88:
         phase = "Descending"
     else:
         phase = "Landing"
 
-    # Action language and next event.
-    verified = vwap_dist is not None
-    market_bad = str(market).upper() in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}
+    # ------------------------------------------------------------
+    # Pair-specific action: radar logic first, ATC language second.
+    # ------------------------------------------------------------
+    reasons = []
+    risks = []
 
-    if not verified:
-        action, color = "WATCH", "#55bfff"
-        reason = "Momentum is visible, but VWAP confirmation is missing."
-        next_event = "Wait for verified VWAP data."
-    elif phase == "Takeoff" and flags.get("vwap_accept") and (flags.get("pullback") or flags.get("structure_break")) and not market_bad:
-        action, color = "ENTER", "#72ff9a"
-        reason = "Takeoff conditions are aligned and the entry window is open."
-        next_event = "Confirm continuation; exit on VWAP loss."
+    if verified:
+        if vwap_label == "Holding":
+            reasons.append(f"VWAP is being defended ({vwap_dist:+.2f}%).")
+        elif vwap_label == "Above":
+            reasons.append(f"Price is {vwap_dist:+.2f}% above VWAP.")
+        elif vwap_label == "Testing":
+            reasons.append(f"Price is testing VWAP ({vwap_dist:+.2f}%).")
+        else:
+            risks.append(f"Price is below VWAP ({vwap_dist:+.2f}%).")
+    else:
+        risks.append("VWAP is not verified for this pair.")
+
+    if ch1 > 0.75:
+        reasons.append(f"1H momentum is strong at {ch1:+.2f}%.")
+    elif ch1 > 0.15:
+        reasons.append(f"1H momentum is positive at {ch1:+.2f}%.")
+    elif ch1 < -0.50:
+        risks.append(f"1H momentum is still weak at {ch1:+.2f}%.")
+    elif ch1 < 0:
+        risks.append(f"1H is slightly negative at {ch1:+.2f}%.")
+
+    if ch24 > 2:
+        reasons.append(f"24H trend is supportive at {ch24:+.2f}%.")
+    elif ch24 < -2:
+        risks.append(f"24H context is weak at {ch24:+.2f}%.")
+
+    if pullback:
+        reasons.append("A pullback has formed.")
+    elif impulse:
+        risks.append("Impulse is active without a confirmed pullback.")
+
+    if structure_break:
+        reasons.append("Structure break is confirmed.")
     elif phase in {"Taxiing", "Takeoff"}:
+        risks.append("Structure break is not confirmed yet.")
+
+    if compression:
+        reasons.append("Compression is present before expansion.")
+    if volume_spike:
+        reasons.append("Volume expansion is supporting the move.")
+
+    if rsi1 >= 72:
+        risks.append(f"1m RSI is hot at {rsi1:.0f}.")
+    elif rsi1 >= 55:
+        reasons.append(f"1m RSI supports momentum at {rsi1:.0f}.")
+    elif rsi1 < 50:
+        risks.append(f"1m RSI is soft at {rsi1:.0f}.")
+
+    if macd15 > 0:
+        reasons.append("15m MACD structure is positive.")
+    elif macd15 < 0:
+        risks.append("15m MACD structure is still negative.")
+
+    # ENTRY requires actual confirmation. A numerical window is only shown
+    # when the setup is genuinely close enough to act on.
+    enter_ready = (
+        verified
+        and vwap_accept
+        and timing in {"ON TIME", "OPTIMAL", "READY SOON"}
+        and (pullback or structure_break)
+        and rsi1 < 72
+        and not market_bad
+    )
+
+    close_but_not_ready = (
+        verified
+        and vwap_label in {"Holding", "Above", "Testing"}
+        and timing in {"EARLY", "WATCH", "WAIT", "ON TIME", "READY SOON"}
+        and phase in {"Taxiing", "Takeoff"}
+    )
+
+    extended = (
+        timing in {"LATE", "REJECTED"}
+        or (verified and (vwap_dist or 0) > 2.2)
+        or rsi1 >= 74
+        or phase in {"Descending", "Landing"}
+    )
+
+    if extended:
+        action, color = "SKIP", "#ff6262"
+        entry_condition = "Wait for a new base or a clean VWAP reset."
+        invalidation = "Current entry window is considered closed."
+        tower_note = "This flight is too mature for a fresh entry."
+        window_label = "Closed"
+    elif enter_ready:
+        action, color = "ENTER", "#72ff9a"
+        if pullback and structure_break:
+            entry_condition = "Enter only if the next candle holds VWAP and continues above the structure break."
+        elif pullback:
+            entry_condition = "Enter only on continuation from the confirmed pullback while VWAP holds."
+        else:
+            entry_condition = "Enter only if breakout continuation holds above VWAP."
+        invalidation = "Cancel entry on VWAP loss or immediate failure back below the breakout level."
+        tower_note = "This is the cleanest active departure in the current radar read."
+        window_est = 4
+        if timing == "READY SOON":
+            window_est = 7
+        if pullback:
+            window_est += 2
+        if market_supportive:
+            window_est += 2
+        window_label = f"~{max(3, min(12, window_est))} min"
+    elif close_but_not_ready:
         action, color = "WAIT", "#ffd85a"
-        reason = "The flight is early, but final takeoff confirmation is incomplete."
-        next_event = "Watch for pullback hold and breakout confirmation."
-    elif phase == "Climbing":
+        missing = []
+        if not pullback:
+            missing.append("pullback")
+        if not structure_break:
+            missing.append("breakout")
+        if not vwap_accept:
+            missing.append("VWAP hold")
+        if rsi1 < 55:
+            missing.append("momentum")
+        missing_text = ", ".join(missing[:3]) if missing else "one more confirmation"
+        entry_condition = f"Wait for {missing_text} before entering."
+        invalidation = "Stand down if VWAP fails or 1H momentum continues weakening."
+        tower_note = "Close to departure, but the radar has not earned an entry yet."
+        window_label = "Not open yet"
+    elif phase == "Climbing" and not extended:
         action, color = "WATCH", "#55bfff"
-        reason = "Momentum is active, but the best entry may already be passing."
-        next_event = "Only act on a clean retest; do not chase."
+        entry_condition = "Only consider a new entry on a controlled retest back toward VWAP."
+        invalidation = "Do not chase if price remains extended from VWAP."
+        tower_note = "Momentum is airborne; entry quality now depends on a retest."
+        window_label = "Retest only"
     elif phase == "Cruising":
         action, color = "HOLD / SKIP", "#ffd85a"
-        reason = "The move is established and new-entry reward is shrinking."
-        next_event = "Existing positions manage risk; new entries wait."
+        entry_condition = "Existing positions can manage the trend; new entries should wait for reset."
+        invalidation = "Fresh entry is invalid without a new base and renewed VWAP control."
+        tower_note = "The move is established; reward-to-risk for new entry is shrinking."
+        window_label = "Mostly gone"
     else:
-        action, color = "SKIP", "#ff6262"
-        reason = "Momentum is fading or the opportunity is close to landing."
-        next_event = "Wait for a full reset and new departure."
+        action, color = "WATCH", "#55bfff"
+        entry_condition = "No entry until VWAP, momentum, and structure agree."
+        invalidation = "Ignore the setup if momentum deteriorates before confirmation."
+        tower_note = "Radar sees activity, not yet a trade."
+        window_label = "Not open"
+
+    # Opportunity is descriptive, not a fake precision signal.
+    # It is higher only when the setup is early AND structurally healthy.
+    opportunity = 50
+    opportunity += 12 if verified and vwap_label in {"Holding", "Above"} else -12
+    opportunity += 10 if pullback else 0
+    opportunity += 9 if structure_break else 0
+    opportunity += 8 if compression else 0
+    opportunity += 7 if 55 <= rsi1 < 70 else -5 if rsi1 >= 74 else 0
+    opportunity += 6 if macd15 > 0 else -5 if macd15 < 0 else 0
+    opportunity += 5 if ch24 > 0 else -5 if ch24 < 0 else 0
+    opportunity -= 18 if phase in {"Cruising", "Descending"} else 30 if phase == "Landing" else 0
+    opportunity = max(0, min(100, opportunity))
+
+    # Keep the top pair briefing concise and unique.
+    briefing_reasons = reasons[:3]
+    briefing_risks = risks[:2]
+    reason = briefing_reasons[0] if briefing_reasons else (
+        briefing_risks[0] if briefing_risks else "Radar conditions are mixed."
+    )
 
     return {
-        "phase": phase, "progress": int(round(progress)), "remaining": int(round(remaining)),
-        "window": window_min, "action": action, "color": color, "reason": reason,
-        "next_event": next_event, "vwap": vwap_label, "vwap_dist": vwap_dist,
-        "change_1h": ch1, "change_24h": ch24, "age": age, "sector": sector,
+        "phase": phase,
+        "progress": int(round(maturity)),
+        "remaining": int(round(opportunity)),
+        "window": window_label,
+        "action": action,
+        "color": color,
+        "reason": reason,
+        "reasons": briefing_reasons,
+        "risks": briefing_risks,
+        "entry_condition": entry_condition,
+        "invalidation": invalidation,
+        "tower_note": tower_note,
+        "vwap": vwap_label,
+        "vwap_dist": vwap_dist,
+        "change_1h": ch1,
+        "change_24h": ch24,
+        "age": age,
+        "sector": sector,
+        "rsi_1m": rsi1,
+        "rsi_5m": rsi5,
+        "timing": timing,
     }
-
 
 def build_flights(state, market, generated_at):
     board = ((state or {}).get("billboard", {}) or {}).get("one_hour", []) or []
@@ -1515,21 +1671,32 @@ def tower_command(flights):
     enter = [f for f in flights if f["action"] == "ENTER"]
     wait = [f for f in flights if f["action"] == "WAIT"]
     watch = [f for f in flights if f["action"] == "WATCH"]
+
     if enter:
         f = enter[0]
-        return "ENTRY OPEN", "#72ff9a", f"{f['pair']} is entering takeoff with {f['window']} minutes estimated in the window.", f
+        return "ENTRY OPEN", "#72ff9a", f"{f['pair']}: {f['entry_condition']}", f
     if wait:
         f = wait[0]
-        return "HOLD SHORT", "#ffd85a", f"{f['pair']} is closest to takeoff, but confirmation is incomplete.", f
+        return "HOLD SHORT", "#ffd85a", f"{f['pair']}: {f['entry_condition']}", f
     if watch:
         f = watch[0]
-        return "MONITOR", "#55bfff", f"{f['pair']} has momentum, but the clean entry window is uncertain.", f
-    return "NO DEPARTURES", "#8498a6", "No verified takeoff opportunity is active.", None
+        return "MONITOR", "#55bfff", f"{f['pair']}: {f['tower_note']}", f
+    return "NO DEPARTURES", "#8498a6", "No pair currently has a qualified entry condition.", None
 
 
 def render_flight_card(f):
     vwap_text = f["vwap"] if f["vwap_dist"] is None else f'{f["vwap"]} {f["vwap_dist"]:+.2f}%'
     change24 = safe_float(f.get("change_24h", 0))
+
+    reason_lines = "".join(
+        f'<div class="brief-line"><b>Why</b>{clean_text(x)}</div>'
+        for x in (f.get("reasons") or [])
+    )
+    risk_lines = "".join(
+        f'<div class="brief-line" style="color:#ffd85a;"><b>Risk</b>{clean_text(x)}</div>'
+        for x in (f.get("risks") or [])
+    )
+
     return f"""
 <div class="flight-card" style="color:{f['color']};">
   <div class="flight-top">
@@ -1539,18 +1706,27 @@ def render_flight_card(f):
     </div>
     <div class="flight-phase">{clean_text(f['phase'])}</div>
   </div>
+
   <div class="flight-action">{clean_text(f['action'])}</div>
-  <div class="flight-reason">{clean_text(f['reason'])}</div>
-  <div class="progress-track"><div class="progress-fill" style="width:{f['progress']}%;"></div></div>
+  <div class="flight-reason">{clean_text(f['tower_note'])}</div>
+
+  <div class="progress-track"><div class="progress-fill" style="width:{f['remaining']}%;"></div></div>
+
   <div class="flight-data">
-    <div class="data-box"><div class="data-k">Flight Progress</div><div class="data-v">{f['progress']}%</div></div>
-    <div class="data-box"><div class="data-k">Opportunity Left</div><div class="data-v">{f['remaining']}%</div></div>
-    <div class="data-box"><div class="data-k">Window</div><div class="data-v">{f['window']} min</div></div>
+    <div class="data-box"><div class="data-k">Opportunity</div><div class="data-v">{f['remaining']}%</div></div>
+    <div class="data-box"><div class="data-k">Entry Window</div><div class="data-v">{clean_text(f['window'])}</div></div>
     <div class="data-box"><div class="data-k">VWAP</div><div class="data-v">{clean_text(vwap_text)}</div></div>
-    <div class="data-box"><div class="data-k">1H Move</div><div class="data-v">{f['change_1h']:+.2f}%</div></div>
-    <div class="data-box"><div class="data-k">24H Context</div><div class="data-v">{change24:+.2f}%</div></div>
+    <div class="data-box"><div class="data-k">1H / 24H</div><div class="data-v">{f['change_1h']:+.2f}% / {change24:+.2f}%</div></div>
+    <div class="data-box"><div class="data-k">RSI 1m</div><div class="data-v">{f.get('rsi_1m', 0):.0f}</div></div>
+    <div class="data-box"><div class="data-k">Radar Timing</div><div class="data-v">{clean_text(f.get('timing','WATCH'))}</div></div>
   </div>
-  <div class="next-step"><b>NEXT:</b> {clean_text(f['next_event'])}</div>
+
+  <div class="briefing">
+    {reason_lines}
+    {risk_lines}
+    <div class="brief-line"><b>Best Entry</b>{clean_text(f['entry_condition'])}</div>
+    <div class="brief-line" style="color:#ff8f8f;"><b>Invalidation</b>{clean_text(f['invalidation'])}</div>
+  </div>
 </div>
 """
 
@@ -1633,7 +1809,7 @@ st.markdown(f"""
     <div class="command-target">
       <div class="command-cell"><div class="command-k">Priority Flight</div><div class="command-v">{clean_text(primary['pair']) if primary else 'NONE'}</div></div>
       <div class="command-cell"><div class="command-k">Flight Phase</div><div class="command-v">{clean_text(primary['phase']) if primary else 'Grounded'}</div></div>
-      <div class="command-cell"><div class="command-k">Window Remaining</div><div class="command-v">{str(primary['window'])+' min' if primary else '—'}</div></div>
+      <div class="command-cell"><div class="command-k">Entry Window</div><div class="command-v">{clean_text(primary['window']) if primary else '—'}</div></div>
     </div>
   </div>
   <div class="airspace">
@@ -1661,27 +1837,27 @@ if sectors:
 </div>""")
     st.markdown('<div class="sector-strip">' + "".join(sector_html) + '</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-head"><div class="section-title">Departures Board</div><div class="section-note">Closest flights to a usable takeoff window</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Departures Board</div><div class="section-note">Pairs closest to a qualified entry</div></div>', unsafe_allow_html=True)
 departure_board = [f for f in flights if f["action"] in {"ENTER","WAIT"}][:6]
 if departure_board:
     st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in departure_board) + '</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div class="empty">No qualified departures right now.</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-head"><div class="section-title">Airborne Traffic</div><div class="section-note">Momentum already underway</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Airborne Traffic</div><div class="section-note">Momentum active — new entry requires a retest</div></div>', unsafe_allow_html=True)
 airborne = [f for f in flights if f["action"] in {"WATCH","HOLD / SKIP"}][:6]
 if airborne:
     st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in airborne) + '</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div class="empty">No airborne opportunities currently tracked.</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-head"><div class="section-title">Approach & Landing</div><div class="section-note">Momentum fading — avoid new entry</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Approach & Landing</div><div class="section-note">Momentum fading — fresh entry is closed</div></div>', unsafe_allow_html=True)
 if landing:
     st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in landing[:6]) + '</div>', unsafe_allow_html=True)
 else:
     st.markdown('<div class="empty">No flights currently approaching landing.</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-head"><div class="section-title">Flight Readout</div><div class="section-note">Detailed action logic for one target</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Flight Readout</div><div class="section-note">Pair-specific radar briefing</div></div>', unsafe_allow_html=True)
 if flights:
     if broadcast_mode:
         selected = flights[int(time.time() // 20) % len(flights)]
@@ -1691,9 +1867,9 @@ if flights:
 
     checks = [
         ("VWAP verified", selected["vwap_dist"] is not None),
+        ("Radar timing actionable", selected.get("timing") in {"ON TIME", "OPTIMAL", "READY SOON"}),
         ("Entry window open", selected["action"] == "ENTER"),
-        ("Opportunity above 50%", selected["remaining"] >= 50),
-        ("Not yet descending", selected["phase"] not in {"Descending","Landing"}),
+        ("Fresh entry not extended", selected["action"] not in {"SKIP", "HOLD / SKIP"}),
     ]
     check_html = "".join(
         f'<div class="check" style="color:{"#72ff9a" if ok else "#ffd85a"};">{"✓" if ok else "□"} {clean_text(label)}</div>'
@@ -1711,8 +1887,9 @@ if flights:
     <div>
       <div class="kicker">Action Checklist</div>
       <div class="detail-checks" style="margin-top:10px;">{check_html}</div>
-      <div class="next-step"><b>WHY:</b> {clean_text(selected['reason'])}</div>
-      <div class="next-step"><b>NEXT EVENT:</b> {clean_text(selected['next_event'])}</div>
+      <div class="next-step"><b>TOWER READ:</b> {clean_text(selected['tower_note'])}</div>
+      <div class="next-step"><b>BEST ENTRY:</b> {clean_text(selected['entry_condition'])}</div>
+      <div class="next-step"><b>INVALIDATION:</b> {clean_text(selected['invalidation'])}</div>
     </div>
   </div>
 </div>
