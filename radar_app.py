@@ -1418,6 +1418,19 @@ ATC_CSS = """
   text-transform:uppercase;
 }
 
+
+.read-state{
+  display:inline-block;
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:9px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-left:6px;
+}
+
 </style>
 """
 st.markdown(ATC_CSS, unsafe_allow_html=True)
@@ -1466,14 +1479,20 @@ def atc_metrics(setup, market, generated_at):
 
     ch1 = safe_float(setup.get("change_1h_pct", setup.get("pct_1h", pct_change(setup.get("close_1h", [])))))
     ch24 = safe_float(setup.get("change_24h_pct", setup.get("pct_24h", setup.get("twenty_four_hour_change", 0))))
+
     rsi1 = safe_float(setup.get("rsi_1m", setup.get("rsi", 50)), 50)
     rsi5 = safe_float(setup.get("rsi_5m", 50), 50)
+    rsi15 = safe_float(setup.get("rsi_15m", 50), 50)
+
     macd1 = safe_float(setup.get("macd_hist_1m", setup.get("macd_hist", 0)))
+    macd5 = safe_float(setup.get("macd_hist_5m", 0))
     macd15 = safe_float(setup.get("macd_hist_15m", 0))
+
     age = setup_age_minutes(setup, generated_at)
     timing = str(cr.get("timing") or setup.get("entry_readiness_label") or "WATCH").upper()
     vwap_label, vwap_dist = atc_vwap(setup)
     sector = atc_sector(setup)
+
     market_upper = str(market).upper()
     market_bad = market_upper in {"BEAR", "DISTRIBUTION", "EXHAUSTION"}
     market_supportive = market_upper in {"BULL", "PREBULL", "EXPANSION", "ACCUMULATION"}
@@ -1487,7 +1506,49 @@ def atc_metrics(setup, market, generated_at):
     volume_spike = bool(flags.get("volume_spike"))
 
     # ------------------------------------------------------------
-    # Lifecycle: only a visual translation of actual radar readings.
+    # Relational timeframe reads.
+    # ------------------------------------------------------------
+    five_min_strong = (
+        rsi5 >= 58
+        and (macd5 > 0 or macd15 > 0 or impulse)
+        and (not verified or vwap_label in {"Holding", "Above"})
+    )
+    one_min_cooling = 35 <= rsi1 < 52
+    one_min_reloading = 48 <= rsi1 <= 58 and macd1 >= 0
+    one_min_hot = rsi1 >= 72
+
+    reload_watch = (
+        verified
+        and vwap_label in {"Holding", "Above", "Testing"}
+        and five_min_strong
+        and one_min_cooling
+        and not one_min_hot
+        and not market_bad
+    )
+
+    reload_ready = (
+        verified
+        and vwap_label in {"Holding", "Above"}
+        and five_min_strong
+        and one_min_reloading
+        and (pullback or structure_break)
+        and not market_bad
+    )
+
+    higher_tf_recovery = (
+        rsi15 >= 48
+        or macd15 >= 0
+        or ch1 > 0
+    )
+
+    higher_tf_weak = (
+        rsi15 < 45
+        and macd15 < 0
+        and ch1 < 0
+    )
+
+    # ------------------------------------------------------------
+    # Lifecycle is presentation only.
     # ------------------------------------------------------------
     maturity = 8.0
     if verified:
@@ -1519,9 +1580,6 @@ def atc_metrics(setup, market, generated_at):
     else:
         phase = "Landing"
 
-    # ------------------------------------------------------------
-    # Pair-specific action: radar logic first, ATC language second.
-    # ------------------------------------------------------------
     reasons = []
     risks = []
 
@@ -1537,14 +1595,29 @@ def atc_metrics(setup, market, generated_at):
     else:
         risks.append("VWAP is not verified for this pair.")
 
+    if five_min_strong:
+        reasons.append(f"5m momentum is strong (RSI {rsi5:.0f}).")
+    elif rsi5 < 50:
+        risks.append(f"5m momentum is weak (RSI {rsi5:.0f}).")
+
+    if reload_watch:
+        reasons.append(f"1m has cooled to RSI {rsi1:.0f} while 5m remains strong.")
+    elif reload_ready:
+        reasons.append(f"1m momentum is reloading (RSI {rsi1:.0f}) into stronger 5m structure.")
+    elif one_min_hot:
+        risks.append(f"1m RSI is hot at {rsi1:.0f}.")
+
+    if higher_tf_recovery:
+        reasons.append("Higher-timeframe structure is stabilizing.")
+    if higher_tf_weak:
+        risks.append("Higher-timeframe structure is still weak.")
+
     if ch1 > 0.75:
         reasons.append(f"1H momentum is strong at {ch1:+.2f}%.")
     elif ch1 > 0.15:
         reasons.append(f"1H momentum is positive at {ch1:+.2f}%.")
     elif ch1 < -0.50:
-        risks.append(f"1H momentum is still weak at {ch1:+.2f}%.")
-    elif ch1 < 0:
-        risks.append(f"1H is slightly negative at {ch1:+.2f}%.")
+        risks.append(f"1H momentum is weak at {ch1:+.2f}%.")
 
     if ch24 > 2:
         reasons.append(f"24H trend is supportive at {ch24:+.2f}%.")
@@ -1553,7 +1626,7 @@ def atc_metrics(setup, market, generated_at):
 
     if pullback:
         reasons.append("A pullback has formed.")
-    elif impulse:
+    elif impulse and not reload_watch:
         risks.append("Impulse is active without a confirmed pullback.")
 
     if structure_break:
@@ -1566,40 +1639,29 @@ def atc_metrics(setup, market, generated_at):
     if volume_spike:
         reasons.append("Volume expansion is supporting the move.")
 
-    if rsi1 >= 72:
-        risks.append(f"1m RSI is hot at {rsi1:.0f}.")
-    elif rsi1 >= 55:
-        reasons.append(f"1m RSI supports momentum at {rsi1:.0f}.")
-    elif rsi1 < 50:
-        risks.append(f"1m RSI is soft at {rsi1:.0f}.")
-
-    if macd15 > 0:
-        reasons.append("15m MACD structure is positive.")
-    elif macd15 < 0:
-        risks.append("15m MACD structure is still negative.")
-
-    # ENTRY requires actual confirmation. A numerical window is only shown
-    # when the setup is genuinely close enough to act on.
-    enter_ready = (
-        verified
-        and vwap_accept
-        and timing in {"ON TIME", "OPTIMAL", "READY SOON"}
-        and (pullback or structure_break)
-        and rsi1 < 72
-        and not market_bad
-    )
-
-    close_but_not_ready = (
-        verified
-        and vwap_label in {"Holding", "Above", "Testing"}
-        and timing in {"EARLY", "WATCH", "WAIT", "ON TIME", "READY SOON"}
-        and phase in {"Taxiing", "Takeoff"}
-    )
+    # ------------------------------------------------------------
+    # Dynamic read state.
+    # ------------------------------------------------------------
+    if reload_ready:
+        read_state = "RELOAD READY"
+        read_color = "#72ff9a"
+    elif reload_watch:
+        read_state = "RELOAD WATCH"
+        read_color = "#55bfff"
+    elif five_min_strong and structure_break and vwap_accept:
+        read_state = "CONTINUATION WATCH"
+        read_color = "#55bfff"
+    elif compression and vwap_accept:
+        read_state = "PRESSURE BUILDING"
+        read_color = "#ffd85a"
+    else:
+        read_state = "STANDARD WATCH"
+        read_color = "#8498a6"
 
     extended = (
         timing in {"LATE", "REJECTED"}
         or (verified and (vwap_dist or 0) > 2.2)
-        or rsi1 >= 74
+        or one_min_hot
         or phase in {"Descending", "Landing"}
     )
 
@@ -1607,75 +1669,88 @@ def atc_metrics(setup, market, generated_at):
         action, color = "SKIP", "#ff6262"
         entry_condition = "Wait for a new base or a clean VWAP reset."
         invalidation = "Current entry window is considered closed."
-        tower_note = "This flight is too mature for a fresh entry."
+        tower_note = "This setup is too mature for a fresh entry."
         window_label = "Closed"
-    elif enter_ready:
+    elif reload_ready:
         action, color = "ENTER", "#72ff9a"
-        if pullback and structure_break:
-            entry_condition = "Enter only if the next candle holds VWAP and continues above the structure break."
-        elif pullback:
-            entry_condition = "Enter only on continuation from the confirmed pullback while VWAP holds."
-        else:
-            entry_condition = "Enter only if breakout continuation holds above VWAP."
-        invalidation = "Cancel entry on VWAP loss or immediate failure back below the breakout level."
-        tower_note = "This is the cleanest active departure in the current radar read."
-        window_est = 4
-        if timing == "READY SOON":
-            window_est = 7
-        if pullback:
-            window_est += 2
-        if market_supportive:
-            window_est += 2
-        window_label = f"~{max(3, min(12, window_est))} min"
-    elif close_but_not_ready:
+        entry_condition = "Enter only if 1m momentum continues turning up while VWAP holds and price confirms above the local trigger."
+        invalidation = "Cancel entry if 1m momentum rolls back over or price loses VWAP."
+        tower_note = "5m momentum is strong and the 1m reload is rejoining it."
+        window_label = "~3–8 min"
+    elif reload_watch:
         action, color = "WAIT", "#ffd85a"
-        missing = []
-        if not pullback:
-            missing.append("pullback")
-        if not structure_break:
-            missing.append("breakout")
-        if not vwap_accept:
-            missing.append("VWAP hold")
-        if rsi1 < 55:
-            missing.append("momentum")
-        missing_text = ", ".join(missing[:3]) if missing else "one more confirmation"
-        entry_condition = f"Wait for {missing_text} before entering."
-        invalidation = "Stand down if VWAP fails or 1H momentum continues weakening."
-        tower_note = "Close to departure, but the radar has not earned an entry yet."
-        window_label = "Not open yet"
-    elif phase == "Climbing" and not extended:
-        action, color = "WATCH", "#55bfff"
-        entry_condition = "Only consider a new entry on a controlled retest back toward VWAP."
-        invalidation = "Do not chase if price remains extended from VWAP."
-        tower_note = "Momentum is airborne; entry quality now depends on a retest."
-        window_label = "Retest only"
-    elif phase == "Cruising":
-        action, color = "HOLD / SKIP", "#ffd85a"
-        entry_condition = "Existing positions can manage the trend; new entries should wait for reset."
-        invalidation = "Fresh entry is invalid without a new base and renewed VWAP control."
-        tower_note = "The move is established; reward-to-risk for new entry is shrinking."
-        window_label = "Mostly gone"
+        entry_condition = "Wait for 1m RSI to reclaim roughly 50–55 with momentum turning back up while VWAP holds."
+        invalidation = "Stand down if VWAP fails or 5m momentum begins rolling over."
+        tower_note = "Potential continuation reload: 5m is strong while 1m is cooling."
+        window_label = "Reload forming"
     else:
-        action, color = "WATCH", "#55bfff"
-        entry_condition = "No entry until VWAP, momentum, and structure agree."
-        invalidation = "Ignore the setup if momentum deteriorates before confirmation."
-        tower_note = "Radar sees activity, not yet a trade."
-        window_label = "Not open"
+        enter_ready = (
+            verified
+            and vwap_accept
+            and timing in {"ON TIME", "OPTIMAL", "READY SOON"}
+            and (pullback or structure_break)
+            and rsi1 < 72
+            and not market_bad
+        )
+        close_but_not_ready = (
+            verified
+            and vwap_label in {"Holding", "Above", "Testing"}
+            and timing in {"EARLY", "WATCH", "WAIT", "ON TIME", "READY SOON"}
+            and phase in {"Taxiing", "Takeoff"}
+        )
 
-    # Opportunity is descriptive, not a fake precision signal.
-    # It is higher only when the setup is early AND structurally healthy.
+        if enter_ready:
+            action, color = "ENTER", "#72ff9a"
+            entry_condition = "Enter only on confirmed continuation while VWAP remains defended."
+            invalidation = "Cancel entry on VWAP loss or immediate breakout failure."
+            tower_note = "The radar has a qualified continuation setup."
+            window_label = "~4–10 min"
+        elif close_but_not_ready:
+            action, color = "WAIT", "#ffd85a"
+            missing = []
+            if not pullback:
+                missing.append("pullback")
+            if not structure_break:
+                missing.append("breakout")
+            if not vwap_accept:
+                missing.append("VWAP hold")
+            if rsi1 < 55:
+                missing.append("momentum")
+            entry_condition = f"Wait for {', '.join(missing[:3]) if missing else 'one more confirmation'} before entering."
+            invalidation = "Stand down if VWAP fails or 1H momentum continues weakening."
+            tower_note = "Close to departure, but the radar has not earned an entry yet."
+            window_label = "Not open yet"
+        elif phase == "Climbing":
+            action, color = "WATCH", "#55bfff"
+            entry_condition = "Only consider a new entry on a controlled retest back toward VWAP."
+            invalidation = "Do not chase if price remains extended from VWAP."
+            tower_note = "Momentum is airborne; entry quality now depends on a retest."
+            window_label = "Retest only"
+        elif phase == "Cruising":
+            action, color = "HOLD / SKIP", "#ffd85a"
+            entry_condition = "Existing positions manage the trend; new entries wait for reset."
+            invalidation = "Fresh entry is invalid without a new base and renewed VWAP control."
+            tower_note = "The move is established; reward-to-risk for new entry is shrinking."
+            window_label = "Mostly gone"
+        else:
+            action, color = "WATCH", "#55bfff"
+            entry_condition = "No entry until VWAP, momentum, and structure agree."
+            invalidation = "Ignore the setup if momentum deteriorates before confirmation."
+            tower_note = "Radar sees activity, not yet a trade."
+            window_label = "Not open"
+
     opportunity = 50
     opportunity += 12 if verified and vwap_label in {"Holding", "Above"} else -12
     opportunity += 10 if pullback else 0
     opportunity += 9 if structure_break else 0
     opportunity += 8 if compression else 0
-    opportunity += 7 if 55 <= rsi1 < 70 else -5 if rsi1 >= 74 else 0
-    opportunity += 6 if macd15 > 0 else -5 if macd15 < 0 else 0
+    opportunity += 8 if reload_watch else 0
+    opportunity += 12 if reload_ready else 0
+    opportunity += 6 if higher_tf_recovery else -7 if higher_tf_weak else 0
     opportunity += 5 if ch24 > 0 else -5 if ch24 < 0 else 0
     opportunity -= 18 if phase in {"Cruising", "Descending"} else 30 if phase == "Landing" else 0
     opportunity = max(0, min(95, opportunity))
 
-    # A setup that has not earned entry cannot display near-perfect opportunity.
     if action == "WAIT":
         opportunity = min(opportunity, 84)
     elif action == "WATCH":
@@ -1685,9 +1760,8 @@ def atc_metrics(setup, market, generated_at):
     elif action == "SKIP":
         opportunity = min(opportunity, 25)
 
-    # Keep the top pair briefing concise and unique.
-    briefing_reasons = reasons[:3]
-    briefing_risks = risks[:2]
+    briefing_reasons = reasons[:4]
+    briefing_risks = risks[:3]
     reason = briefing_reasons[0] if briefing_reasons else (
         briefing_risks[0] if briefing_risks else "Radar conditions are mixed."
     )
@@ -1713,7 +1787,10 @@ def atc_metrics(setup, market, generated_at):
         "sector": sector,
         "rsi_1m": rsi1,
         "rsi_5m": rsi5,
+        "rsi_15m": rsi15,
         "timing": timing,
+        "read_state": read_state,
+        "read_color": read_color,
     }
 
 def build_flights(state, market, generated_at):
@@ -1815,7 +1892,10 @@ def render_flight_card(f):
     <div class="flight-phase">{clean_text(f['phase'])}</div>
   </div>
 
-  <div style="margin-top:10px;">{('<span class="sharp-badge">' + ('Sharpshooter Ready' if f['action'] == 'ENTER' else 'Sharpshooter Watch') + '</span>' if f in sharpshooter_candidates([f]) else '')}</div>
+  <div style="margin-top:10px;">
+    {('<span class="sharp-badge">' + ('Sharpshooter Ready' if f['action'] == 'ENTER' else 'Sharpshooter Watch') + '</span>' if f in sharpshooter_candidates([f]) else '')}
+    <span class="read-state" style="color:{f.get('read_color','#8498a6')};">{clean_text(f.get('read_state','STANDARD WATCH'))}</span>
+  </div>
   <div class="flight-action">{clean_text(f['action'])}</div>
   <div class="flight-reason">{clean_text(f['tower_note'])}</div>
 
@@ -1826,7 +1906,7 @@ def render_flight_card(f):
     <div class="data-box"><div class="data-k">Entry Window</div><div class="data-v">{clean_text(f['window'])}</div></div>
     <div class="data-box"><div class="data-k">VWAP</div><div class="data-v">{clean_text(vwap_text)}</div></div>
     <div class="data-box"><div class="data-k">1H / 24H</div><div class="data-v">{f['change_1h']:+.2f}% / {change24:+.2f}%</div></div>
-    <div class="data-box"><div class="data-k">RSI 1m</div><div class="data-v">{f.get('rsi_1m', 0):.0f}</div></div>
+    <div class="data-box"><div class="data-k">RSI 1m / 5m</div><div class="data-v">{f.get('rsi_1m', 0):.0f} / {f.get('rsi_5m', 0):.0f}</div></div>
     <div class="data-box"><div class="data-k">Radar Timing</div><div class="data-v">{clean_text(f.get('timing','WATCH'))}</div></div>
   </div>
 
@@ -1886,7 +1966,7 @@ def render_live_ticker(flights):
             f'<span class="live-tape-item">'
             f'<span class="status" style="color:{status_color};">{clean_text(status)}</span>'
             f'<b>{clean_text(f["pair"])}</b>'
-            f'<span>{clean_text(f["phase"])}</span>'
+            f'<span>{clean_text(f.get("read_state", f["phase"]))}</span>'
             f'<span>VWAP {clean_text(f["vwap"])}</span>'
             f'<span>{clean_text(f["window"])}</span>'
             f'<span>{clean_text(reason)}</span>'
