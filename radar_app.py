@@ -2542,10 +2542,7 @@ flights = build_flights(state, market, updated)
 # A+ RADAR 8-PHASE ENGINE PIPELINE
 # ============================================================
 
-engine_pairs = [
-    setup_to_engine_pair(s)
-    for s in setups
-]
+engine_pairs = flights
 
 # Phase 1 — Market Engine
 engine_market = build_market_state(
