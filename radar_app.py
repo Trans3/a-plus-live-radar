@@ -2614,6 +2614,8 @@ radar_ai_state = radar_ai_engine.run(
     market,
 )
 
+
+
 # Phase 8 — Learning Engine
 learning_engine = LearningEngine(
     replay_engine
@@ -2621,8 +2623,6 @@ learning_engine = LearningEngine(
 
 learning_report = learning_engine.build_learning_report()
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("Engine Status")
 
 st.sidebar.write(
     "1. Market:",
