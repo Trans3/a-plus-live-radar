@@ -2622,15 +2622,53 @@ learning_engine = LearningEngine(
 learning_report = learning_engine.build_learning_report()
 
 st.sidebar.markdown("---")
-st.sidebar.success("🚀 8-Phase Engine Active")
+st.sidebar.subheader("Engine Status")
 
-st.sidebar.write("Market Mode:", engine_market.get("market_mode"))
+st.sidebar.write(
+    "1. Market:",
+    engine_market.get("market_mode")
+)
 
-if "command_brief" in radar_ai_state:
-    st.sidebar.write(
-        "Best Setup:",
-        radar_ai_state["command_brief"].get("best_pair")
-    )
+st.sidebar.write(
+    "2. Pair:",
+    len(engine_pairs_ranked.get("ranked_pairs", [])),
+    "ranked"
+)
+
+st.sidebar.write(
+    "3. Entry:",
+    engine_entries.get("summary", {}).get("enter_count", 0),
+    "ENTER"
+)
+
+st.sidebar.write(
+    "4. Replay:",
+    len(replay_engine.open_signals()),
+    "open"
+)
+
+st.sidebar.write(
+    "5. Analyst:",
+    len(engine_analysis),
+    "analyses"
+)
+
+st.sidebar.write(
+    "6. Confidence:",
+    "ACTIVE" if confidence_calibrator else "OFF"
+)
+
+st.sidebar.write(
+    "7. Radar AI:",
+    radar_ai_state.get("command_brief", {}).get("best_pair")
+    or "No setup"
+)
+
+st.sidebar.write(
+    "8. Learning:",
+    learning_report.get("summary", {}).get("trades_analyzed", 0),
+    "trades"
+)
 
 print(
     "✅ Radar 8-phase pipeline active:",
