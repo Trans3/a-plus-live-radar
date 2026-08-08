@@ -2621,6 +2621,17 @@ learning_engine = LearningEngine(
 
 learning_report = learning_engine.build_learning_report()
 
+st.sidebar.markdown("---")
+st.sidebar.success("🚀 8-Phase Engine Active")
+
+st.sidebar.write("Market Mode:", engine_market.get("market_mode"))
+
+if "command_brief" in radar_ai_state:
+    st.sidebar.write(
+        "Best Setup:",
+        radar_ai_state["command_brief"].get("best_pair")
+    )
+
 print(
     "✅ Radar 8-phase pipeline active:",
     engine_market.get("market_mode"),
