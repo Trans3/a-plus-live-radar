@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-23T01:58:24",
-  "cycle_number": 8091,
+  "generated_at": "2026-08-23T01:59:39",
+  "cycle_number": 8092,
   "active_pairs": 8,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -8,11 +8,11 @@
     "reason": "BTC lacks clean higher-timeframe control",
     "market_phase": "CHOP",
     "volatility_state": "NORMAL",
-    "price_5m": 76122.9,
-    "price_15m": 76122.9,
-    "price_60m": 76122.9,
-    "rsi_15m": 27.53,
-    "rsi_60m": 34.52,
+    "price_5m": 76115.1,
+    "price_15m": 76115.1,
+    "price_60m": 76115.1,
+    "rsi_15m": 27.43,
+    "rsi_60m": 34.42,
     "above_vwap_15m": false,
     "above_vwap_60m": true
   },
@@ -31,58 +31,58 @@
       {
         "pair": "TRUMP/USD",
         "coin": "TRUMP",
-        "change_1h_pct": 5.066,
-        "change_24h_pct": 0.126,
-        "usd_volume": 7153985.81,
-        "billboard_score": 0.9587
+        "change_1h_pct": 5.198,
+        "change_24h_pct": 0.252,
+        "usd_volume": 7154268.49,
+        "billboard_score": 0.9577
       },
       {
         "pair": "RE/USD",
         "coin": "RE",
-        "change_1h_pct": 3.627,
-        "change_24h_pct": 6.536,
-        "usd_volume": 633724.77,
-        "billboard_score": 0.9
+        "change_1h_pct": 3.272,
+        "change_24h_pct": 6.171,
+        "usd_volume": 631792.5,
+        "billboard_score": 0.8974
       },
       {
         "pair": "DENT/USD",
         "coin": "DENT",
-        "change_1h_pct": 30.051,
-        "change_24h_pct": 47.059,
-        "usd_volume": 76727.43,
-        "billboard_score": 0.8337
+        "change_1h_pct": 23.737,
+        "change_24h_pct": 44.118,
+        "usd_volume": 75671.8,
+        "billboard_score": 0.8295
       },
       {
         "pair": "XMN/USD",
         "coin": "XMN",
         "change_1h_pct": 3.797,
         "change_24h_pct": 0.0,
-        "usd_volume": 62523.48,
-        "billboard_score": 0.7588
+        "usd_volume": 62507.08,
+        "billboard_score": 0.7526
       },
       {
         "pair": "ZBCN/USD",
         "coin": "ZBCN",
         "change_1h_pct": 2.633,
         "change_24h_pct": 1.299,
-        "usd_volume": 158334.46,
-        "billboard_score": 0.7388
+        "usd_volume": 158376.79,
+        "billboard_score": 0.7321
+      },
+      {
+        "pair": "EUR/USD",
+        "coin": "EUR",
+        "change_1h_pct": 0.037,
+        "change_24h_pct": 0.084,
+        "usd_volume": 13062571.77,
+        "billboard_score": 0.7167
       },
       {
         "pair": "GAME2/USD",
         "coin": "GAME2",
         "change_1h_pct": 12.402,
         "change_24h_pct": 0.0,
-        "usd_volume": 40943.59,
-        "billboard_score": 0.7125
-      },
-      {
-        "pair": "EUR/USD",
-        "coin": "EUR",
-        "change_1h_pct": 0.018,
-        "change_24h_pct": 0.073,
-        "usd_volume": 13010349.29,
-        "billboard_score": 0.7075
+        "usd_volume": 40919.95,
+        "billboard_score": 0.7141
       },
       {
         "pair": "XAN/USD",
@@ -90,15 +90,15 @@
         "change_1h_pct": 2.66,
         "change_24h_pct": 2.917,
         "usd_volume": 60576.57,
-        "billboard_score": 0.685
+        "billboard_score": 0.6769
       },
       {
-        "pair": "EURC/USDC",
-        "coin": "EURC",
-        "change_1h_pct": 0.036,
-        "change_24h_pct": 0.044,
-        "usd_volume": 399961.62,
-        "billboard_score": 0.6787
+        "pair": "PROS/USD",
+        "coin": "PROS",
+        "change_1h_pct": 2.693,
+        "change_24h_pct": 0.78,
+        "usd_volume": 47375.0,
+        "billboard_score": 0.6577
       },
       {
         "pair": "IDEX/USD",
@@ -106,23 +106,23 @@
         "change_1h_pct": 2.817,
         "change_24h_pct": 5.797,
         "usd_volume": 42225.82,
-        "billboard_score": 0.6562
-      },
-      {
-        "pair": "PROS/USD",
-        "coin": "PROS",
-        "change_1h_pct": 2.693,
-        "change_24h_pct": 0.78,
-        "usd_volume": 47394.61,
-        "billboard_score": 0.6487
+        "billboard_score": 0.6564
       },
       {
         "pair": "INX/USD",
         "coin": "INX",
         "change_1h_pct": 1.313,
         "change_24h_pct": 0.772,
-        "usd_volume": 81719.78,
-        "billboard_score": 0.6475
+        "usd_volume": 81689.91,
+        "billboard_score": 0.6385
+      },
+      {
+        "pair": "EURC/USDC",
+        "coin": "EURC",
+        "change_1h_pct": 0.036,
+        "change_24h_pct": 0.044,
+        "usd_volume": 399961.62,
+        "billboard_score": 0.6372
       }
     ],
     "twenty_four_hour": [
@@ -130,8 +130,8 @@
         "pair": "DENT/USD",
         "coin": "DENT",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 47.059,
-        "usd_volume": 76727.43,
+        "change_24h_pct": 44.118,
+        "usd_volume": 75671.8,
         "billboard_score": 0.0
       },
       {
@@ -139,7 +139,7 @@
         "coin": "TRAC",
         "change_1h_pct": 0.0,
         "change_24h_pct": 17.148,
-        "usd_volume": 548486.96,
+        "usd_volume": 548370.61,
         "billboard_score": 0.0
       },
       {
@@ -154,8 +154,8 @@
         "pair": "RE/USD",
         "coin": "RE",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 6.536,
-        "usd_volume": 633724.77,
+        "change_24h_pct": 6.171,
+        "usd_volume": 631792.5,
         "billboard_score": 0.0
       },
       {
@@ -170,8 +170,8 @@
         "pair": "COTI/USD",
         "coin": "COTI",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 5.401,
-        "usd_volume": 542867.54,
+        "change_24h_pct": 5.749,
+        "usd_volume": 544796.13,
         "billboard_score": 0.0
       },
       {
@@ -195,15 +195,15 @@
         "coin": "ARX",
         "change_1h_pct": 0.0,
         "change_24h_pct": 2.701,
-        "usd_volume": 48235.01,
+        "usd_volume": 47281.54,
         "billboard_score": 0.0
       },
       {
-        "pair": "NOCK/USD",
-        "coin": "NOCK",
+        "pair": "AIN/USD",
+        "coin": "AIN",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 2.073,
-        "usd_volume": 50454.98,
+        "change_24h_pct": 2.232,
+        "usd_volume": 27372.68,
         "billboard_score": 0.0
       },
       {
@@ -215,11 +215,11 @@
         "billboard_score": 0.0
       },
       {
-        "pair": "AIN/USD",
-        "coin": "AIN",
+        "pair": "WEMIX/USD",
+        "coin": "WEMIX",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 1.535,
-        "usd_volume": 26800.84,
+        "change_24h_pct": 1.414,
+        "usd_volume": 356165.77,
         "billboard_score": 0.0
       }
     ],
@@ -231,11 +231,11 @@
       "pair": "TRUMP/USD",
       "coin": "TRUMP",
       "tag": "WATCHLIST",
-      "price": 2.385,
-      "change_24h_pct": 0.126,
-      "trigger_score": 65,
-      "trade_score": 59,
-      "confidence": 65,
+      "price": 2.388,
+      "change_24h_pct": 0.252,
+      "trigger_score": 55,
+      "trade_score": 52,
+      "confidence": 55,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
       "sector": "OTHER",
@@ -246,7 +246,7 @@
         "impulse": true,
         "vwap_accept": true,
         "pullback": false,
-        "acceleration": true,
+        "acceleration": false,
         "rsi_ok": true,
         "macd_turn_up": true,
         "trend_ok": true,
@@ -263,13 +263,11 @@
         "no pullback",
         "no volume spike"
       ],
-      "rsi_1m": 69.231,
-      "rsi_5m": 80.088,
-      "vwap": 2.3016189554145594,
-      "macd_hist_15m": 0.01591464978693953,
+      "rsi_1m": 67.568,
+      "rsi_5m": 80.349,
+      "vwap": 2.3015706097991235,
+      "macd_hist_15m": 0.01610610277839282,
       "close_30m": [
-        2.402,
-        2.365,
         2.383,
         2.378,
         2.377,
@@ -297,7 +295,9 @@
         2.357,
         2.385,
         2.385,
-        2.385
+        2.385,
+        2.388,
+        2.388
       ],
       "close_1h": [
         1.904,
@@ -339,21 +339,21 @@
         2.309,
         2.266,
         2.27,
-        2.385
+        2.388
       ],
       "chart_read": {
-        "read_30m": "Momentum burst",
+        "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "EARLY",
-        "change_30m_pct": -0.708,
-        "change_1h_pct": 25.263
+        "change_30m_pct": 0.21,
+        "change_1h_pct": 25.42
       },
       "momentum_quality": "BUILDING",
       "trap_risk": "LOW",
       "volatility_state": "HIGH",
       "structure_type": "BREAKOUT",
-      "relative_strength_pct": 5.665,
-      "distance_from_vwap_pct": 3.623,
+      "relative_strength_pct": 5.807,
+      "distance_from_vwap_pct": 3.755,
       "composite_score": 58,
       "environment_score": 58,
       "environment_tier": "UNKNOWN",
@@ -372,7 +372,7 @@
       "fakeout_risk": "UNKNOWN",
       "sharpshooter_reasons": [],
       "sharpshooter_penalties": [],
-      "caption": "momentum is increasing, it is breaking structure upward, and buyers are holding control above VWAP."
+      "caption": "a strong move just happened, it is breaking structure upward, and buyers are holding control above VWAP."
     },
     {
       "rank": 2,
@@ -382,7 +382,7 @@
       "price": 1.0001,
       "change_24h_pct": 0.01,
       "trigger_score": 50,
-      "trade_score": 43,
+      "trade_score": 52,
       "confidence": 50,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -398,7 +398,7 @@
         "rsi_ok": false,
         "macd_turn_up": true,
         "trend_ok": true,
-        "volume_spike": false,
+        "volume_spike": true,
         "structure_break": false,
         "momentum_building": false,
         "momentum_failing": false,
@@ -409,13 +409,12 @@
       "missing": [
         "no impulse",
         "no pullback",
-        "no volume spike",
         "no structure break",
         "RSI<55.0 or RSI>72.0 (RSI=100.00)"
       ],
       "rsi_1m": 100.0,
       "rsi_5m": 66.667,
-      "vwap": 1.0000921638901343,
+      "vwap": 1.000092186165888,
       "macd_hist_15m": 6.4443414616893e-06,
       "close_30m": [
         1.0,
@@ -424,7 +423,7 @@
         1.0,
         1.0,
         1.0,
-        1.0,
+        1.0001,
         1.0001,
         1.0001,
         1.0001,
@@ -502,7 +501,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.609,
+      "relative_strength_pct": 0.619,
       "distance_from_vwap_pct": 0.001,
       "composite_score": 54,
       "environment_score": 54,
@@ -652,7 +651,7 @@
       "trap_risk": "MEDIUM",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.635,
+      "relative_strength_pct": 0.645,
       "distance_from_vwap_pct": 0.13,
       "composite_score": 34,
       "environment_score": 34,
@@ -743,10 +742,10 @@
         1.00003,
         1.00003,
         1.00003,
-        1.00003,
         1.00001,
         1.00001,
         1.00001,
+        0.99997,
         0.99997,
         0.99997,
         0.99997
@@ -804,7 +803,7 @@
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.601,
+      "relative_strength_pct": 0.611,
       "distance_from_vwap_pct": -0.004,
       "composite_score": 43,
       "environment_score": 43,
@@ -887,7 +886,7 @@
         1.0,
         1.0,
         1.0,
-        1.0,
+        0.9998,
         0.9998,
         0.9998,
         0.9998,
@@ -957,7 +956,7 @@
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.589,
+      "relative_strength_pct": 0.599,
       "distance_from_vwap_pct": -0.018,
       "composite_score": 38,
       "environment_score": 38,
@@ -1109,7 +1108,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.599,
+      "relative_strength_pct": 0.609,
       "distance_from_vwap_pct": 999.0,
       "composite_score": 28,
       "environment_score": 28,
@@ -1186,7 +1185,7 @@
         0.10579,
         0.10579,
         0.10579,
-        0.10579,
+        0.10512,
         0.10512,
         0.10512,
         0.10512,
@@ -1263,7 +1262,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": -0.306,
+      "relative_strength_pct": -0.296,
       "distance_from_vwap_pct": -1.272,
       "composite_score": 11,
       "environment_score": 11,
@@ -1330,10 +1329,9 @@
       ],
       "rsi_1m": 37.624,
       "rsi_5m": 29.688,
-      "vwap": 0.39153497406115906,
+      "vwap": 0.39153403294244227,
       "macd_hist_15m": -0.006530084076903113,
       "close_30m": [
-        0.3748,
         0.3698,
         0.3673,
         0.3673,
@@ -1359,6 +1357,7 @@
         0.3658,
         0.3626,
         0.3626,
+        0.3607,
         0.3607,
         0.3607,
         0.3607,
@@ -1410,14 +1409,14 @@
         "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "EARLY",
-        "change_30m_pct": -3.762,
+        "change_30m_pct": -2.461,
         "change_1h_pct": 22.106
       },
       "momentum_quality": "FAILING",
       "trap_risk": "LOW",
       "volatility_state": "HIGH",
       "structure_type": "WEAK",
-      "relative_strength_pct": -3.137,
+      "relative_strength_pct": -3.127,
       "distance_from_vwap_pct": -7.875,
       "composite_score": 0,
       "environment_score": 0,
