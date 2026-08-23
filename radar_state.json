@@ -1,48 +1,56 @@
 {
-  "generated_at": "2026-08-23T01:56:21",
-  "cycle_number": 8089,
-  "active_pairs": 7,
+  "generated_at": "2026-08-23T01:57:35",
+  "cycle_number": 8090,
+  "active_pairs": 8,
   "market_state": "CHOP",
   "regime_name": "CHOP",
   "btc": {
     "reason": "BTC lacks clean higher-timeframe control",
     "market_phase": "CHOP",
     "volatility_state": "NORMAL",
-    "price_5m": 76103.1,
-    "price_15m": 76103.1,
-    "price_60m": 76103.1,
-    "rsi_15m": 27.28,
-    "rsi_60m": 34.27,
+    "price_5m": 76123.3,
+    "price_15m": 76123.3,
+    "price_60m": 76123.3,
+    "rsi_15m": 27.53,
+    "rsi_60m": 34.52,
     "above_vwap_15m": false,
     "above_vwap_60m": true
   },
   "sector_counts": {
-    "OTHER": 5
+    "OTHER": 1
   },
   "state_counts": {
     "READY": 0,
     "BUILDING": 0,
     "EARLY": 0,
-    "BLOCKED": 7,
+    "BLOCKED": 8,
     "LATE": 0
   },
   "billboard": {
     "one_hour": [
       {
+        "pair": "TRUMP/USD",
+        "coin": "TRUMP",
+        "change_1h_pct": 5.066,
+        "change_24h_pct": 0.126,
+        "usd_volume": 7153985.81,
+        "billboard_score": 0.9587
+      },
+      {
         "pair": "RE/USD",
         "coin": "RE",
-        "change_1h_pct": 4.967,
+        "change_1h_pct": 3.627,
         "change_24h_pct": 6.536,
-        "usd_volume": 634010.49,
-        "billboard_score": 0.9412
+        "usd_volume": 633724.77,
+        "billboard_score": 0.9
       },
       {
         "pair": "DENT/USD",
         "coin": "DENT",
-        "change_1h_pct": 23.99,
-        "change_24h_pct": 49.706,
-        "usd_volume": 77219.0,
-        "billboard_score": 0.8425
+        "change_1h_pct": 30.051,
+        "change_24h_pct": 47.059,
+        "usd_volume": 76727.43,
+        "billboard_score": 0.8337
       },
       {
         "pair": "XMN/USD",
@@ -50,7 +58,15 @@
         "change_1h_pct": 3.797,
         "change_24h_pct": 0.0,
         "usd_volume": 62523.48,
-        "billboard_score": 0.7675
+        "billboard_score": 0.7588
+      },
+      {
+        "pair": "ZBCN/USD",
+        "coin": "ZBCN",
+        "change_1h_pct": 2.633,
+        "change_24h_pct": 1.299,
+        "usd_volume": 158334.46,
+        "billboard_score": 0.7388
       },
       {
         "pair": "GAME2/USD",
@@ -58,15 +74,15 @@
         "change_1h_pct": 12.402,
         "change_24h_pct": 0.0,
         "usd_volume": 40943.59,
-        "billboard_score": 0.7213
+        "billboard_score": 0.7125
       },
       {
-        "pair": "ZBCN/USD",
-        "coin": "ZBCN",
-        "change_1h_pct": 1.637,
-        "change_24h_pct": 0.866,
-        "usd_volume": 157443.96,
-        "billboard_score": 0.715
+        "pair": "EUR/USD",
+        "coin": "EUR",
+        "change_1h_pct": 0.018,
+        "change_24h_pct": 0.073,
+        "usd_volume": 13010349.29,
+        "billboard_score": 0.7075
       },
       {
         "pair": "XAN/USD",
@@ -74,23 +90,15 @@
         "change_1h_pct": 2.66,
         "change_24h_pct": 2.917,
         "usd_volume": 60576.57,
-        "billboard_score": 0.71
-      },
-      {
-        "pair": "EUR/USD",
-        "coin": "EUR",
-        "change_1h_pct": 0.012,
-        "change_24h_pct": 0.073,
-        "usd_volume": 12998299.57,
-        "billboard_score": 0.7075
+        "billboard_score": 0.685
       },
       {
         "pair": "EURC/USDC",
         "coin": "EURC",
         "change_1h_pct": 0.036,
         "change_24h_pct": 0.044,
-        "usd_volume": 399988.28,
-        "billboard_score": 0.7037
+        "usd_volume": 399961.62,
+        "billboard_score": 0.6787
       },
       {
         "pair": "IDEX/USD",
@@ -98,15 +106,7 @@
         "change_1h_pct": 2.817,
         "change_24h_pct": 5.797,
         "usd_volume": 42225.82,
-        "billboard_score": 0.6813
-      },
-      {
-        "pair": "EGLD/USD",
-        "coin": "EGLD",
-        "change_1h_pct": 1.852,
-        "change_24h_pct": 0.304,
-        "usd_volume": 66350.79,
-        "billboard_score": 0.6787
+        "billboard_score": 0.6562
       },
       {
         "pair": "PROS/USD",
@@ -114,15 +114,15 @@
         "change_1h_pct": 2.693,
         "change_24h_pct": 0.78,
         "usd_volume": 47394.61,
-        "billboard_score": 0.6737
+        "billboard_score": 0.6487
       },
       {
         "pair": "INX/USD",
         "coin": "INX",
         "change_1h_pct": 1.313,
-        "change_24h_pct": 0.802,
-        "usd_volume": 81745.4,
-        "billboard_score": 0.6725
+        "change_24h_pct": 0.772,
+        "usd_volume": 81719.78,
+        "billboard_score": 0.6475
       }
     ],
     "twenty_four_hour": [
@@ -130,16 +130,16 @@
         "pair": "DENT/USD",
         "coin": "DENT",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 49.706,
-        "usd_volume": 77219.0,
+        "change_24h_pct": 47.059,
+        "usd_volume": 76727.43,
         "billboard_score": 0.0
       },
       {
         "pair": "TRAC/USD",
         "coin": "TRAC",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 17.766,
-        "usd_volume": 551059.39,
+        "change_24h_pct": 17.148,
+        "usd_volume": 548486.96,
         "billboard_score": 0.0
       },
       {
@@ -155,15 +155,7 @@
         "coin": "RE",
         "change_1h_pct": 0.0,
         "change_24h_pct": 6.536,
-        "usd_volume": 634010.49,
-        "billboard_score": 0.0
-      },
-      {
-        "pair": "COTI/USD",
-        "coin": "COTI",
-        "change_1h_pct": 0.0,
-        "change_24h_pct": 5.923,
-        "usd_volume": 545526.36,
+        "usd_volume": 633724.77,
         "billboard_score": 0.0
       },
       {
@@ -172,6 +164,14 @@
         "change_1h_pct": 0.0,
         "change_24h_pct": 5.797,
         "usd_volume": 42225.82,
+        "billboard_score": 0.0
+      },
+      {
+        "pair": "COTI/USD",
+        "coin": "COTI",
+        "change_1h_pct": 0.0,
+        "change_24h_pct": 5.401,
+        "usd_volume": 542867.54,
         "billboard_score": 0.0
       },
       {
@@ -211,7 +211,7 @@
         "coin": "ESPORTS",
         "change_1h_pct": 0.0,
         "change_24h_pct": 2.041,
-        "usd_volume": 395039.6,
+        "usd_volume": 394957.62,
         "billboard_score": 0.0
       },
       {
@@ -228,6 +228,163 @@
   "top_setups": [
     {
       "rank": 1,
+      "pair": "TRUMP/USD",
+      "coin": "TRUMP",
+      "tag": "WATCHLIST",
+      "price": 2.382,
+      "change_24h_pct": 0.0,
+      "trigger_score": 95,
+      "trade_score": 66,
+      "confidence": 95,
+      "entry_readiness_score": 0,
+      "entry_readiness_label": "WATCH",
+      "sector": "OTHER",
+      "state": "BLOCKED",
+      "blocker": "BTC BEAR",
+      "flags": {
+        "compression": false,
+        "impulse": true,
+        "vwap_accept": true,
+        "pullback": true,
+        "acceleration": true,
+        "rsi_ok": true,
+        "macd_turn_up": true,
+        "trend_ok": true,
+        "volume_spike": false,
+        "structure_break": true,
+        "momentum_building": true,
+        "momentum_failing": false,
+        "trap_risk_high": false,
+        "relative_strength_positive": true,
+        "composite_a_plus": false
+      },
+      "missing": [
+        "no compression",
+        "no volume spike"
+      ],
+      "rsi_1m": 66.667,
+      "rsi_5m": 79.821,
+      "vwap": 2.301611091632509,
+      "macd_hist_15m": 0.015723196795486952,
+      "close_30m": [
+        2.402,
+        2.365,
+        2.383,
+        2.378,
+        2.377,
+        2.37,
+        2.358,
+        2.355,
+        2.34,
+        2.354,
+        2.347,
+        2.344,
+        2.337,
+        2.346,
+        2.367,
+        2.355,
+        2.355,
+        2.362,
+        2.371,
+        2.362,
+        2.354,
+        2.354,
+        2.364,
+        2.363,
+        2.361,
+        2.36,
+        2.357,
+        2.385,
+        2.385,
+        2.382
+      ],
+      "close_1h": [
+        1.904,
+        1.871,
+        1.847,
+        1.845,
+        1.806,
+        1.753,
+        1.8,
+        1.827,
+        1.888,
+        1.87,
+        1.933,
+        1.947,
+        2.195,
+        2.724,
+        3.203,
+        2.989,
+        2.958,
+        2.846,
+        2.728,
+        2.515,
+        2.697,
+        2.696,
+        2.495,
+        2.463,
+        2.356,
+        2.437,
+        2.564,
+        2.565,
+        2.486,
+        2.489,
+        2.456,
+        2.277,
+        2.346,
+        2.384,
+        2.434,
+        2.344,
+        2.309,
+        2.266,
+        2.27,
+        2.382
+      ],
+      "chart_read": {
+        "read_30m": "Pullback holding VWAP",
+        "read_1h": "Trend intact",
+        "timing": "ON TIME",
+        "change_30m_pct": -0.833,
+        "change_1h_pct": 25.105
+      },
+      "momentum_quality": "BUILDING",
+      "trap_risk": "LOW",
+      "volatility_state": "HIGH",
+      "structure_type": "TRENDING",
+      "relative_strength_pct": 5.533,
+      "distance_from_vwap_pct": 3.493,
+      "composite_score": 62,
+      "environment_score": 62,
+      "environment_tier": "UNKNOWN",
+      "environment_adjustments": [],
+      "billboard_score": 0,
+      "billboard_penalty": 0,
+      "billboard_reasons": [],
+      "veteran_decision": "SHARPSHOOTER",
+      "position_size": "NO TRADE",
+      "decision_reason": "outperforming BTC, trending",
+      "sharpshooter_mode": true,
+      "sharpshooter_score": 47,
+      "sharpshooter_threshold": 86,
+      "sharpshooter_qualified": false,
+      "outlier_label": "FAKEOUT RISK",
+      "fakeout_risk": "HIGH",
+      "sharpshooter_reasons": [
+        "elite relative strength",
+        "solo leader with elite RS",
+        "VWAP accepted",
+        "pullback held",
+        "structure break",
+        "momentum accelerating"
+      ],
+      "sharpshooter_penalties": [
+        "no volume expansion",
+        "far from value"
+      ],
+      "caption": "momentum is increasing, it is pulling back after the move, and buyers are holding control above VWAP."
+    },
+    {
+      "rank": 2,
       "pair": "USDG/USDC",
       "coin": "USDG",
       "tag": "WATCHLIST",
@@ -270,15 +427,15 @@
       "vwap": 1.0000922852799503,
       "macd_hist_15m": 6.4443414616893e-06,
       "close_30m": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
         1.0001,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
         1.0001,
         1.0001,
         1.0001,
@@ -347,14 +504,14 @@
         "read_30m": "Range building",
         "read_1h": "Trend intact",
         "timing": "LATE",
-        "change_30m_pct": 0.0,
+        "change_30m_pct": 0.01,
         "change_1h_pct": 0.01
       },
       "momentum_quality": "STABLE",
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.635,
+      "relative_strength_pct": 0.609,
       "distance_from_vwap_pct": 0.001,
       "composite_score": 54,
       "environment_score": 54,
@@ -377,7 +534,7 @@
       "caption": "momentum is building slowly, it is still trying to prove structure, and buyers are holding control above VWAP."
     },
     {
-      "rank": 2,
+      "rank": 3,
       "pair": "EURC/USDC",
       "coin": "EURC",
       "tag": "WATCHLIST",
@@ -504,7 +661,7 @@
       "trap_risk": "MEDIUM",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.661,
+      "relative_strength_pct": 0.635,
       "distance_from_vwap_pct": 0.13,
       "composite_score": 34,
       "environment_score": 34,
@@ -527,14 +684,14 @@
       "caption": "momentum is building slowly, it is still trying to prove structure, and buyers are holding control above VWAP."
     },
     {
-      "rank": 3,
+      "rank": 4,
       "pair": "RLUSD/USD",
       "coin": "RLUSD",
       "tag": "WATCHLIST",
-      "price": 1.00001,
-      "change_24h_pct": 0.005,
+      "price": 0.99997,
+      "change_24h_pct": 0.001,
       "trigger_score": 40,
-      "trade_score": 30,
+      "trade_score": 24,
       "confidence": 40,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -549,7 +706,7 @@
         "acceleration": false,
         "rsi_ok": false,
         "macd_turn_up": true,
-        "trend_ok": true,
+        "trend_ok": false,
         "volume_spike": false,
         "structure_break": false,
         "momentum_building": false,
@@ -561,15 +718,16 @@
       "missing": [
         "no impulse",
         "VWAP not accepted",
+        "trend not aligned",
         "no volume spike",
         "no structure break",
         "momentum weakening",
         "RSI<55.0 or RSI>72.0 (RSI=0.00)"
       ],
       "rsi_1m": 0.0,
-      "rsi_5m": 80.0,
-      "vwap": 1.000012952502897,
-      "macd_hist_15m": 5.719985417910047e-06,
+      "rsi_5m": 57.143,
+      "vwap": 1.0000121016992383,
+      "macd_hist_15m": 3.1672788651936034e-06,
       "close_30m": [
         1.00003,
         1.00003,
@@ -596,11 +754,11 @@
         1.00003,
         1.00003,
         1.00003,
-        1.00003,
         1.00001,
         1.00001,
         1.00001,
-        1.00001
+        0.99997,
+        0.99997
       ],
       "close_1h": [
         0.99994,
@@ -642,21 +800,21 @@
         0.99994,
         1.00005,
         0.99995,
-        1.00001
+        0.99997
       ],
       "chart_read": {
         "read_30m": "Range building",
-        "read_1h": "Trend intact",
+        "read_1h": "No clean 1H trend",
         "timing": "WAIT",
-        "change_30m_pct": -0.002,
-        "change_1h_pct": 0.007
+        "change_30m_pct": -0.006,
+        "change_1h_pct": 0.003
       },
       "momentum_quality": "WEAKENING",
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.631,
-      "distance_from_vwap_pct": -0.0,
+      "relative_strength_pct": 0.601,
+      "distance_from_vwap_pct": -0.004,
       "composite_score": 43,
       "environment_score": 43,
       "environment_tier": "UNKNOWN",
@@ -678,7 +836,7 @@
       "caption": "momentum is building slowly, it is pulling back after the move, and buyers have not fully taken VWAP control yet."
     },
     {
-      "rank": 4,
+      "rank": 5,
       "pair": "RLUSD/USDC",
       "coin": "RLUSD",
       "tag": "WATCHLIST",
@@ -807,7 +965,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.625,
+      "relative_strength_pct": 0.599,
       "distance_from_vwap_pct": 999.0,
       "composite_score": 28,
       "environment_score": 28,
@@ -830,7 +988,7 @@
       "caption": "momentum is building slowly, it is still trying to prove structure, and buyers have not fully taken VWAP control yet."
     },
     {
-      "rank": 5,
+      "rank": 6,
       "pair": "USDE/USD",
       "coin": "USDE",
       "tag": "WATCHLIST",
@@ -893,7 +1051,7 @@
         1.0,
         1.0,
         1.0,
-        1.0,
+        0.9998,
         0.9998,
         0.9998,
         0.9998,
@@ -961,7 +1119,7 @@
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.615,
+      "relative_strength_pct": 0.589,
       "distance_from_vwap_pct": -0.018,
       "composite_score": 43,
       "environment_score": 43,
@@ -984,7 +1142,7 @@
       "caption": "momentum is building slowly, it is pulling back after the move, and buyers have not fully taken VWAP control yet."
     },
     {
-      "rank": 6,
+      "rank": 7,
       "pair": "JST/USD",
       "coin": "JST",
       "tag": "WATCHLIST",
@@ -1040,7 +1198,7 @@
         0.10579,
         0.10579,
         0.10579,
-        0.10579,
+        0.10512,
         0.10512,
         0.10512,
         0.10512,
@@ -1115,7 +1273,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": -0.28,
+      "relative_strength_pct": -0.306,
       "distance_from_vwap_pct": -1.272,
       "composite_score": 11,
       "environment_score": 11,
@@ -1138,7 +1296,7 @@
       "caption": "momentum is building slowly, it is still trying to prove structure, and buyers have not fully taken VWAP control yet."
     },
     {
-      "rank": 7,
+      "rank": 8,
       "pair": "TRAC/USD",
       "coin": "TRAC",
       "tag": "WATCHLIST",
@@ -1176,16 +1334,15 @@
         "no volume spike",
         "no structure break",
         "momentum weakening",
-        "RSI<55.0 or RSI>72.0 (RSI=42.20)",
+        "RSI<55.0 or RSI>72.0 (RSI=37.62)",
         "5m RSI<53.5 (RSI=29.69)",
         "15m MACD hist < 0"
       ],
-      "rsi_1m": 42.202,
+      "rsi_1m": 37.624,
       "rsi_5m": 29.688,
-      "vwap": 0.39152810226989204,
+      "vwap": 0.39153529696342193,
       "macd_hist_15m": -0.006530084076903113,
       "close_30m": [
-        0.3764,
         0.3775,
         0.3748,
         0.3698,
@@ -1213,6 +1370,7 @@
         0.3658,
         0.3626,
         0.3626,
+        0.3607,
         0.3607,
         0.3607
       ],
@@ -1262,15 +1420,15 @@
         "read_30m": "Fresh impulse",
         "read_1h": "Trend intact",
         "timing": "EARLY",
-        "change_30m_pct": -4.171,
+        "change_30m_pct": -4.45,
         "change_1h_pct": 22.106
       },
       "momentum_quality": "WEAKENING",
       "trap_risk": "LOW",
       "volatility_state": "HIGH",
       "structure_type": "WEAK",
-      "relative_strength_pct": -3.111,
-      "distance_from_vwap_pct": -7.874,
+      "relative_strength_pct": -3.137,
+      "distance_from_vwap_pct": -7.875,
       "composite_score": 12,
       "environment_score": 12,
       "environment_tier": "UNKNOWN",
