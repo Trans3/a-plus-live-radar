@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-27T17:37:08",
-  "cycle_number": 10602,
+  "generated_at": "2026-08-27T17:40:19",
+  "cycle_number": 10603,
   "settings": {
     "hit_1pct": 1.0,
     "hit_2pct": 2.0,
@@ -11,7 +11,7 @@
   },
   "summary": {
     "total_signals": 250,
-    "open_signals": 21,
+    "open_signals": 20,
     "hit_1pct_count": 20,
     "hit_2pct_count": 1,
     "drawdown_count": 0,
@@ -61,9 +61,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.174,
-        "avg_drawdown_pct": -0.084,
-        "avg_current_pct": 0.094,
-        "edge_score": 1.75
+        "avg_drawdown_pct": -0.086,
+        "avg_current_pct": 0.073,
+        "edge_score": 1.74
       }
     ],
     "by_timing": [
@@ -85,8 +85,8 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.274,
-        "avg_drawdown_pct": -0.067,
-        "avg_current_pct": 0.181,
+        "avg_drawdown_pct": -0.069,
+        "avg_current_pct": 0.18,
         "edge_score": 3.02
       },
       {
@@ -97,7 +97,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.237,
         "avg_drawdown_pct": -0.071,
-        "avg_current_pct": 0.157,
+        "avg_current_pct": 0.152,
         "edge_score": 2.86
       },
       {
@@ -132,7 +132,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.374,
         "avg_drawdown_pct": -0.129,
-        "avg_current_pct": 0.298,
+        "avg_current_pct": 0.273,
         "edge_score": 3.97
       },
       {
@@ -176,7 +176,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.239,
         "avg_drawdown_pct": -0.081,
-        "avg_current_pct": 0.158,
+        "avg_current_pct": 0.152,
         "edge_score": 2.55
       },
       {
@@ -186,9 +186,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.209,
-        "avg_drawdown_pct": -0.052,
-        "avg_current_pct": 0.138,
-        "edge_score": 2.3
+        "avg_drawdown_pct": -0.053,
+        "avg_current_pct": 0.136,
+        "edge_score": 2.29
       },
       {
         "name": "INFRA",
@@ -222,7 +222,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.285,
         "avg_drawdown_pct": -0.08,
-        "avg_current_pct": 0.199,
+        "avg_current_pct": 0.193,
         "edge_score": 3.41
       },
       {
@@ -290,7 +290,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.358,
         "avg_drawdown_pct": -0.052,
-        "avg_current_pct": 0.271,
+        "avg_current_pct": 0.251,
         "edge_score": 4.09
       },
       {
@@ -300,9 +300,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.33,
-        "avg_drawdown_pct": -0.115,
-        "avg_current_pct": 0.212,
-        "edge_score": 3.49
+        "avg_drawdown_pct": -0.118,
+        "avg_current_pct": 0.209,
+        "edge_score": 3.48
       },
       {
         "name": "compression breakout continuation",
@@ -323,7 +323,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.191,
         "avg_drawdown_pct": -0.063,
-        "avg_current_pct": 0.12,
+        "avg_current_pct": 0.117,
         "edge_score": 2.04
       }
     ],
@@ -336,7 +336,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.311,
         "avg_drawdown_pct": -0.095,
-        "avg_current_pct": 0.242,
+        "avg_current_pct": 0.209,
         "edge_score": 5.25
       },
       {
@@ -346,9 +346,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.303,
-        "avg_drawdown_pct": -0.092,
-        "avg_current_pct": 0.194,
-        "edge_score": 3.27
+        "avg_drawdown_pct": -0.094,
+        "avg_current_pct": 0.193,
+        "edge_score": 3.26
       },
       {
         "name": "RSI 50-55",
@@ -369,7 +369,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.226,
         "avg_drawdown_pct": -0.062,
-        "avg_current_pct": 0.142,
+        "avg_current_pct": 0.141,
         "edge_score": 2.46
       },
       {
@@ -437,7 +437,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.248,
         "avg_drawdown_pct": -0.059,
-        "avg_current_pct": 0.169,
+        "avg_current_pct": 0.164,
         "edge_score": 2.74
       },
       {
@@ -447,8 +447,8 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.208,
-        "avg_drawdown_pct": -0.048,
-        "avg_current_pct": 0.145,
+        "avg_drawdown_pct": -0.049,
+        "avg_current_pct": 0.136,
         "edge_score": 2.3
       },
       {
@@ -581,9 +581,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.093,
-        "avg_drawdown_pct": -0.065,
-        "avg_current_pct": 0.052,
-        "edge_score": 0.86
+        "avg_drawdown_pct": -0.069,
+        "avg_current_pct": -0.004,
+        "edge_score": 0.84
       }
     ],
     "by_veteran_decision": [
@@ -606,7 +606,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.289,
         "avg_drawdown_pct": -0.116,
-        "avg_current_pct": 0.184,
+        "avg_current_pct": 0.183,
         "edge_score": 4.18
       },
       {
@@ -638,9 +638,9 @@
         "hit_2pct_rate": 0.0,
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.224,
-        "avg_drawdown_pct": -0.054,
-        "avg_current_pct": 0.151,
-        "edge_score": 2.48
+        "avg_drawdown_pct": -0.055,
+        "avg_current_pct": 0.144,
+        "edge_score": 2.47
       },
       {
         "name": "WAIT",
@@ -685,7 +685,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.215,
         "avg_drawdown_pct": -0.075,
-        "avg_current_pct": 0.13,
+        "avg_current_pct": 0.124,
         "edge_score": 2.28
       }
     ],
@@ -698,7 +698,7 @@
         "drawdown_rate": 0.0,
         "avg_max_move_pct": 0.246,
         "avg_drawdown_pct": -0.072,
-        "avg_current_pct": 0.162,
+        "avg_current_pct": 0.158,
         "edge_score": 2.88
       }
     ],
@@ -723,19 +723,19 @@
       "entry_price": 0.2378,
       "max_price_after": 0.23962,
       "min_price_after": 0.23742,
-      "last_price": 0.23962,
-      "last_seen": "2026-08-27T17:37:08",
-      "last_seen_ts": 1787866628.082176,
+      "last_price": 0.23871,
+      "last_seen": "2026-08-27T17:40:19",
+      "last_seen_ts": 1787866819.9237788,
       "rank_first": 5,
-      "rank_best": 3,
-      "rank_last": 3,
+      "rank_best": 1,
+      "rank_last": 1,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "ON TIME",
-      "timing_last": "LATE",
-      "trigger_score": 85,
-      "trade_score": 67,
-      "confidence": 85,
+      "timing_last": "ON TIME",
+      "trigger_score": 90,
+      "trade_score": 50,
+      "confidence": 90,
       "environment_score_first": 56,
       "environment_tier_first": "UNKNOWN",
       "sector": "DEFI",
@@ -755,12 +755,12 @@
       "status": "OPEN",
       "environment_score_last": 56,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 16.59,
+      "age_minutes": 19.79,
       "max_gain_pct": 0.765,
       "max_move_pct": 0.765,
       "max_drawdown_pct": -0.16,
       "drawdown_pct": -0.16,
-      "current_pct": 0.765,
+      "current_pct": 0.383,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -776,19 +776,19 @@
       "entry_price": 4.6312,
       "max_price_after": 4.645,
       "min_price_after": 4.6173,
-      "last_price": 4.6433,
-      "last_seen": "2026-08-27T17:37:08",
-      "last_seen_ts": 1787866628.082176,
+      "last_price": 4.6415,
+      "last_seen": "2026-08-27T17:40:19",
+      "last_seen_ts": 1787866819.9237788,
       "rank_first": 3,
       "rank_best": 1,
-      "rank_last": 1,
+      "rank_last": 4,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "ON TIME",
       "timing_last": "ON TIME",
-      "trigger_score": 95,
-      "trade_score": 49,
-      "confidence": 95,
+      "trigger_score": 70,
+      "trade_score": 40,
+      "confidence": 70,
       "environment_score_first": 64,
       "environment_tier_first": "UNKNOWN",
       "sector": "DEFI",
@@ -808,12 +808,12 @@
       "status": "OPEN",
       "environment_score_last": 64,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 23.63,
+      "age_minutes": 26.83,
       "max_gain_pct": 0.298,
       "max_move_pct": 0.298,
       "max_drawdown_pct": -0.3,
       "drawdown_pct": -0.3,
-      "current_pct": 0.261,
+      "current_pct": 0.222,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -829,19 +829,19 @@
       "entry_price": 0.02888,
       "max_price_after": 0.02906,
       "min_price_after": 0.02888,
-      "last_price": 0.02906,
-      "last_seen": "2026-08-27T17:37:08",
-      "last_seen_ts": 1787866628.082176,
+      "last_price": 0.02889,
+      "last_seen": "2026-08-27T17:40:19",
+      "last_seen_ts": 1787866819.9237788,
       "rank_first": 3,
-      "rank_best": 3,
-      "rank_last": 4,
+      "rank_best": 2,
+      "rank_last": 2,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "ON TIME",
-      "timing_last": "LATE",
-      "trigger_score": 85,
-      "trade_score": 69,
-      "confidence": 85,
+      "timing_last": "ON TIME",
+      "trigger_score": 80,
+      "trade_score": 36,
+      "confidence": 80,
       "environment_score_first": 59,
       "environment_tier_first": "UNKNOWN",
       "sector": "OTHER",
@@ -861,12 +861,12 @@
       "status": "OPEN",
       "environment_score_last": 59,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 20.07,
+      "age_minutes": 23.27,
       "max_gain_pct": 0.623,
       "max_move_pct": 0.623,
       "max_drawdown_pct": 0.0,
       "drawdown_pct": 0.0,
-      "current_pct": 0.623,
+      "current_pct": 0.035,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -881,20 +881,20 @@
       "first_cycle": 10602,
       "entry_price": 1.535,
       "max_price_after": 1.535,
-      "min_price_after": 1.535,
-      "last_price": 1.535,
-      "last_seen": "2026-08-27T17:37:08",
-      "last_seen_ts": 1787866628.082176,
+      "min_price_after": 1.5337,
+      "last_price": 1.5337,
+      "last_seen": "2026-08-27T17:40:19",
+      "last_seen_ts": 1787866819.9237788,
       "rank_first": 2,
       "rank_best": 2,
-      "rank_last": 2,
+      "rank_last": 3,
       "regime_first": "CHOP",
       "regime_last": "CHOP",
       "timing_first": "EARLY",
-      "timing_last": "EARLY",
-      "trigger_score": 95,
-      "trade_score": 56,
-      "confidence": 95,
+      "timing_last": "ON TIME",
+      "trigger_score": 80,
+      "trade_score": 34,
+      "confidence": 80,
       "environment_score_first": 61,
       "environment_tier_first": "UNKNOWN",
       "sector": "L1",
@@ -914,12 +914,12 @@
       "status": "OPEN",
       "environment_score_last": 61,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 0.0,
+      "age_minutes": 3.2,
       "max_gain_pct": 0.0,
       "max_move_pct": 0.0,
-      "max_drawdown_pct": 0.0,
-      "drawdown_pct": 0.0,
-      "current_pct": 0.0,
+      "max_drawdown_pct": -0.085,
+      "drawdown_pct": -0.085,
+      "current_pct": -0.085,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -934,10 +934,10 @@
       "first_cycle": 10602,
       "entry_price": 80093.0,
       "max_price_after": 80093.0,
-      "min_price_after": 80093.0,
-      "last_price": 80093.0,
-      "last_seen": "2026-08-27T17:37:08",
-      "last_seen_ts": 1787866628.082176,
+      "min_price_after": 80084.79,
+      "last_price": 80084.79,
+      "last_seen": "2026-08-27T17:40:19",
+      "last_seen_ts": 1787866819.9237788,
       "rank_first": 5,
       "rank_best": 5,
       "rank_last": 5,
@@ -945,9 +945,9 @@
       "regime_last": "CHOP",
       "timing_first": "ON TIME",
       "timing_last": "ON TIME",
-      "trigger_score": 85,
-      "trade_score": 49,
-      "confidence": 85,
+      "trigger_score": 70,
+      "trade_score": 43,
+      "confidence": 70,
       "environment_score_first": 61,
       "environment_tier_first": "UNKNOWN",
       "sector": "OTHER",
@@ -967,12 +967,12 @@
       "status": "OPEN",
       "environment_score_last": 61,
       "environment_tier_last": "UNKNOWN",
-      "age_minutes": 0.0,
+      "age_minutes": 3.2,
       "max_gain_pct": 0.0,
       "max_move_pct": 0.0,
-      "max_drawdown_pct": 0.0,
-      "drawdown_pct": 0.0,
-      "current_pct": 0.0,
+      "max_drawdown_pct": -0.01,
+      "drawdown_pct": -0.01,
+      "current_pct": -0.01,
       "hit_1pct": false,
       "hit_2pct": false
     },
@@ -1918,7 +1918,7 @@
       "trigger_score_zone": "80-89",
       "trade_score_zone": "<60",
       "confidence_zone": "80-89",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 65,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1928,7 +1928,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-08-27T17:40:19"
     },
     {
       "key": "TRUMP/USD|WATCHLIST|cycle-10578|1787861657",
