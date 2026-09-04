@@ -2053,35 +2053,145 @@ def tower_command(flights):
     return "NO DEPARTURES", "#8498a6", "No pair currently has a qualified entry condition.", None
 
 
+def _pair_analysis(f):
+    """Build pair-specific setup / trade / next-action text from live scanner fields."""
+    s = f.get("setup", {}) or {}
+    flags = s.get("flags", {}) or {}
+
+    price = safe_float(s.get("price"))
+    vwap = safe_float(s.get("vwap"))
+    r1 = safe_float(f.get("rsi_1m", s.get("rsi_1m", 0)))
+    r5 = safe_float(f.get("rsi_5m", s.get("rsi_5m", 0)))
+    ch1 = safe_float(f.get("change_1h", s.get("change_1h_pct", 0)))
+    action = str(f.get("action", "WATCH")).upper()
+    read_state = str(f.get("read_state", "STANDARD WATCH")).upper()
+
+    # RSI-MA fields are optional so the UI stays backwards-compatible while the
+    # scanner rollout catches up.
+    rsi_ma = safe_float(
+        s.get("rsi_ma_1m", s.get("rsi_1m_ma", s.get("rsi_ma", 0)))
+    )
+    rsi_ma_slope = safe_float(
+        s.get("rsi_ma_slope_1m", s.get("rsi_ma_slope", 0))
+    )
+    rsi_gap = safe_float(
+        s.get("rsi_ma_gap_1m", s.get("rsi_ma_gap", (r1 - rsi_ma) if rsi_ma else 0))
+    )
+    cross_up = bool(s.get("rsi_cross_up_1m", s.get("rsi_cross_up", False)))
+    cross_down = bool(s.get("rsi_cross_down_1m", s.get("rsi_cross_down", False)))
+    hold_above = int(safe_float(s.get("rsi_hold_above_ma_1m", s.get("rsi_hold_above_ma", 0))))
+
+    # 1) WHAT IS THIS PAIR DOING?
+    setup_bits = []
+    if read_state == "RELOAD READY":
+        setup_bits.append(f"1m reload active (RSI {r1:.0f})")
+        setup_bits.append(f"5m trend strong (RSI {r5:.0f})")
+    elif read_state == "RELOAD WATCH":
+        setup_bits.append(f"1m cooling (RSI {r1:.0f})")
+        setup_bits.append(f"5m still strong (RSI {r5:.0f})")
+    elif read_state == "CONTINUATION WATCH":
+        setup_bits.append("continuation structure intact")
+    elif read_state == "PRESSURE BUILDING":
+        setup_bits.append("compression / pressure building")
+    else:
+        setup_bits.append(f"1m RSI {r1:.0f} / 5m RSI {r5:.0f}")
+
+    if rsi_ma:
+        if cross_up:
+            setup_bits.append("RSI just crossed above its MA")
+        elif cross_down:
+            setup_bits.append("RSI just crossed below its MA")
+        elif rsi_gap > 0:
+            setup_bits.append(f"RSI +{rsi_gap:.1f} above MA")
+        else:
+            setup_bits.append(f"RSI {abs(rsi_gap):.1f} below MA")
+
+        if rsi_ma_slope > 0.15:
+            setup_bits.append("RSI-MA rising")
+        elif rsi_ma_slope < -0.15:
+            setup_bits.append("RSI-MA falling")
+        if hold_above >= 2:
+            setup_bits.append(f"holding above MA {hold_above} bars")
+
+    if flags.get("structure_break"):
+        setup_bits.append("breakout confirmed")
+    elif flags.get("compression"):
+        setup_bits.append("breakout not confirmed")
+    if flags.get("volume_spike"):
+        setup_bits.append("volume expansion present")
+
+    setup_read = " · ".join(setup_bits[:3])
+
+    # 2) TRADE MATH
+    low_move, high_move, move_conf = projected_move(s, f.get("market", ""))
+    levels = trade_levels(s, f.get("market", ""))
+    trade_read = (
+        f"+{low_move:.2f}% to +{high_move:.2f}% est. · "
+        f"{clean_text(levels.get('rr','—'))} R:R"
+    )
+
+    # 3) WHAT CHANGES THE DECISION NEXT?
+    if action == "ENTER":
+        if rsi_ma and rsi_gap > 0:
+            next_label = "Hold / Add Trigger"
+            next_text = "Keep VWAP + RSI above its MA; cancel on momentum rollover or failed breakout."
+        else:
+            next_label = "Entry Trigger"
+            next_text = clean_text(f.get("entry_condition", "Require immediate continuation confirmation."))
+    elif action == "WAIT":
+        next_label = "Entry Trigger"
+        if read_state == "RELOAD WATCH":
+            next_text = "Wait for 1m RSI reclaim + turn-up while 5m stays strong and VWAP holds."
+        elif flags.get("structure_break"):
+            next_text = "Wait for pullback/retest to hold before entry; do not chase the breakout candle."
+        elif flags.get("compression"):
+            next_text = "Wait for structure break + buyer hold above VWAP before upgrading to ENTER."
+        elif r1 < 55:
+            next_text = f"Need 1m momentum back above ~55 (now {r1:.0f}) with VWAP still defended."
+        else:
+            next_text = clean_text(f.get("entry_condition", "One more confirmation required."))
+    elif action in {"WATCH", "HOLD / SKIP"}:
+        next_label = "What Would Improve It"
+        next_text = clean_text(f.get("entry_condition", "Needs reset and fresh structure."))
+    else:
+        next_label = "Re-Entry Condition"
+        next_text = clean_text(f.get("entry_condition", "Wait for a fresh base / VWAP reset."))
+
+    # Specific risk note to avoid same invalidation sentence on every card.
+    if price > 0 and vwap > 0:
+        vwap_dist = (price - vwap) / vwap * 100.0
+        if vwap_dist > 1.5:
+            risk_note = f"Chase risk: price is {vwap_dist:+.2f}% from VWAP."
+        elif r1 >= 72:
+            risk_note = f"Momentum hot: 1m RSI {r1:.0f}; avoid late entry."
+        elif rsi_ma and rsi_gap < 0:
+            risk_note = "Momentum risk: RSI is below its MA."
+        elif ch1 < 0:
+            risk_note = f"1H still negative ({ch1:+.2f}%)."
+        else:
+            risk_note = clean_text(f.get("invalidation", "VWAP / momentum failure invalidates."))
+    else:
+        risk_note = clean_text(f.get("invalidation", "Momentum failure invalidates."))
+
+    return {
+        "setup_read": setup_read,
+        "trade_read": trade_read,
+        "move_conf": move_conf,
+        "levels": levels,
+        "next_label": next_label,
+        "next_text": next_text,
+        "risk_note": risk_note,
+    }
+
+
 def render_flight_card(f):
-    """Compact ATC card: three decision items per pair."""
-    setup = f.get("setup", {}) or {}
-    market = f.get("market", "") or ""
-    low_move, high_move, move_conf = projected_move(setup, market)
-    levels = trade_levels(setup, market)
-
-    price = safe_float(setup.get("price"))
-    stop_text = levels.get("stop", "—")
-    target_text = levels.get("target", "—")
-    rr_text = levels.get("rr", "—")
-
-    risk_pct = None
-    try:
-        stop_num = float(str(stop_text).replace("$", "").replace(",", ""))
-        if price > 0 and stop_num > 0:
-            risk_pct = abs((price - stop_num) / price * 100.0)
-    except Exception:
-        risk_pct = None
-
-    potential_text = f"+{low_move:.2f}% to +{high_move:.2f}%"
-    risk_text = f"-{risk_pct:.2f}%" if risk_pct is not None else "—"
+    """Compact decision card with pair-specific analysis instead of repeated templates."""
+    a = _pair_analysis(f)
     action = clean_text(f.get("action", "WATCH"))
     action_color = f.get("color", "#8498a6")
     timing = clean_text(f.get("timing", "WATCH"))
     window = clean_text(f.get("window", "Needs trigger"))
-    invalidation = clean_text(
-        f.get("invalidation") or "Stand down on VWAP loss / momentum rollover."
-    )
+    levels = a["levels"]
 
     return f"""
 <div class="flight-card" style="color:{action_color};">
@@ -2098,18 +2208,20 @@ def render_flight_card(f):
 
   <div class="flight-data decision-3">
     <div class="data-box">
-      <div class="data-k">Potential Move</div>
-      <div class="data-v">{potential_text}</div>
-      <div class="small">Estimate · {move_conf}% model confidence</div>
+      <div class="data-k">Live Setup</div>
+      <div class="data-v" style="font-size:13px;line-height:1.35;">{clean_text(a['setup_read'])}</div>
     </div>
+
     <div class="data-box">
-      <div class="data-k">Risk / Reward</div>
-      <div class="data-v">{risk_text} · {clean_text(rr_text)}</div>
-      <div class="small">Target {clean_text(target_text)} · Stop {clean_text(stop_text)}</div>
+      <div class="data-k">Trade Math</div>
+      <div class="data-v">{a['trade_read']}</div>
+      <div class="small">Target {clean_text(levels.get('target','—'))} · Stop {clean_text(levels.get('stop','—'))} · {a['move_conf']}% model conf.</div>
     </div>
+
     <div class="data-box">
-      <div class="data-k">Invalidation</div>
-      <div class="data-v" style="font-size:13px;line-height:1.35;color:#ff8f8f;">{invalidation}</div>
+      <div class="data-k">{clean_text(a['next_label'])}</div>
+      <div class="data-v" style="font-size:13px;line-height:1.35;color:#79e7ff;">{clean_text(a['next_text'])}</div>
+      <div class="small" style="margin-top:6px;color:#ff8f8f;">Risk: {clean_text(a['risk_note'])}</div>
     </div>
   </div>
 </div>
