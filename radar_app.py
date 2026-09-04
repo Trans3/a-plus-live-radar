@@ -2203,7 +2203,12 @@ def _pair_analysis(f):
 
 
 def render_flight_card(f):
-    """Compact decision card with pair-specific analysis instead of repeated templates."""
+    """Compact pair card rendered as one continuous HTML block.
+
+    Streamlit Markdown can terminate a raw-HTML block at blank lines and then
+    display the remaining indented tags literally. Building one continuous
+    string prevents that parser behavior.
+    """
     a = _pair_analysis(f)
     action = clean_text(f.get("action", "WATCH"))
     action_color = f.get("color", "#8498a6")
@@ -2211,39 +2216,35 @@ def render_flight_card(f):
     window = clean_text(f.get("window", "Needs trigger"))
     levels = a["levels"]
 
-    return f"""
-<div class="flight-card" style="color:{action_color};">
-  <div class="flight-top">
-    <div>
-      <div class="flight-pair">{clean_text(f.get('pair','UNKNOWN'))}</div>
-      <div class="flight-sector">{clean_text(f.get('sector','OTHER'))} sector</div>
-    </div>
-    <div class="flight-phase">{clean_text(f.get('phase','WATCH'))}</div>
-  </div>
-
-  <div class="flight-action">{action}</div>
-  <div class="flight-reason">{timing} · {window}</div>
-
-  <div class="flight-data decision-3">
-    <div class="data-box">
-      <div class="data-k">Live Setup</div>
-      <div class="data-v" style="font-size:13px;line-height:1.35;">{clean_text(a['setup_read'])}</div>
-    </div>
-
-    <div class="data-box">
-      <div class="data-k">Trade Math</div>
-      <div class="data-v">{a['trade_read']}</div>
-      <div class="small">Target {clean_text(levels.get('target','—'))} · Stop {clean_text(levels.get('stop','—'))} · {a['move_conf']}% model conf.</div>
-    </div>
-
-    <div class="data-box">
-      <div class="data-k">{clean_text(a['next_label'])}</div>
-      <div class="data-v" style="font-size:13px;line-height:1.35;color:#79e7ff;">{clean_text(a['next_text'])}</div>
-      <div class="small" style="margin-top:6px;color:#ff8f8f;">Risk: {clean_text(a['risk_note'])}</div>
-    </div>
-  </div>
-</div>
-"""
+    parts = [
+        f'<div class="flight-card" style="color:{action_color};">',
+        '<div class="flight-top"><div>',
+        f'<div class="flight-pair">{clean_text(f.get("pair","UNKNOWN"))}</div>',
+        f'<div class="flight-sector">{clean_text(f.get("sector","OTHER"))} sector</div>',
+        '</div>',
+        f'<div class="flight-phase">{clean_text(f.get("phase","WATCH"))}</div>',
+        '</div>',
+        f'<div class="flight-action">{action}</div>',
+        f'<div class="flight-reason">{timing} · {window}</div>',
+        '<div class="flight-data decision-3">',
+        '<div class="data-box">',
+        '<div class="data-k">Live Setup</div>',
+        f'<div class="data-v" style="font-size:13px;line-height:1.35;">{clean_text(a["setup_read"])}</div>',
+        '</div>',
+        '<div class="data-box">',
+        '<div class="data-k">Trade Math</div>',
+        f'<div class="data-v">{clean_text(a["trade_read"])}</div>',
+        f'<div class="small">Target {clean_text(levels.get("target","—"))} · Stop {clean_text(levels.get("stop","—"))} · {a["move_conf"]}% model conf.</div>',
+        '</div>',
+        '<div class="data-box">',
+        f'<div class="data-k">{clean_text(a["next_label"])}</div>',
+        f'<div class="data-v" style="font-size:13px;line-height:1.35;color:#79e7ff;">{clean_text(a["next_text"])}</div>',
+        f'<div class="small" style="margin-top:6px;color:#ff8f8f;">Risk: {clean_text(a["risk_note"])}</div>',
+        '</div>',
+        '</div>',
+        '</div>',
+    ]
+    return "".join(parts)
 
 def sharpshooter_candidates(flights):
     """Use existing radar timing + structure to identify top sharpshooter options."""
