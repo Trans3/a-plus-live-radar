@@ -2286,44 +2286,152 @@ def build_dropdown_news_cache(flights, limit=4):
     return news_by_pair
 
 
+
+def _headline_relevance_score(story, symbol, coin_name=""):
+    title = str(story.get("title", "") or "")
+    t = title.lower()
+    score = 0
+
+    # Strong pair-specific match.
+    if symbol.lower() in t:
+        score += 5
+    if coin_name and coin_name.lower() in t:
+        score += 5
+
+    positive_terms = [
+        "partnership","integration","listing","listed","launch","upgrade","mainnet",
+        "funding","investment","institutional","adoption","revenue","growth","airdrop",
+        "governance","buyback","burn","volume","whale","treasury","expansion"
+    ]
+    negative_terms = [
+        "exploit","hack","breach","delist","delisting","lawsuit","probe","investigation",
+        "unlock","dump","outflow","selloff","liquidation","attack","vulnerability","ban"
+    ]
+    generic_terms = [
+        "bitcoin","ethereum","crypto market","market cap","stocks","treasury yields",
+        "fed","interest rates","macro","price prediction","price forecast"
+    ]
+
+    for term in positive_terms + negative_terms:
+        if term in t:
+            score += 2
+
+    for term in generic_terms:
+        if term in t and symbol.lower() not in t and (not coin_name or coin_name.lower() not in t):
+            score -= 3
+
+    # Prefer fresher-looking items when metadata contains dates naturally by order.
+    return score
+
+
+def _headline_catalyst(story):
+    title = str(story.get("title", "") or "").lower()
+    pos = [
+        "partnership","integration","listing","listed","launch","upgrade","mainnet",
+        "funding","investment","institutional","adoption","revenue","growth","buyback",
+        "burn","volume","whale","treasury","expansion"
+    ]
+    neg = [
+        "exploit","hack","breach","delist","delisting","lawsuit","probe","investigation",
+        "unlock","dump","outflow","selloff","liquidation","attack","vulnerability","ban"
+    ]
+    p = sum(1 for x in pos if x in title)
+    n = sum(1 for x in neg if x in title)
+    if p > n:
+        return "POSITIVE"
+    if n > p:
+        return "NEGATIVE"
+    return "NEUTRAL"
+
+
+def _why_news_matters(story, catalyst):
+    title = str(story.get("title", "") or "").lower()
+    if catalyst == "POSITIVE":
+        if any(k in title for k in ["listing","listed","partnership","integration","funding","investment","adoption"]):
+            return "Pair-specific catalyst could reinforce demand if price/volume confirmation follows."
+        if any(k in title for k in ["upgrade","launch","mainnet","governance"]):
+            return "Protocol/news catalyst may support momentum, but the chart still needs to confirm."
+        return "Headline is constructive and may support the technical setup if buyers keep control."
+    if catalyst == "NEGATIVE":
+        if any(k in title for k in ["unlock","dump","outflow","selloff","liquidation"]):
+            return "This can create supply pressure and weakens the case for chasing strength."
+        if any(k in title for k in ["exploit","hack","breach","vulnerability"]):
+            return "Security risk can invalidate an otherwise strong technical setup quickly."
+        return "Headline adds downside risk and should reduce confidence in an aggressive entry."
+    return "No clear directional catalyst. Treat this setup as technical-first."
+
+
 def render_news_rail(selected, news_by_pair=None, limit=4):
-    """Right rail: news context only for the pair currently selected in Flight Readout."""
+    """Right rail: filtered pair-specific trade context, not a generic news dump."""
     if not selected:
         return (
             '<aside class="news-rail"><div class="news-title">Pair Intelligence</div>'
-            '<div class="news-sub">Select a flight to load pair-specific news.</div></aside>'
+            '<div class="news-sub">Select a flight to load trade-relevant pair context.</div></aside>'
         )
 
     pair = str(selected.get("pair", "UNKNOWN"))
     symbol = pair.split("/")[0].upper()
     action = str(selected.get("action", "WATCH")).upper()
+    coin_name = COIN_NEWS_NAMES.get(symbol, symbol)
+
     if isinstance(news_by_pair, dict) and pair in news_by_pair:
-        stories = news_by_pair.get(pair) or []
+        raw_stories = list(news_by_pair.get(pair) or [])
     else:
-        stories = fetch_pair_news(symbol, limit)
+        raw_stories = fetch_pair_news(symbol, limit)
 
-    if not stories:
-        body = '<div class="news-sub">No directly related headlines found on this sweep.</div>'
-    else:
-        parts = []
-        for s in stories:
-            meta = " · ".join([x for x in [s.get("source"), s.get("pub")] if x])
-            parts.append(
-                f'<a class="news-item" href="{html.escape(s["link"])}" target="_blank" rel="noopener noreferrer">'
-                f'<span class="news-symbol">{clean_text(pair)} · {clean_text(action)}</span>'
-                f'<div class="news-headline">{clean_text(s["title"])}</div>'
-                f'<div class="news-meta">{clean_text(meta)}</div></a>'
-            )
-        body = "".join(parts)
-
-    return (
-        '<aside class="news-rail">'
-        '<div class="news-title">Pair Intelligence</div>'
-        f'<div class="news-sub">Current headlines for <b>{clean_text(pair)}</b>. '
-        'News supports context; Radar still controls the entry decision.</div>'
-        + body +
-        '</aside>'
+    ranked = sorted(
+        raw_stories,
+        key=lambda s: _headline_relevance_score(s, symbol, coin_name),
+        reverse=True,
     )
+
+    # Keep only actually relevant stories. Fallback: technical-only.
+    relevant = [
+        s for s in ranked
+        if _headline_relevance_score(s, symbol, coin_name) >= 4
+    ][:2]
+
+    if not relevant:
+        return (
+            '<aside class="news-rail">'
+            '<div class="news-title">Pair Intelligence</div>'
+            f'<div class="news-sub"><b>{clean_text(pair)}</b> · {clean_text(action)}</div>'
+            '<div style="margin-top:12px;color:#FFD93D;font-weight:1000;">NO STRONG CATALYST</div>'
+            '<div class="news-sub" style="margin-top:6px;">No meaningful pair-specific headline passed the relevance filter. '
+            'Treat this as a technical-only setup.</div>'
+            '</aside>'
+        )
+
+    primary = relevant[0]
+    catalyst = _headline_catalyst(primary)
+    catalyst_color = "#72ff9a" if catalyst == "POSITIVE" else "#ff6262" if catalyst == "NEGATIVE" else "#ffd85a"
+
+    parts = [
+        '<aside class="news-rail">',
+        '<div class="news-title">Pair Intelligence</div>',
+        f'<div class="news-sub"><b>{clean_text(pair)}</b> · {clean_text(action)}</div>',
+        f'<div style="margin-top:12px;font-size:11px;color:{catalyst_color};font-weight:1000;text-transform:uppercase;">Catalyst: {catalyst}</div>',
+    ]
+
+    for i, s in enumerate(relevant):
+        meta = " · ".join([x for x in [s.get("source"), s.get("pub")] if x])
+        cat = _headline_catalyst(s)
+        why = _why_news_matters(s, cat)
+        label = "TOP STORY" if i == 0 else "SECONDARY"
+        parts.append(
+            f'<a class="news-item" href="{html.escape(s["link"])}" target="_blank" rel="noopener noreferrer">'
+            f'<span class="news-symbol">{label}</span>'
+            f'<div class="news-headline">{clean_text(s["title"])}</div>'
+            f'<div class="news-meta">{clean_text(meta)}</div>'
+            f'<div class="news-sub" style="margin-top:6px;">Why it matters: {clean_text(why)}</div>'
+            '</a>'
+        )
+
+    parts.append(
+        '<div class="news-sub" style="margin-top:10px;">News is context only. Radar remains the entry decision engine.</div>'
+    )
+    parts.append('</aside>')
+    return "".join(parts)
 
 
 
