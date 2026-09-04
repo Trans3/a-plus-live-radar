@@ -1252,7 +1252,7 @@ def fires(n):
 
 ATC_CSS = """
 <style>
-.decision-3{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+.decision-3{grid-template-columns:1.15fr 1fr 1.35fr !important;}
 .decision-3 .data-box{min-height:92px;}
 @media(max-width:900px){.decision-3{grid-template-columns:1fr !important;}}
 
@@ -2122,13 +2122,31 @@ def _pair_analysis(f):
 
     setup_read = " · ".join(setup_bits[:3])
 
-    # 2) TRADE MATH
+    # 2) TRADE MATH — calculate plain-text values only.
     low_move, high_move, move_conf = projected_move(s, f.get("market", ""))
-    levels = trade_levels(s, f.get("market", ""))
+
+    entry = price
+    stop_pct = 0.0
+    if price > 0 and vwap > 0 and vwap < price:
+        stop_pct = abs((price - vwap) / price * 100.0)
+    if stop_pct <= 0:
+        # Dynamic fallback based on current setup extension/volatility.
+        stop_pct = max(0.65, min(2.25, high_move * 0.45))
+
+    rr_low = (low_move / stop_pct) if stop_pct > 0 else 0.0
+    rr_high = (high_move / stop_pct) if stop_pct > 0 else 0.0
+    target_price = entry * (1.0 + high_move / 100.0) if entry > 0 else 0.0
+    stop_price = entry * (1.0 - stop_pct / 100.0) if entry > 0 else 0.0
+
     trade_read = (
-        f"+{low_move:.2f}% to +{high_move:.2f}% est. · "
-        f"{clean_text(levels.get('rr','—'))} R:R"
+        f"+{low_move:.2f}% to +{high_move:.2f}% · "
+        f"{rr_low:.1f}R–{rr_high:.1f}R"
     )
+    levels = {
+        "target": f"${target_price:.8f}".rstrip("0").rstrip(".") if target_price else "—",
+        "stop": f"${stop_price:.8f}".rstrip("0").rstrip(".") if stop_price else "—",
+        "rr": f"{rr_low:.1f}R–{rr_high:.1f}R",
+    }
 
     # 3) WHAT CHANGES THE DECISION NEXT?
     if action == "ENTER":
