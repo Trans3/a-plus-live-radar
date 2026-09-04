@@ -1465,6 +1465,48 @@ ATC_CSS = """
   padding:14px;
   backdrop-filter:blur(8px);
 }
+
+.aplus-feed-row{
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+}
+.aplus-feed-row:last-child{border-bottom:0;}
+.aplus-feed-top{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+}
+.aplus-feed-pair{
+  color:var(--text);
+  font-size:12px;
+  font-weight:1000;
+}
+.aplus-feed-status{
+  font-size:9px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.aplus-feed-read{
+  margin-top:4px;
+  color:var(--cyan);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.aplus-feed-meta{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+.aplus-feed-time{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:900;
+}
+
 .market-command-title{
   font-size:11px;
   color:var(--muted);
@@ -2227,19 +2269,18 @@ def relevant_news_flights(flights, limit_pairs=4):
                 return chosen
     return chosen
 
-def render_news_rail(flights):
-    focus = relevant_news_flights(flights, 4)
-    stories, seen_titles = [], set()
-    for f in focus:
-        symbol = str(f["pair"]).split("/")[0].upper()
-        for story in fetch_pair_news(symbol, 2):
-            key = story["title"].lower()
-            if key not in seen_titles:
-                story["pair"] = f["pair"]
-                story["action"] = f["action"]
-                stories.append(story)
-                seen_titles.add(key)
-    stories = stories[:7]
+def render_news_rail(selected, limit=4):
+    """Right rail: news context only for the pair currently selected in Flight Readout."""
+    if not selected:
+        return (
+            '<aside class="news-rail"><div class="news-title">Pair Intelligence</div>'
+            '<div class="news-sub">Select a flight to load pair-specific news.</div></aside>'
+        )
+
+    pair = str(selected.get("pair", "UNKNOWN"))
+    symbol = pair.split("/")[0].upper()
+    action = str(selected.get("action", "WATCH")).upper()
+    stories = fetch_pair_news(symbol, limit)
 
     if not stories:
         body = '<div class="news-sub">No directly related headlines found on this sweep.</div>'
@@ -2249,18 +2290,21 @@ def render_news_rail(flights):
             meta = " · ".join([x for x in [s.get("source"), s.get("pub")] if x])
             parts.append(
                 f'<a class="news-item" href="{html.escape(s["link"])}" target="_blank" rel="noopener noreferrer">'
-                f'<span class="news-symbol">{clean_text(s["pair"])} · {clean_text(s["action"])}</span>'
+                f'<span class="news-symbol">{clean_text(pair)} · {clean_text(action)}</span>'
                 f'<div class="news-headline">{clean_text(s["title"])}</div>'
                 f'<div class="news-meta">{clean_text(meta)}</div></a>'
             )
         body = "".join(parts)
 
-    focus_names = ", ".join(clean_text(f["pair"]) for f in focus[:3]) or "current radar options"
     return (
-        '<aside class="news-rail"><div class="news-title">Relevant News</div>'
-        f'<div class="news-sub">Headlines prioritized for {focus_names}. News is context, not an entry signal.</div>'
-        + body + '</aside>'
+        '<aside class="news-rail">'
+        '<div class="news-title">Pair Intelligence</div>'
+        f'<div class="news-sub">Current headlines for <b>{clean_text(pair)}</b>. '
+        'News supports context; Radar still controls the entry decision.</div>'
+        + body +
+        '</aside>'
     )
+
 
 
 def market_command_metrics(flights, sectors, market):
@@ -2412,6 +2456,87 @@ def market_command_metrics(flights, sectors, market):
         "visibility":visibility, "wind":wind, "turbulence":turbulence,
         "strategy":strategy, "strategy_note":strategy_note,
     }
+
+
+
+def _feed_time_for_flight(f, fallback=""):
+    setup = f.get("setup", {}) or {}
+    for key in ("signal_time", "first_seen", "created_at", "detected_at"):
+        value = setup.get(key)
+        if value:
+            txt = str(value)
+            if "T" in txt and len(txt) >= 16:
+                return txt[11:16]
+            if " " in txt and len(txt) >= 16:
+                return txt[11:16]
+    txt = str(fallback or "")
+    return txt[11:16] if len(txt) >= 16 else "--:--"
+
+
+def render_aplus_live_feed(flights, updated="", limit=10):
+    """Left rail: compact website mirror of the scanner/Discord decision stream."""
+    if not flights:
+        return (
+            '<aside class="market-command-rail">'
+            '<div class="market-command-title">A+ Live Feed</div>'
+            '<div class="control-sub">Waiting for scanner events...</div>'
+            '</aside>'
+        )
+
+    sharps = set(id(x) for x in sharpshooter_candidates(flights))
+    rows = []
+
+    for rank, f in enumerate(flights[:limit], start=1):
+        setup = f.get("setup", {}) or {}
+        action = str(f.get("action", "WATCH")).upper()
+        read_state = str(f.get("read_state") or f.get("phase") or "WATCH").upper()
+        timing = str(f.get("timing") or "WATCH").upper()
+        trigger = int(safe_float(setup.get("trigger_score", 0)))
+        trade = int(safe_float(setup.get("trade_score", 0)))
+        streak = int(safe_float(setup.get("board_cycles", setup.get("streak", 0))))
+        hits = int(safe_float(setup.get("watch_hits", setup.get("hits_last_2h", 0))))
+
+        if id(f) in sharps:
+            status = "SHARPSHOOTER READY" if action == "ENTER" else "SHARPSHOOTER WATCH"
+        else:
+            status = action
+
+        status_color = (
+            "#72ff9a" if action == "ENTER"
+            else "#ffd85a" if action in {"WAIT", "WATCH"}
+            else "#ff6262"
+        )
+
+        score_bits = []
+        if trigger:
+            score_bits.append(f"T{trigger}")
+        if trade:
+            score_bits.append(f"TR{trade}")
+        if streak:
+            score_bits.append(f"{streak} cycles")
+        if hits:
+            score_bits.append(f"{hits} hits")
+        score_text = " · ".join(score_bits) if score_bits else clean_text(f.get("window", ""))
+
+        rows.append(
+            '<div class="aplus-feed-row">'
+            '<div class="aplus-feed-top">'
+            f'<span class="aplus-feed-pair">#{rank} {clean_text(f.get("pair","UNKNOWN"))}</span>'
+            f'<span class="aplus-feed-time">{clean_text(_feed_time_for_flight(f, updated))}</span>'
+            '</div>'
+            f'<div class="aplus-feed-status" style="color:{status_color};">{clean_text(status)}</div>'
+            f'<div class="aplus-feed-read">{clean_text(read_state)}</div>'
+            f'<div class="aplus-feed-meta">{clean_text(timing)} · {clean_text(score_text)}</div>'
+            '</div>'
+        )
+
+    return (
+        '<aside class="market-command-rail">'
+        '<div class="market-command-title">A+ Live Feed</div>'
+        '<div class="news-sub">Same scanner decisions in-browser — no Discord tab required.</div>'
+        + "".join(rows) +
+        '</aside>'
+    )
 
 
 def render_market_command_rail(flights, sectors, market):
@@ -2691,8 +2816,7 @@ climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
 landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
 
-st.markdown(render_market_command_rail(flights, sectors, market), unsafe_allow_html=True)
-st.markdown(render_news_rail(flights), unsafe_allow_html=True)
+st.markdown(render_aplus_live_feed(flights, updated, limit=10), unsafe_allow_html=True)
 st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
 
 st.markdown(f"""
@@ -2771,6 +2895,8 @@ if flights:
     else:
         selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
         selected = next(f for f in flights if f["pair"] == selected_pair)
+
+    st.markdown(render_news_rail(selected), unsafe_allow_html=True)
 
     checks = [
         ("VWAP verified", selected["vwap_dist"] is not None),
