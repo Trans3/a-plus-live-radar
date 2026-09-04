@@ -3119,118 +3119,52 @@ climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
 landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
 
-st.markdown(render_aplus_live_feed(flights, updated, limit=10), unsafe_allow_html=True)
-st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
 
-st.markdown(f"""
-<div class="atc-top">
-  <div class="atc-brand">
-    <div class="atc-logo">A+</div>
-    <div><div class="atc-name">MOMENTUM ATC</div><div class="atc-sub">Live Opportunity Control Tower</div></div>
-  </div>
-  <div class="atc-sync">RADAR SYNCED · CYCLE {cycle}</div>
-</div>
-
-{render_live_ticker(flights)}
-
-<div class="tower-grid">
-  <div class="tower-command">
-    <div class="kicker">Tower Command</div>
-    <div class="command-action" style="color:{command_color};">{clean_text(command)}</div>
-    <div class="command-copy">{clean_text(command_copy)}</div>
-    <div class="command-target">
-      <div class="command-cell"><div class="command-k">Priority Flight</div><div class="command-v">{clean_text(primary['pair']) if primary else 'NONE'}</div></div>
-      <div class="command-cell"><div class="command-k">Flight Phase</div><div class="command-v">{clean_text(primary['phase']) if primary else 'Grounded'}</div></div>
-      <div class="command-cell"><div class="command-k">Entry Window</div><div class="command-v">{clean_text(primary['window']) if primary else '—'}</div></div>
-    </div>
-  </div>
-  <div class="airspace">
-    <div class="kicker">Airspace Status</div>
-    <div class="airspace-row"><div class="airspace-k">Market</div><div class="airspace-v">{clean_text(str(market).title())}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Departures</div><div class="airspace-v">{len(departures)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Climbing</div><div class="airspace-v">{len(climbing)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Cruising</div><div class="airspace-v">{len(cruising)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Landing</div><div class="airspace-v">{len(landing)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Pairs Scanned</div><div class="airspace-v">{active}</div></div>
-  </div>
-</div>
+# ===== CLEAN DECISION DASHBOARD =====
+st.markdown("""
+<style>
+.clean-head{max-width:1220px;margin:8px auto 14px}.clean-title{font-size:25px;font-weight:1000;text-transform:uppercase;letter-spacing:1px}.clean-note{font-size:10px;color:#6d9bad}
+.clean-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.clean-card{background:#062630;border:1px solid #135064;border-bottom:3px solid #ffd63d;border-radius:12px;padding:13px;min-height:260px}
+.cc-top{display:flex;justify-content:space-between;gap:8px}.cc-pair{font-size:17px;font-weight:1000;color:#ffd63d}.cc-sector{font-size:8px;color:#68c7e8;margin-top:4px;text-transform:uppercase}.cc-phase{font-size:8px;color:#ffd63d;font-weight:1000;text-transform:uppercase}
+.cc-action{font-size:23px;font-weight:1000;margin:14px 0 2px}.cc-time{font-size:9px;font-weight:900;margin-bottom:13px}.cc-grid{display:grid;grid-template-columns:1fr 1fr 1.12fr;gap:7px}
+.cc-box{background:#031b23;border:1px solid #115064;border-radius:8px;padding:8px;min-height:132px}.cc-k{font-size:7px;color:#67b8d2;font-weight:1000;text-transform:uppercase;margin-bottom:7px}.cc-v{font-size:11px;color:#fff;font-weight:900;line-height:1.38}.cc-risk{color:#ff6262;margin-top:8px}
+.clean-health{border:1px solid #12485a;border-radius:13px;background:#05202a;padding:12px;margin-bottom:12px}.ch-k{font-size:9px;color:#8da9b5;font-weight:1000;letter-spacing:1.4px;text-transform:uppercase}.ch-score{font-size:30px;color:#2df0b0;font-weight:1000;margin:6px 0}.ch-score span{font-size:12px;color:#7896a2}.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ch-cell{background:#031b23;border:1px solid #114654;border-radius:7px;padding:7px}.ch-cell small{display:block;font-size:7px;color:#7896a2;font-weight:900}.ch-cell b{font-size:11px}.ch-mode{font-size:9px;color:#8da9b5;line-height:1.55;margin-top:7px}
+@media(max-width:900px){.clean-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.clean-cards{grid-template-columns:1fr}}
+</style>
 """, unsafe_allow_html=True)
 
-st.markdown(render_traffic_feed(flights, sectors, updated), unsafe_allow_html=True)
+def clean_market_health(fs):
+    fs=fs or []
+    buyers=round(100*sum(1 for f in fs if safe_float(f.get("rsi_5m",0))>=50)/max(1,len(fs)))
+    breadth=round(100*sum(1 for f in fs if safe_float(f.get("change_1h",f.get("change_1h_pct",0)))>0)/max(1,len(fs)))
+    conf=round(sum(safe_float(f.get("confidence",0)) for f in fs)/max(1,len(fs)))
+    score=max(0,min(100,round(.40*buyers+.35*breadth+.25*conf)))
+    mode="EXPANSION" if score>=75 else "SELECTIVE" if score>=55 else "DEFENSIVE"
+    trend="BULLISH BIAS" if breadth>=60 else "MIXED" if breadth>=40 else "WEAK / CHOPPY"
+    return f'<div class="clean-health"><div class="ch-k">Market Health</div><div class="ch-score">{score}<span>/100</span></div><div class="ch-grid"><div class="ch-cell"><small>BUYERS</small><b>{buyers}%</b></div><div class="ch-cell"><small>BREADTH</small><b>{breadth}%</b></div></div><div class="ch-mode">MODE <b>{mode}</b><br>TREND <b>{trend}</b></div></div>'
 
-st.markdown('<div class="section-head"><div class="section-title">Sector Traffic</div><div class="section-note">Where departures are concentrating</div></div>', unsafe_allow_html=True)
-if sectors:
-    sector_html = []
-    for s in sectors[:5]:
-        c = "#72ff9a" if s["avg"] > .5 else "#ffd85a" if s["avg"] >= 0 else "#ff6262"
-        sector_html.append(f"""
-<div class="sector-card">
-  <div class="sector-name">{clean_text(s['sector'])}</div>
-  <div class="sector-read" style="color:{c};">{s['avg']:+.2f}%</div>
-  <div class="sector-sub">{s['departures']} departing · {s['landings']} landing</div>
-</div>""")
-    st.markdown('<div class="sector-strip">' + "".join(sector_html) + '</div>', unsafe_allow_html=True)
+def clean_pair_card(f):
+    pair=clean_text(f.get("pair","UNKNOWN")); action=clean_text(f.get("action","WAIT"))
+    color=f.get("color") or ("#2df0b0" if action=="ENTER" else "#ffd63d")
+    r1=safe_float(f.get("rsi_1m",0)); r5=safe_float(f.get("rsi_5m",0))
+    setup=f.get("live_setup") or f.get("setup_read") or f"RSI {r1:.1f} vs 5m {r5:.1f}; momentum needs confirmation."
+    entry=f.get("entry_condition") or f.get("best_entry") or "Wait for structure break + buyer hold above VWAP."
+    invalid=f.get("invalidation") or "Stand down on VWAP loss or momentum failure."
+    low=safe_float(f.get("potential_low",f.get("projected_low",0))); high=safe_float(f.get("potential_high",f.get("projected_high",0)))
+    rr=clean_text(f.get("rr") or f.get("risk_reward") or "—")
+    math=f"{low:+.2f}% to {high:+.2f}% · {rr}" if high else clean_text(f.get("trade_math","Awaiting range model"))
+    return ('<div class="clean-card"><div class="cc-top"><div>'+f'<div class="cc-pair">{pair}</div><div class="cc-sector">{clean_text(f.get("sector","OTHER SECTOR"))}</div></div><div class="cc-phase">{clean_text(f.get("phase","WATCH"))}</div></div>'+f'<div class="cc-action" style="color:{color};">{action}</div><div class="cc-time">{clean_text(f.get("timing","WATCH"))} · {clean_text(f.get("window","Not open yet"))}</div><div class="cc-grid">'+f'<div class="cc-box"><div class="cc-k">Live Setup</div><div class="cc-v">{clean_text(setup)}</div></div><div class="cc-box"><div class="cc-k">Trade Math</div><div class="cc-v">{math}</div></div><div class="cc-box"><div class="cc-k">Entry Trigger</div><div class="cc-v">{clean_text(entry)}</div><div class="cc-v cc-risk">Risk: {clean_text(invalid)}</div></div></div></div>')
 
-st.markdown('<div class="section-head"><div class="section-title">Departures Board</div><div class="section-note">Pairs closest to a qualified entry</div></div>', unsafe_allow_html=True)
-departure_board = [f for f in flights if f["action"] in {"ENTER","WAIT"}][:6]
-if departure_board:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in departure_board) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No qualified departures right now.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Airborne Traffic</div><div class="section-note">Momentum active — new entry requires a retest</div></div>', unsafe_allow_html=True)
-airborne = [f for f in flights if f["action"] in {"WATCH","HOLD / SKIP"}][:6]
-if airborne:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in airborne) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No airborne opportunities currently tracked.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Approach & Landing</div><div class="section-note">Momentum fading — fresh entry is closed</div></div>', unsafe_allow_html=True)
-if landing:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in landing[:6]) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No flights currently approaching landing.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Flight Readout</div><div class="section-note">Pair-specific radar briefing</div></div>', unsafe_allow_html=True)
-if flights:
-    if broadcast_mode:
-        selected = flights[int(time.time() // 20) % len(flights)]
-    else:
-        selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
-        selected = next(f for f in flights if f["pair"] == selected_pair)
-
-    st.markdown(render_news_rail(selected, dropdown_news), unsafe_allow_html=True)
-
-    checks = [
-        ("VWAP verified", selected["vwap_dist"] is not None),
-        ("Radar timing actionable", selected.get("timing") in {"ON TIME", "OPTIMAL", "READY SOON"}),
-        ("Entry window open", selected["action"] == "ENTER"),
-        ("Fresh entry not extended", selected["action"] not in {"SKIP", "HOLD / SKIP"}),
-    ]
-    check_html = "".join(
-        f'<div class="check" style="color:{"#72ff9a" if ok else "#ffd85a"};">{"✓" if ok else "□"} {clean_text(label)}</div>'
-        for label, ok in checks
-    )
-    st.markdown(f"""
-<div class="detail">
-  <div class="detail-grid">
-    <div class="detail-left">
-      <div class="kicker">Flight</div>
-      <div class="detail-pair">{clean_text(selected['pair'])}</div>
-      <div class="detail-action" style="color:{selected['color']};">{clean_text(selected['action'])}</div>
-      <div class="flight-sector">{clean_text(selected['sector'])} · {clean_text(selected['phase'])}</div>
-    </div>
-    <div>
-      <div class="kicker">Action Checklist</div>
-      <div class="detail-checks" style="margin-top:10px;">{check_html}</div>
-      <div class="next-step"><b>TOWER READ:</b> {clean_text(selected['tower_note'])}</div>
-      <div class="next-step"><b>BEST ENTRY:</b> {clean_text(selected['entry_condition'])}</div>
-      <div class="next-step"><b>INVALIDATION:</b> {clean_text(selected['invalidation'])}</div>
-    </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown(f'<div class="section-note" style="margin-top:18px;">Source: {clean_text(source)} · Estimated windows are model guidance, not guarantees.</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="clean-head"><div class="clean-title">Decision Radar</div><div class="clean-note">Three things per pair: setup · trade math · trigger</div></div>', unsafe_allow_html=True)
+left,center,right=st.columns([1.0,3.9,1.0],gap="medium")
+with left:
+    st.markdown(clean_market_health(flights),unsafe_allow_html=True)
+    st.markdown(render_aplus_live_feed(flights,updated,limit=10),unsafe_allow_html=True)
+with center:
+    st.markdown('<div class="section-head"><div class="section-title">Top Setups</div><div class="section-note">Pairs closest to a qualified entry</div></div>',unsafe_allow_html=True)
+    board=[f for f in flights if f.get("action") in {"ENTER","WAIT"}][:6] or flights[:6]
+    st.markdown('<div class="clean-cards">'+"".join(clean_pair_card(f) for f in board)+'</div>' if board else '<div class="empty">No qualified setups right now.</div>',unsafe_allow_html=True)
+with right:
+    st.markdown(render_news_rail(flights[0],dropdown_news) if flights else '<div class="empty">Premium news waiting for active pairs.</div>',unsafe_allow_html=True)
+st.markdown(f'<div class="section-note" style="max-width:1220px;margin:18px auto 0;">Source: {clean_text(source)} · Estimated windows are model guidance, not guarantees.</div>',unsafe_allow_html=True)
