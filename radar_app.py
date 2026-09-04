@@ -3131,6 +3131,47 @@ st.markdown("""
 .cc-box{background:#031b23;border:1px solid #115064;border-radius:8px;padding:8px;min-height:132px}.cc-k{font-size:7px;color:#67b8d2;font-weight:1000;text-transform:uppercase;margin-bottom:7px}.cc-v{font-size:11px;color:#fff;font-weight:900;line-height:1.38}.cc-risk{color:#ff6262;margin-top:8px}
 .clean-health{border:1px solid #12485a;border-radius:13px;background:#05202a;padding:12px;margin-bottom:12px}.ch-k{font-size:9px;color:#8da9b5;font-weight:1000;letter-spacing:1.4px;text-transform:uppercase}.ch-score{font-size:30px;color:#2df0b0;font-weight:1000;margin:6px 0}.ch-score span{font-size:12px;color:#7896a2}.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ch-cell{background:#031b23;border:1px solid #114654;border-radius:7px;padding:7px}.ch-cell small{display:block;font-size:7px;color:#7896a2;font-weight:900}.ch-cell b{font-size:11px}.ch-mode{font-size:9px;color:#8da9b5;line-height:1.55;margin-top:7px}
 @media(max-width:900px){.clean-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.clean-cards{grid-template-columns:1fr}}
+
+/* ===== WIDE DASHBOARD LAYOUT FIX ===== */
+.block-container{
+    max-width: 1500px !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+.clean-head{
+    max-width: 1500px !important;
+    margin-left: 0 !important;
+}
+.clean-cards{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+}
+.clean-card{
+    min-width: 0 !important;
+    min-height: 285px !important;
+}
+.cc-grid{
+    grid-template-columns: 1.08fr 1fr 1.35fr !important;
+    gap: 8px !important;
+}
+.cc-box{
+    min-width: 0 !important;
+    min-height: 150px !important;
+}
+.cc-v{
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+.clean-health{
+    padding: 10px !important;
+}
+@media (max-width: 1200px){
+    .clean-cards{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+}
+@media (max-width: 760px){
+    .clean-cards{grid-template-columns:1fr !important;}
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -3157,7 +3198,7 @@ def clean_pair_card(f):
     return ('<div class="clean-card"><div class="cc-top"><div>'+f'<div class="cc-pair">{pair}</div><div class="cc-sector">{clean_text(f.get("sector","OTHER SECTOR"))}</div></div><div class="cc-phase">{clean_text(f.get("phase","WATCH"))}</div></div>'+f'<div class="cc-action" style="color:{color};">{action}</div><div class="cc-time">{clean_text(f.get("timing","WATCH"))} · {clean_text(f.get("window","Not open yet"))}</div><div class="cc-grid">'+f'<div class="cc-box"><div class="cc-k">Live Setup</div><div class="cc-v">{clean_text(setup)}</div></div><div class="cc-box"><div class="cc-k">Trade Math</div><div class="cc-v">{math}</div></div><div class="cc-box"><div class="cc-k">Entry Trigger</div><div class="cc-v">{clean_text(entry)}</div><div class="cc-v cc-risk">Risk: {clean_text(invalid)}</div></div></div></div>')
 
 st.markdown('<div class="clean-head"><div class="clean-title">Decision Radar</div><div class="clean-note">Three things per pair: setup · trade math · trigger</div></div>', unsafe_allow_html=True)
-left,center,right=st.columns([1.0,3.9,1.0],gap="medium")
+left,center,right=st.columns([0.85,5.8,0.95],gap="small")
 with left:
     st.markdown(clean_market_health(flights),unsafe_allow_html=True)
     st.markdown(render_aplus_live_feed(flights,updated,limit=10),unsafe_allow_html=True)
