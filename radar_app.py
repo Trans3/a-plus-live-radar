@@ -2269,7 +2269,24 @@ def relevant_news_flights(flights, limit_pairs=4):
                 return chosen
     return chosen
 
-def render_news_rail(selected, limit=4):
+
+def build_dropdown_news_cache(flights, limit=4):
+    """Preload news for every pair currently offered in the Flight dropdown.
+
+    fetch_pair_news() is already cached for 5 minutes, so after the first sweep
+    changing the dropdown is effectively instant and each pair has its own stories.
+    """
+    news_by_pair = {}
+    for f in (flights or []):
+        pair = str(f.get("pair", "") or "")
+        if not pair:
+            continue
+        symbol = pair.split("/")[0].upper()
+        news_by_pair[pair] = fetch_pair_news(symbol, limit)
+    return news_by_pair
+
+
+def render_news_rail(selected, news_by_pair=None, limit=4):
     """Right rail: news context only for the pair currently selected in Flight Readout."""
     if not selected:
         return (
@@ -2280,7 +2297,10 @@ def render_news_rail(selected, limit=4):
     pair = str(selected.get("pair", "UNKNOWN"))
     symbol = pair.split("/")[0].upper()
     action = str(selected.get("action", "WATCH")).upper()
-    stories = fetch_pair_news(symbol, limit)
+    if isinstance(news_by_pair, dict) and pair in news_by_pair:
+        stories = news_by_pair.get(pair) or []
+    else:
+        stories = fetch_pair_news(symbol, limit)
 
     if not stories:
         body = '<div class="news-sub">No directly related headlines found on this sweep.</div>'
@@ -2666,6 +2686,9 @@ cycle = state.get("cycle_number", state.get("cycle", 0))
 active = int(state.get("active_pairs", 0) or 0)
 
 flights = build_flights(state, market, updated)
+# Preload pair-specific headlines for every current dropdown option.
+# fetch_pair_news is cached, so only stale/new symbols trigger network calls.
+dropdown_news = build_dropdown_news_cache(flights, limit=4)
 
 # ============================================================
 # A+ RADAR 8-PHASE ENGINE PIPELINE
@@ -2896,7 +2919,7 @@ if flights:
         selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
         selected = next(f for f in flights if f["pair"] == selected_pair)
 
-    st.markdown(render_news_rail(selected), unsafe_allow_html=True)
+    st.markdown(render_news_rail(selected, dropdown_news), unsafe_allow_html=True)
 
     checks = [
         ("VWAP verified", selected["vwap_dist"] is not None),
