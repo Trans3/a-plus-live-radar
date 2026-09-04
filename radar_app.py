@@ -1466,6 +1466,18 @@ ATC_CSS = """
   backdrop-filter:blur(8px);
 }
 
+.market-health-compact{padding-bottom:14px;border-bottom:1px solid var(--line)}
+.health-score-big{margin:8px 0 10px;color:#35f2b3;font-size:31px;line-height:1;font-weight:1000}
+.health-score-big span{color:var(--muted);font-size:15px;margin-left:3px}
+.health-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.health-mini-grid>div{border:1px solid var(--line);border-radius:8px;padding:7px 5px;text-align:center;background:rgba(3,25,34,.55)}
+.health-mini-grid small{display:block;color:var(--muted);font-size:7px;font-weight:900}
+.health-mini-grid b{display:block;margin-top:3px;color:var(--text);font-size:11px}
+.health-bar{height:7px;margin:10px 0;border-radius:99px;overflow:hidden;background:#173442}
+.health-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#20e9b0,#d8e04b,#ffd34f)}
+.health-mode{margin-top:5px;color:var(--muted);font-size:9px;text-transform:uppercase}
+.health-mode b{color:#35f2b3}.health-note{margin-top:9px;color:#8aa6b5;font-size:9px;line-height:1.45}
+
 .aplus-feed-row{
   padding:10px 0;
   border-bottom:1px solid var(--line);
@@ -2732,6 +2744,35 @@ def _feed_time_for_flight(f, fallback=""):
     return txt[11:16] if len(txt) >= 16 else "--:--"
 
 
+def render_compact_market_health(flights):
+    if not flights:
+        return '<div class="market-health-compact"><div class="market-command-title">Market Health</div><div class="health-score-big">—<span>/100</span></div></div>'
+    enters=sum(1 for f in flights if str(f.get("action","")).upper()=="ENTER")
+    waits=sum(1 for f in flights if str(f.get("action","")).upper()=="WAIT")
+    breadth=round(100*sum(1 for f in flights if safe_float(f.get("change_1h",0))>0)/max(1,len(flights)))
+    buyers=round(100*sum(1 for f in flights if safe_float(f.get("rsi_5m",0))>=50 or str(f.get("read_state","")).upper() in {"RELOAD READY","CONTINUATION WATCH","PRESSURE BUILDING"})/max(1,len(flights)))
+    avg_conf=round(sum(int(safe_float(f.get("confidence",0))) for f in flights)/max(1,len(flights)))
+    health=max(0,min(100,round(.40*buyers+.35*breadth+.25*avg_conf)))
+    if health>=75:
+        mode,trend,note="EXPANSION","BULLISH BIAS","Conditions favor continuation. Stay selective and avoid extended moves."
+    elif health>=55:
+        mode,trend,note="SELECTIVE","MIXED / BUILDING","Some setups are working, but confirmation still matters."
+    else:
+        mode,trend,note="DEFENSIVE","WEAK / CHOPPY","Protect capital. Favor only the cleanest confirmed setups."
+    return (
+        '<div class="market-health-compact"><div class="market-command-title">Market Health</div>'
+        f'<div class="health-score-big">{health}<span>/100</span></div>'
+        '<div class="health-mini-grid">'
+        f'<div><small>BUYERS</small><b>{buyers}%</b></div>'
+        f'<div><small>BREADTH</small><b>{breadth}%</b></div>'
+        f'<div><small>SETUPS</small><b>{enters}E / {waits}W</b></div></div>'
+        f'<div class="health-bar"><i style="width:{health}%"></i></div>'
+        f'<div class="health-mode">Mode: <b>{mode}</b></div>'
+        f'<div class="health-mode">Trend: <b>{trend}</b></div>'
+        f'<div class="health-note">{note}</div></div>'
+    )
+
+
 def render_aplus_live_feed(flights, updated="", limit=10):
     """Left rail: compact website mirror of the scanner/Discord decision stream."""
     if not flights:
@@ -3192,3 +3233,4 @@ if flights:
 
 st.markdown(f'<div class="section-note" style="margin-top:18px;">Source: {clean_text(source)} · Estimated windows are model guidance, not guarantees.</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
