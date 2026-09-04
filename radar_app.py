@@ -1252,6 +1252,10 @@ def fires(n):
 
 ATC_CSS = """
 <style>
+.decision-3{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+.decision-3 .data-box{min-height:92px;}
+@media(max-width:900px){.decision-3{grid-template-columns:1fr !important;}}
+
 :root{
   --bg:#02070b; --panel:#07131b; --panel2:#040b11; --line:#18313f;
   --text:#f4f8fb; --muted:#8498a6; --green:#72ff9a; --yellow:#ffd85a;
@@ -2008,66 +2012,66 @@ def tower_command(flights):
 
 
 def render_flight_card(f):
-    vwap_text = f["vwap"] if f["vwap_dist"] is None else f'{f["vwap"]} {f["vwap_dist"]:+.2f}%'
-    change24 = safe_float(f.get("change_24h", 0))
+    """Compact ATC card: three decision items per pair."""
+    setup = f.get("setup", {}) or {}
+    market = f.get("market", "") or ""
+    low_move, high_move, move_conf = projected_move(setup, market)
+    levels = trade_levels(setup, market)
 
-    reason_lines = "".join(
-        f'<div class="brief-line"><b>Why</b>{clean_text(x)}</div>'
-        for x in (f.get("reasons") or [])
+    price = safe_float(setup.get("price"))
+    stop_text = levels.get("stop", "—")
+    target_text = levels.get("target", "—")
+    rr_text = levels.get("rr", "—")
+
+    risk_pct = None
+    try:
+        stop_num = float(str(stop_text).replace("$", "").replace(",", ""))
+        if price > 0 and stop_num > 0:
+            risk_pct = abs((price - stop_num) / price * 100.0)
+    except Exception:
+        risk_pct = None
+
+    potential_text = f"+{low_move:.2f}% to +{high_move:.2f}%"
+    risk_text = f"-{risk_pct:.2f}%" if risk_pct is not None else "—"
+    action = clean_text(f.get("action", "WATCH"))
+    action_color = f.get("color", "#8498a6")
+    timing = clean_text(f.get("timing", "WATCH"))
+    window = clean_text(f.get("window", "Needs trigger"))
+    invalidation = clean_text(
+        f.get("invalidation") or "Stand down on VWAP loss / momentum rollover."
     )
-    risk_lines = "".join(
-        f'<div class="brief-line" style="color:#ffd85a;"><b>Risk</b>{clean_text(x)}</div>'
-        for x in (f.get("risks") or [])
-    )
-    best_entry_html = (
-        '<div class="brief-line"><b>Best Entry</b>' +
-        clean_text(f.get("entry_condition", "Wait for confirmation.")) +
-        '</div>'
-    )
-    invalidation_html = (
-        '<div class="brief-line" style="color:#ff8f8f;"><b>Invalidation</b>' +
-        clean_text(f.get("invalidation", "Stand down if setup fails.")) +
-        '</div>'
-    )
-    sharp_html = ""
-    if f in sharpshooter_candidates([f]):
-        sharp_label = "Sharpshooter Ready" if f["action"] == "ENTER" else "Sharpshooter Watch"
-        sharp_html = f'<span class="sharp-badge">{clean_text(sharp_label)}</span>'
-    read_html = (
-        f'<span class="read-state" style="color:{f.get("read_color","#8498a6")};">'
-        f'{clean_text(f.get("read_state","STANDARD WATCH"))}</span>'
-    )
-    badge_row_html = f'<div style="margin-top:10px;">{sharp_html}{read_html}</div>'
 
     return f"""
-<div class="flight-card" style="color:{f['color']};">
+<div class="flight-card" style="color:{action_color};">
   <div class="flight-top">
     <div>
-      <div class="flight-pair">{clean_text(f['pair'])}</div>
-      <div class="flight-sector">{clean_text(f['sector'])} sector</div>
+      <div class="flight-pair">{clean_text(f.get('pair','UNKNOWN'))}</div>
+      <div class="flight-sector">{clean_text(f.get('sector','OTHER'))} sector</div>
     </div>
-    <div class="flight-phase">{clean_text(f['phase'])}</div>
+    <div class="flight-phase">{clean_text(f.get('phase','WATCH'))}</div>
   </div>
 
-{badge_row_html}
-  <div class="flight-action">{clean_text(f['action'])}</div>
-  <div class="flight-reason">{clean_text(f['tower_note'])}</div>
+  <div class="flight-action">{action}</div>
+  <div class="flight-reason">{timing} · {window}</div>
 
-  <div class="progress-track"><div class="progress-fill" style="width:{f['remaining']}%;"></div></div>
-
-  <div class="flight-data">
-    <div class="data-box"><div class="data-k">Opportunity</div><div class="data-v">{f['remaining']}%</div></div>
-    <div class="data-box"><div class="data-k">Entry Window</div><div class="data-v">{clean_text(f['window'])}</div></div>
-    <div class="data-box"><div class="data-k">VWAP</div><div class="data-v">{clean_text(vwap_text)}</div></div>
-    <div class="data-box"><div class="data-k">1H / 24H</div><div class="data-v">{f['change_1h']:+.2f}% / {change24:+.2f}%</div></div>
-    <div class="data-box"><div class="data-k">RSI 1m / 5m</div><div class="data-v">{f.get('rsi_1m', 0):.0f} / {f.get('rsi_5m', 0):.0f}</div></div>
-    <div class="data-box"><div class="data-k">Radar Timing</div><div class="data-v">{clean_text(f.get('timing','WATCH'))}</div></div>
+  <div class="flight-data decision-3">
+    <div class="data-box">
+      <div class="data-k">Potential Move</div>
+      <div class="data-v">{potential_text}</div>
+      <div class="small">Estimate · {move_conf}% model confidence</div>
+    </div>
+    <div class="data-box">
+      <div class="data-k">Risk / Reward</div>
+      <div class="data-v">{risk_text} · {clean_text(rr_text)}</div>
+      <div class="small">Target {clean_text(target_text)} · Stop {clean_text(stop_text)}</div>
+    </div>
+    <div class="data-box">
+      <div class="data-k">Invalidation</div>
+      <div class="data-v" style="font-size:13px;line-height:1.35;color:#ff8f8f;">{invalidation}</div>
+    </div>
   </div>
-
-  <div class="briefing">{reason_lines}{risk_lines}{best_entry_html}{invalidation_html}</div>
 </div>
 """
-
 
 def sharpshooter_candidates(flights):
     """Use existing radar timing + structure to identify top sharpshooter options."""
