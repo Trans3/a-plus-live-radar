@@ -1339,6 +1339,35 @@ ATC_CSS = """
   .command-action{font-size:50px;}
 }
 
+/* Landing V2 — command-center hierarchy */
+.command-strip{display:grid;grid-template-columns:1.4fr repeat(4,.72fr);gap:8px;margin:14px 0 12px;}
+.command-metric{border:1px solid #142c38;border-radius:12px;background:rgba(4,11,17,.88);padding:10px 12px;min-height:62px;}
+.command-metric.hero{background:linear-gradient(135deg,rgba(121,231,255,.08),rgba(4,11,17,.92));}
+.command-metric .cm-k{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.13em;}
+.command-metric .cm-v{font-size:18px;font-weight:1000;margin-top:4px;white-space:nowrap;}
+.command-metric .cm-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.lifecycle-rail{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0 14px;padding:8px;border:1px solid var(--line);border-radius:12px;background:#040b11;}
+.life-stage{text-align:center;padding:7px 5px;border-radius:8px;font-size:9px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;color:#607583;border:1px solid transparent;}
+.life-stage.hot{color:var(--cyan);border-color:#173746;background:rgba(121,231,255,.06);}
+.sector-strip{grid-template-columns:repeat(5,minmax(0,1fr));}
+.sector-card{padding:10px 12px;min-height:72px;}
+.flight-card{min-height:0;padding:15px;background:linear-gradient(155deg,#07131b 0%,#050d13 100%);transition:transform .15s ease,border-color .15s ease;}
+.flight-card:hover{transform:translateY(-2px);border-color:#2b5265;}
+.flight-card.enter-card{box-shadow:0 0 28px rgba(114,255,154,.07);border-color:rgba(114,255,154,.42);}
+.flight-quality{display:flex;justify-content:space-between;align-items:end;margin-top:12px;}
+.quality-score{font-size:25px;font-weight:1000;line-height:1;}
+.quality-label{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.08em;}
+.need-box{margin-top:10px;border:1px solid #193541;border-radius:10px;background:#040b11;padding:9px 10px;}
+.need-k{font-size:9px;color:var(--yellow);font-weight:1000;text-transform:uppercase;letter-spacing:.1em;}
+.need-v{font-size:12px;color:var(--text);font-weight:850;line-height:1.35;margin-top:3px;}
+.mini-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;}
+.mini-metric{border-top:1px solid #17313d;padding-top:6px;min-width:0;}
+.mini-k{font-size:8px;color:var(--muted);font-weight:1000;text-transform:uppercase;}
+.mini-v{font-size:11px;color:var(--text);font-weight:1000;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.aplus-feed-row{padding-top:9px!important;padding-bottom:9px!important;}
+.news-rail{box-shadow:0 12px 40px rgba(0,0,0,.28);}
+@media(max-width:900px){.command-strip{grid-template-columns:1fr 1fr}.command-metric.hero{grid-column:1/-1}.mini-metrics{grid-template-columns:1fr 1fr}.lifecycle-rail{grid-template-columns:1fr}}
+
 .live-tape-wrap{
   margin:14px 0 18px;
   border:1px solid var(--line);
@@ -2203,45 +2232,55 @@ def _pair_analysis(f):
 
 
 def render_flight_card(f):
-    """Compact pair card rendered as one continuous HTML block.
-
-    Streamlit Markdown can terminate a raw-HTML block at blank lines and then
-    display the remaining indented tags literally. Building one continuous
-    string prevents that parser behavior.
-    """
+    """Landing V2 card: fast scan first, detail second."""
     a = _pair_analysis(f)
-    action = clean_text(f.get("action", "WATCH"))
+    setup = f.get("setup", {}) or {}
+    action_raw = str(f.get("action", "WATCH")).upper()
+    action = clean_text(action_raw)
     action_color = f.get("color", "#8498a6")
     timing = clean_text(f.get("timing", "WATCH"))
     window = clean_text(f.get("window", "Needs trigger"))
     levels = a["levels"]
+    trigger = clamp_score(setup.get("trigger_score", 0))
+    trade = clamp_score(setup.get("trade_score", 0))
+    conf = clamp_score(setup.get("confidence", 0))
+    quality = int(round((trigger * .40) + (trade * .35) + (conf * .25)))
+    phase = str(f.get("phase", "Taxiing"))
+    phase_pct = {"Taxiing":20,"Takeoff":40,"Climbing":60,"Cruising":80,"Descending":90,"Landing":100}.get(phase,20)
+    flags = setup.get("flags", {}) or {}
+    rsi1 = safe_float(setup.get("rsi_1m", 0))
+    rsi5 = safe_float(setup.get("rsi_5m", 0))
+    vwap = clean_text(f.get("vwap", "—"))
+    rr = clean_text(levels.get("rr", "—"))
+    card_cls = "flight-card enter-card" if action_raw == "ENTER" else "flight-card"
+    need_label = "ENTRY CLEARANCE" if action_raw == "ENTER" else "NEEDS ONE THING"
+    need_text = a["next_text"] if action_raw != "ENTER" else f"Confirmation active · {window}"
 
     parts = [
-        f'<div class="flight-card" style="color:{action_color};">',
+        f'<div class="{card_cls}" style="color:{action_color};">',
         '<div class="flight-top"><div>',
         f'<div class="flight-pair">{clean_text(f.get("pair","UNKNOWN"))}</div>',
         f'<div class="flight-sector">{clean_text(f.get("sector","OTHER"))} sector</div>',
         '</div>',
-        f'<div class="flight-phase">{clean_text(f.get("phase","WATCH"))}</div>',
-        '</div>',
+        f'<div class="flight-phase">{clean_text(phase)}</div></div>',
         f'<div class="flight-action">{action}</div>',
         f'<div class="flight-reason">{timing} · {window}</div>',
-        '<div class="flight-data decision-3">',
-        '<div class="data-box">',
-        '<div class="data-k">Live Setup</div>',
-        f'<div class="data-v" style="font-size:13px;line-height:1.35;">{clean_text(a["setup_read"])}</div>',
+        '<div class="flight-quality">',
+        f'<div><div class="quality-label">Entry Quality</div><div class="quality-score">{quality}<span style="font-size:12px;color:#8498a6;">/100</span></div></div>',
+        f'<div style="text-align:right;"><div class="quality-label">Lifecycle</div><div class="data-v">{phase_pct}%</div></div>',
         '</div>',
-        '<div class="data-box">',
-        '<div class="data-k">Trade Math</div>',
-        f'<div class="data-v">{clean_text(a["trade_read"])}</div>',
-        f'<div class="small">Target {clean_text(levels.get("target","—"))} · Stop {clean_text(levels.get("stop","—"))} · {a["move_conf"]}% model conf.</div>',
+        f'<div class="progress-track"><div class="progress-fill" style="width:{phase_pct}%;"></div></div>',
+        '<div class="mini-metrics">',
+        f'<div class="mini-metric"><div class="mini-k">RSI 1m</div><div class="mini-v">{rsi1:.1f}</div></div>',
+        f'<div class="mini-metric"><div class="mini-k">RSI 5m</div><div class="mini-v">{rsi5:.1f}</div></div>',
+        f'<div class="mini-metric"><div class="mini-k">VWAP</div><div class="mini-v">{vwap}</div></div>',
+        f'<div class="mini-metric"><div class="mini-k">R:R</div><div class="mini-v">{rr}</div></div>',
         '</div>',
-        '<div class="data-box">',
-        f'<div class="data-k">{clean_text(a["next_label"])}</div>',
-        f'<div class="data-v" style="font-size:13px;line-height:1.35;color:#79e7ff;">{clean_text(a["next_text"])}</div>',
-        f'<div class="small" style="margin-top:6px;color:#ff8f8f;">Risk: {clean_text(a["risk_note"])}</div>',
+        '<div class="need-box">',
+        f'<div class="need-k">{need_label}</div>',
+        f'<div class="need-v">{clean_text(need_text)}</div>',
         '</div>',
-        '</div>',
+        f'<div class="next-step"><b>Target {clean_text(levels.get("target","—"))}</b> · Stop {clean_text(levels.get("stop","—"))} · Model {a["move_conf"]}%</div>',
         '</div>',
     ]
     return "".join(parts)
@@ -3090,6 +3129,18 @@ st.markdown(f"""
   <div class="atc-sync">RADAR SYNCED · CYCLE {cycle}</div>
 </div>
 
+<div class="command-strip">
+  <div class="command-metric hero"><div class="cm-k">Market Mode</div><div class="cm-v" style="color:{command_color};">{clean_text(str(market).upper())}</div><div class="cm-sub">Decision engine · {clean_text(command)}</div></div>
+  <div class="command-metric"><div class="cm-k">Ready</div><div class="cm-v" style="color:#72ff9a;">{len([f for f in flights if f['action']=='ENTER'])}</div><div class="cm-sub">entry cleared</div></div>
+  <div class="command-metric"><div class="cm-k">Taxi / Takeoff</div><div class="cm-v" style="color:#ffd85a;">{len(departures)}</div><div class="cm-sub">near entry</div></div>
+  <div class="command-metric"><div class="cm-k">Scanning</div><div class="cm-v">{active}</div><div class="cm-sub">Kraken USD pairs</div></div>
+  <div class="command-metric"><div class="cm-k">Cycle</div><div class="cm-v">{cycle}</div><div class="cm-sub">radar synced</div></div>
+</div>
+
+<div class="lifecycle-rail">
+  <div class="life-stage hot">Scanning</div><div class="life-stage hot">Taxiing</div><div class="life-stage hot">Takeoff</div><div class="life-stage">Airborne</div><div class="life-stage">Landing</div>
+</div>
+
 {render_live_ticker(flights)}
 
 <div class="tower-grid">
@@ -3117,7 +3168,7 @@ st.markdown(f"""
 
 st.markdown(render_traffic_feed(flights, sectors, updated), unsafe_allow_html=True)
 
-st.markdown('<div class="section-head"><div class="section-title">Sector Traffic</div><div class="section-note">Where departures are concentrating</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-head"><div class="section-title">Sector Traffic</div><div class="section-note">Capital rotation · where momentum is concentrating</div></div>', unsafe_allow_html=True)
 if sectors:
     sector_html = []
     for s in sectors[:5]:
