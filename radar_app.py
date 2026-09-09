@@ -1358,6 +1358,13 @@ ATC_CSS = """
 .quality-score{font-size:25px;font-weight:1000;line-height:1;}
 .quality-label{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.08em;}
 .need-box{margin-top:10px;border:1px solid #193541;border-radius:10px;background:#040b11;padding:9px 10px;}
+.card-footer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.tv-link{display:inline-flex;align-items:center;gap:6px;border:1px solid #2d6177;border-radius:8px;padding:7px 10px;color:#55bfff!important;text-decoration:none!important;font-size:10px;font-weight:1000;letter-spacing:.55px;text-transform:uppercase;background:#061019;transition:border-color .15s ease,transform .15s ease,background .15s ease;}
+.tv-link:hover{border-color:#55bfff;background:#0a1b26;transform:translateY(-1px);}
+.evidence-summary{margin-top:12px;padding:10px;border:1px solid #193541;border-radius:10px;background:#040b11;}
+.evidence-score{font-size:20px;font-weight:1000;line-height:1.05;}
+.evidence-counts{margin-top:5px;color:#8498a6;font-size:10px;font-weight:800;line-height:1.4;}
+.evidence-badge{display:inline-block;margin-right:6px;margin-top:5px;padding:3px 6px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:1000;text-transform:uppercase;letter-spacing:.35px;}
 .need-k{font-size:9px;color:var(--yellow);font-weight:1000;text-transform:uppercase;letter-spacing:.1em;}
 .need-v{font-size:12px;color:var(--text);font-weight:850;line-height:1.35;margin-top:3px;}
 .mini-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;}
@@ -2280,7 +2287,10 @@ def render_flight_card(f):
         f'<div class="need-k">{need_label}</div>',
         f'<div class="need-v">{clean_text(need_text)}</div>',
         '</div>',
-        f'<div class="next-step"><b>Target {clean_text(levels.get("target","—"))}</b> · Stop {clean_text(levels.get("stop","—"))} · Model {a["move_conf"]}%</div>',
+        '<div class="card-footer-row">',
+        f'<div class="next-step" style="margin:0;flex:1;"><b>Target {clean_text(levels.get("target","—"))}</b> · Stop {clean_text(levels.get("stop","—"))} · Model {a["move_conf"]}%</div>',
+        f'<a class="tv-link" href="{html.escape(tradingview_url(f.get("pair","")))}" target="_blank" rel="noopener noreferrer">OPEN CHART ↗</a>',
+        '</div>',
         '</div>',
     ]
     return "".join(parts)
@@ -2392,32 +2402,73 @@ def render_traffic_feed(flights, sectors, updated):
 
 
 COIN_NEWS_NAMES = {
-    "BTC":"Bitcoin","XBT":"Bitcoin","ETH":"Ethereum","SOL":"Solana","FET":"Artificial Superintelligence Alliance",
-    "TAO":"Bittensor","WLD":"Worldcoin","RENDER":"Render","DOGE":"Dogecoin","SHIB":"Shiba Inu",
-    "PEPE":"Pepe crypto","BONK":"Bonk crypto","LINK":"Chainlink","AVAX":"Avalanche crypto",
-    "NEAR":"NEAR Protocol","HBAR":"Hedera","XRP":"XRP","ADA":"Cardano","ONDO":"Ondo Finance",
-    "TRX":"TRON crypto","LTC":"Litecoin","XMR":"Monero","SUI":"Sui crypto","APT":"Aptos crypto",
+    "BTC":"Bitcoin","XBT":"Bitcoin","ETH":"Ethereum","SOL":"Solana",
+    "FET":"Artificial Superintelligence Alliance","TAO":"Bittensor","WLD":"Worldcoin",
+    "RENDER":"Render","DOGE":"Dogecoin","SHIB":"Shiba Inu","PEPE":"Pepe crypto",
+    "BONK":"Bonk crypto","LINK":"Chainlink","AVAX":"Avalanche crypto","NEAR":"NEAR Protocol",
+    "HBAR":"Hedera","XRP":"XRP","ADA":"Cardano","ONDO":"Ondo Finance","TRX":"TRON crypto",
+    "LTC":"Litecoin","XMR":"Monero","SUI":"Sui crypto","APT":"Aptos crypto",
+    "STX":"Stacks","ZEC":"Zcash","SEI":"Sei Network","HYPE":"Hyperliquid","XDG":"Dogecoin",
+    "INJ":"Injective","TIA":"Celestia","AERO":"Aerodrome Finance","ARB":"Arbitrum",
+    "OP":"Optimism","JUP":"Jupiter crypto","PYTH":"Pyth Network","ENA":"Ethena",
+    "MKR":"MakerDAO","AAVE":"Aave","UNI":"Uniswap","DOT":"Polkadot","ATOM":"Cosmos",
 }
 
+COIN_NEWS_ALIASES = {
+    "STX": ["Stacks", "Stacks blockchain", "Bitcoin layer 2"],
+    "ZEC": ["Zcash", "ZEC"],
+    "SEI": ["Sei Network", "SEI crypto"],
+    "HYPE": ["Hyperliquid", "HYPE token"],
+    "XDG": ["Dogecoin", "DOGE"],
+    "TAO": ["Bittensor", "TAO token"],
+    "WLD": ["Worldcoin", "World Network", "WLD token"],
+    "FET": ["Artificial Superintelligence Alliance", "Fetch.ai", "FET token"],
+    "RENDER": ["Render Network", "RENDER token"],
+}
+
+
+def tradingview_url(pair):
+    """TradingView Kraken chart URL for a Radar pair."""
+    raw = str(pair or "").upper().replace("-", "/")
+    base, _, quote = raw.partition("/")
+    base = "BTC" if base == "XBT" else base
+    quote = quote or "USD"
+    symbol = "".join(ch for ch in f"{base}{quote}" if ch.isalnum())
+    return f"https://www.tradingview.com/chart/?symbol=KRAKEN%3A{symbol}"
+
+
 @st.cache_data(ttl=300, show_spinner=False)
-def fetch_pair_news(symbol, limit=2):
+def fetch_pair_news(symbol, limit=10):
+    """Fetch a deeper pair-specific evidence pool from Google News RSS.
+
+    One request per symbol keeps the landing page responsive while aliases broaden
+    coverage beyond ticker-only headlines. Results are ranked/deduped downstream.
+    """
     sym = str(symbol).upper().strip()
     name = COIN_NEWS_NAMES.get(sym, sym)
-    query = f'{name} crypto OR cryptocurrency'
+    aliases = COIN_NEWS_ALIASES.get(sym, [name, sym])
+    # Prefer direct pair/ecosystem mentions while still allowing crypto context.
+    alias_query = " OR ".join(f'"{a}"' for a in aliases[:3] if a)
+    query = f'({alias_query}) (crypto OR cryptocurrency OR blockchain OR token)'
     url = "https://news.google.com/rss/search?q=" + quote_plus(query) + "&hl=en-US&gl=US&ceid=US:en"
     try:
-        r = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        r = requests.get(url, timeout=6, headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
         root = ET.fromstring(r.content)
-        items = []
-        for item in root.findall(".//item")[:limit]:
-            title = clean_text(item.findtext("title") or "")
-            link = item.findtext("link") or ""
-            pub = clean_text(item.findtext("pubDate") or "")
+        items, seen = [], set()
+        for item in root.findall(".//item"):
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            pub = (item.findtext("pubDate") or "").strip()
             source_node = item.find("source")
-            source = clean_text(source_node.text if source_node is not None and source_node.text else "")
-            if title and link:
-                items.append({"symbol":sym,"title":title,"link":link,"pub":pub,"source":source})
+            source = (source_node.text if source_node is not None and source_node.text else "").strip()
+            key = title.lower()
+            if not title or not link or key in seen:
+                continue
+            seen.add(key)
+            items.append({"symbol":sym,"title":title,"link":link,"pub":pub,"source":source})
+            if len(items) >= max(3, int(limit)):
+                break
         return items
     except Exception:
         return []
@@ -2440,7 +2491,7 @@ def relevant_news_flights(flights, limit_pairs=4):
     return chosen
 
 
-def build_dropdown_news_cache(flights, limit=4):
+def build_dropdown_news_cache(flights, limit=10):
     """Preload news for every pair currently offered in the Flight dropdown.
 
     fetch_pair_news() is already cached for 5 minutes, so after the first sweep
@@ -2531,8 +2582,8 @@ def _why_news_matters(story, catalyst):
     return "No clear directional catalyst. Treat this setup as technical-first."
 
 
-def render_news_rail(selected, news_by_pair=None, limit=4):
-    """Right rail: filtered pair-specific trade context, not a generic news dump."""
+def render_news_rail(selected, news_by_pair=None, limit=10):
+    """Right rail: pair-specific evidence packet, not a generic news dump."""
     if not selected:
         return (
             '<aside class="news-rail"><div class="news-title">Pair Intelligence</div>'
@@ -2543,66 +2594,99 @@ def render_news_rail(selected, news_by_pair=None, limit=4):
     symbol = pair.split("/")[0].upper()
     action = str(selected.get("action", "WATCH")).upper()
     coin_name = COIN_NEWS_NAMES.get(symbol, symbol)
+    tv_url = tradingview_url(pair)
 
     if isinstance(news_by_pair, dict) and pair in news_by_pair:
         raw_stories = list(news_by_pair.get(pair) or [])
     else:
         raw_stories = fetch_pair_news(symbol, limit)
 
+    # Dedupe title variants before ranking.
+    deduped, seen = [], set()
+    for story in raw_stories:
+        key = str(story.get("title", "")).lower().strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(story)
+
     ranked = sorted(
-        raw_stories,
-        key=lambda s: _headline_relevance_score(s, symbol, coin_name),
+        deduped,
+        key=lambda story: _headline_relevance_score(story, symbol, coin_name),
         reverse=True,
     )
 
-    # Keep only actually relevant stories. Fallback: technical-only.
+    # Show a deeper evidence packet. Direct pair/ecosystem mentions still need
+    # to clear relevance so macro noise cannot overwhelm the technical read.
     relevant = [
-        s for s in ranked
-        if _headline_relevance_score(s, symbol, coin_name) >= 4
-    ][:2]
+        story for story in ranked
+        if _headline_relevance_score(story, symbol, coin_name) >= 4
+    ][:5]
+
+    header = (
+        '<aside class="news-rail">'
+        '<div class="news-title">Pair Intelligence</div>'
+        f'<div class="news-sub"><b>{clean_text(pair)}</b> · {clean_text(action)}</div>'
+        f'<a class="tv-link" style="margin-top:10px;" href="{html.escape(tv_url)}" target="_blank" rel="noopener noreferrer">OPEN TRADINGVIEW ↗</a>'
+    )
 
     if not relevant:
         return (
-            '<aside class="news-rail">'
-            '<div class="news-title">Pair Intelligence</div>'
-            f'<div class="news-sub"><b>{clean_text(pair)}</b> · {clean_text(action)}</div>'
-            '<div style="margin-top:12px;color:#FFD93D;font-weight:1000;">NO STRONG CATALYST</div>'
-            '<div class="news-sub" style="margin-top:6px;">No meaningful pair-specific headline passed the relevance filter. '
-            'Treat this as a technical-only setup.</div>'
-            '</aside>'
+            header
+            + '<div style="margin-top:12px;color:#FFD93D;font-weight:1000;">NO STRONG CATALYST</div>'
+            + '<div class="news-sub" style="margin-top:6px;">No meaningful pair-specific headline passed the relevance filter. '
+              'Treat this as a technical-only setup.</div>'
+            + '</aside>'
         )
+
+    cats = [_headline_catalyst(story) for story in relevant]
+    pos = sum(1 for c in cats if c == "POSITIVE")
+    neg = sum(1 for c in cats if c == "NEGATIVE")
+    neu = len(cats) - pos - neg
+    raw_score = (pos - neg) / max(1, len(cats))
+    evidence_score = int(round(raw_score * 100))
+    if evidence_score > 20:
+        evidence_label, evidence_color = "SUPPORTIVE", "#72ff9a"
+    elif evidence_score < -20:
+        evidence_label, evidence_color = "HEADWIND", "#ff6262"
+    else:
+        evidence_label, evidence_color = "MIXED", "#ffd85a"
 
     primary = relevant[0]
     catalyst = _headline_catalyst(primary)
     catalyst_color = "#72ff9a" if catalyst == "POSITIVE" else "#ff6262" if catalyst == "NEGATIVE" else "#ffd85a"
 
     parts = [
-        '<aside class="news-rail">',
-        '<div class="news-title">Pair Intelligence</div>',
-        f'<div class="news-sub"><b>{clean_text(pair)}</b> · {clean_text(action)}</div>',
-        f'<div style="margin-top:12px;font-size:11px;color:{catalyst_color};font-weight:1000;text-transform:uppercase;">Catalyst: {catalyst}</div>',
+        header,
+        '<div class="evidence-summary">',
+        '<div class="quality-label">News Evidence</div>',
+        f'<div class="evidence-score" style="color:{evidence_color};">{evidence_score:+d} · {evidence_label}</div>',
+        f'<div class="evidence-counts">{pos} supportive · {neu} neutral · {neg} negative · {len(relevant)} relevant stories</div>',
+        '</div>',
+        f'<div style="margin-top:12px;font-size:11px;color:{catalyst_color};font-weight:1000;text-transform:uppercase;">Top Catalyst: {catalyst}</div>',
     ]
 
-    for i, s in enumerate(relevant):
-        meta = " · ".join([x for x in [s.get("source"), s.get("pub")] if x])
-        cat = _headline_catalyst(s)
-        why = _why_news_matters(s, cat)
-        label = "TOP STORY" if i == 0 else "SECONDARY"
+    for i, story in enumerate(relevant):
+        meta = " · ".join([x for x in [story.get("source"), story.get("pub")] if x])
+        cat = _headline_catalyst(story)
+        why = _why_news_matters(story, cat)
+        label = "TOP STORY" if i == 0 else f"EVIDENCE {i+1}"
+        badge_color = "#72ff9a" if cat == "POSITIVE" else "#ff6262" if cat == "NEGATIVE" else "#ffd85a"
         parts.append(
-            f'<a class="news-item" href="{html.escape(s["link"])}" target="_blank" rel="noopener noreferrer">'
+            f'<a class="news-item" href="{html.escape(story["link"])}" target="_blank" rel="noopener noreferrer">'
             f'<span class="news-symbol">{label}</span>'
-            f'<div class="news-headline">{clean_text(s["title"])}</div>'
+            f'<span class="evidence-badge" style="color:{badge_color};">{cat}</span>'
+            f'<div class="news-headline">{clean_text(story["title"])}</div>'
             f'<div class="news-meta">{clean_text(meta)}</div>'
             f'<div class="news-sub" style="margin-top:6px;">Why it matters: {clean_text(why)}</div>'
             '</a>'
         )
 
     parts.append(
-        '<div class="news-sub" style="margin-top:10px;">News is context only. Radar remains the entry decision engine.</div>'
+        '<div class="news-sub" style="margin-top:10px;">Evidence supports or challenges the setup; Radar remains the entry decision engine.</div>'
     )
     parts.append('</aside>')
     return "".join(parts)
-
 
 
 def market_command_metrics(flights, sectors, market):
@@ -2966,7 +3050,7 @@ active = int(state.get("active_pairs", 0) or 0)
 flights = build_flights(state, market, updated)
 # Preload pair-specific headlines for every current dropdown option.
 # fetch_pair_news is cached, so only stale/new symbols trigger network calls.
-dropdown_news = build_dropdown_news_cache(flights, limit=4)
+dropdown_news = build_dropdown_news_cache(flights, limit=10)
 
 # ============================================================
 # A+ RADAR 8-PHASE ENGINE PIPELINE
