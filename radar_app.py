@@ -1340,12 +1340,19 @@ ATC_CSS = """
 }
 
 /* Landing V2 — command-center hierarchy */
-.command-strip{display:grid;grid-template-columns:1.4fr repeat(4,.72fr);gap:8px;margin:14px 0 12px;}
+.command-strip{display:grid;grid-template-columns:1.15fr 1.35fr repeat(4,.68fr);gap:8px;margin:14px 0 12px;}
 .command-metric{border:1px solid #142c38;border-radius:12px;background:rgba(4,11,17,.88);padding:10px 12px;min-height:62px;}
 .command-metric.hero{background:linear-gradient(135deg,rgba(121,231,255,.08),rgba(4,11,17,.92));}
+.command-metric.control{background:linear-gradient(135deg,rgba(114,255,154,.055),rgba(255,98,98,.035),rgba(4,11,17,.92));}
 .command-metric .cm-k{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.13em;}
 .command-metric .cm-v{font-size:18px;font-weight:1000;margin-top:4px;white-space:nowrap;}
 .command-metric .cm-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.control-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px;}
+.control-side{font-size:13px;font-weight:1000;white-space:nowrap}.control-buy{color:#72ff9a}.control-sell{color:#ff6262}
+.control-bar{position:relative;height:8px;border:1px solid #203744;border-radius:999px;overflow:hidden;margin-top:6px;background:#101922;}
+.control-fill-buy{height:100%;background:linear-gradient(90deg,#72ff9a,#36d978);border-radius:999px 0 0 999px;}
+.control-mid{position:absolute;left:50%;top:-2px;width:1px;height:12px;background:rgba(255,255,255,.55);}
+.control-read{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.05em;}
 .lifecycle-rail{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:4px 0 14px;padding:8px;border:1px solid var(--line);border-radius:12px;background:#040b11;}
 .life-stage{text-align:center;padding:7px 5px;border-radius:8px;font-size:9px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;color:#607583;border:1px solid transparent;}
 .life-stage.hot{color:var(--cyan);border-color:#173746;background:rgba(121,231,255,.06);}
@@ -3202,6 +3209,21 @@ print(
 
 sectors = sector_summary(flights)
 command, command_color, command_copy, primary = tower_command(flights)
+market_metrics = market_command_metrics(flights, sectors, market)
+buyers = int(market_metrics.get("buyers", 50))
+sellers = int(market_metrics.get("sellers", 50))
+breadth = int(market_metrics.get("breadth", 0))
+control_edge = buyers - sellers
+if buyers >= 65:
+    control_label = "STRONG BUYERS"
+elif buyers >= 55:
+    control_label = "BUYERS"
+elif buyers <= 35:
+    control_label = "STRONG SELLERS"
+elif buyers <= 45:
+    control_label = "SELLERS"
+else:
+    control_label = "BALANCED"
 
 departures = [f for f in flights if f["phase"] in {"Taxiing","Takeoff"}]
 climbing = [f for f in flights if f["phase"] == "Climbing"]
@@ -3222,6 +3244,12 @@ st.markdown(f"""
 
 <div class="command-strip">
   <div class="command-metric hero"><div class="cm-k">Market Mode</div><div class="cm-v" style="color:{command_color};">{clean_text(str(market).upper())}</div><div class="cm-sub">Decision engine · {clean_text(command)}</div></div>
+  <div class="command-metric control">
+    <div class="cm-k">Overall Market Control</div>
+    <div class="control-top"><span class="control-side control-buy">BUYERS {buyers}%</span><span class="control-side control-sell">{sellers}% SELLERS</span></div>
+    <div class="control-bar"><div class="control-fill-buy" style="width:{buyers}%;"></div><div class="control-mid"></div></div>
+    <div class="control-read"><span>{clean_text(control_label)}</span><span>EDGE {control_edge:+d} · BREADTH {breadth}%</span></div>
+  </div>
   <div class="command-metric"><div class="cm-k">Ready</div><div class="cm-v" style="color:#72ff9a;">{len([f for f in flights if f['action']=='ENTER'])}</div><div class="cm-sub">entry cleared</div></div>
   <div class="command-metric"><div class="cm-k">Taxi / Takeoff</div><div class="cm-v" style="color:#ffd85a;">{len(departures)}</div><div class="cm-sub">near entry</div></div>
   <div class="command-metric"><div class="cm-k">Scanning</div><div class="cm-v">{active}</div><div class="cm-sub">Kraken USD pairs</div></div>
