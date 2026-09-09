@@ -1351,8 +1351,11 @@ ATC_CSS = """
 .life-stage.hot{color:var(--cyan);border-color:#173746;background:rgba(121,231,255,.06);}
 .sector-strip{grid-template-columns:repeat(5,minmax(0,1fr));}
 .sector-card{padding:10px 12px;min-height:72px;}
-.flight-card{min-height:0;padding:15px;background:linear-gradient(155deg,#07131b 0%,#050d13 100%);transition:transform .15s ease,border-color .15s ease;}
-.flight-card:hover{transform:translateY(-2px);border-color:#2b5265;}
+.flight-card-link{display:block;color:inherit!important;text-decoration:none!important;border-radius:16px;}
+.flight-card-link:hover,.flight-card-link:focus,.flight-card-link:visited{color:inherit!important;text-decoration:none!important;}
+.flight-card{min-height:0;padding:15px;background:linear-gradient(155deg,#07131b 0%,#050d13 100%);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;cursor:pointer;}
+.flight-card-link:hover .flight-card,.flight-card-link:focus .flight-card{transform:translateY(-2px);border-color:#2b5265;box-shadow:0 10px 30px rgba(0,0,0,.18);}
+.card-chart-cue{font-size:9px;color:#55bfff;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
 .flight-card.enter-card{box-shadow:0 0 28px rgba(114,255,154,.07);border-color:rgba(114,255,154,.42);}
 .flight-quality{display:flex;justify-content:space-between;align-items:end;margin-top:12px;}
 .quality-score{font-size:25px;font-weight:1000;line-height:1;}
@@ -2239,7 +2242,7 @@ def _pair_analysis(f):
 
 
 def render_flight_card(f):
-    """Landing V2 card: fast scan first, detail second."""
+    """Landing card: the entire opportunity card links to its TradingView chart."""
     a = _pair_analysis(f)
     setup = f.get("setup", {}) or {}
     action_raw = str(f.get("action", "WATCH")).upper()
@@ -2254,7 +2257,6 @@ def render_flight_card(f):
     quality = int(round((trigger * .40) + (trade * .35) + (conf * .25)))
     phase = str(f.get("phase", "Taxiing"))
     phase_pct = {"Taxiing":20,"Takeoff":40,"Climbing":60,"Cruising":80,"Descending":90,"Landing":100}.get(phase,20)
-    flags = setup.get("flags", {}) or {}
     rsi1 = safe_float(setup.get("rsi_1m", 0))
     rsi5 = safe_float(setup.get("rsi_5m", 0))
     vwap = clean_text(f.get("vwap", "—"))
@@ -2262,14 +2264,19 @@ def render_flight_card(f):
     card_cls = "flight-card enter-card" if action_raw == "ENTER" else "flight-card"
     need_label = "ENTRY CLEARANCE" if action_raw == "ENTER" else "NEEDS ONE THING"
     need_text = a["next_text"] if action_raw != "ENTER" else f"Confirmation active · {window}"
+    tv_url = html.escape(tradingview_url(f.get("pair", "")))
 
     parts = [
+        f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer" aria-label="Open {clean_text(f.get("pair","UNKNOWN"))} TradingView chart">',
         f'<div class="{card_cls}" style="color:{action_color};">',
         '<div class="flight-top"><div>',
         f'<div class="flight-pair">{clean_text(f.get("pair","UNKNOWN"))}</div>',
         f'<div class="flight-sector">{clean_text(f.get("sector","OTHER"))} sector</div>',
         '</div>',
-        f'<div class="flight-phase">{clean_text(phase)}</div></div>',
+        '<div style="text-align:right;">',
+        f'<div class="flight-phase">{clean_text(phase)}</div>',
+        '<div class="card-chart-cue">CHART ↗</div>',
+        '</div></div>',
         f'<div class="flight-action">{action}</div>',
         f'<div class="flight-reason">{timing} · {window}</div>',
         '<div class="flight-quality">',
@@ -2289,9 +2296,9 @@ def render_flight_card(f):
         '</div>',
         '<div class="card-footer-row">',
         f'<div class="next-step" style="margin:0;flex:1;"><b>Target {clean_text(levels.get("target","—"))}</b> · Stop {clean_text(levels.get("stop","—"))} · Model {a["move_conf"]}%</div>',
-        f'<a class="tv-link" href="{html.escape(tradingview_url(f.get("pair","")))}" target="_blank" rel="noopener noreferrer">OPEN CHART ↗</a>',
         '</div>',
         '</div>',
+        '</a>',
     ]
     return "".join(parts)
 
