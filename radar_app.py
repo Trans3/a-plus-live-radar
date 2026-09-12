@@ -7,6 +7,7 @@ import textwrap
 import xml.etree.ElementTree as ET
 import time
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import quote_plus
 from engines import *
@@ -1340,7 +1341,7 @@ ATC_CSS = """
 }
 
 /* Landing V2 — command-center hierarchy */
-.command-strip{display:grid;grid-template-columns:1.15fr 1.35fr repeat(4,.68fr);gap:8px;margin:14px 0 12px;}
+.command-strip{display:grid;grid-template-columns:1.05fr 1.28fr .72fr repeat(4,.62fr);gap:8px;margin:14px 0 12px;}
 .command-metric{border:1px solid #142c38;border-radius:12px;background:rgba(4,11,17,.88);padding:10px 12px;min-height:62px;}
 .command-metric.hero{background:linear-gradient(135deg,rgba(121,231,255,.08),rgba(4,11,17,.92));}
 .command-metric.control{background:linear-gradient(135deg,rgba(114,255,154,.055),rgba(255,98,98,.035),rgba(4,11,17,.92));}
@@ -1660,6 +1661,47 @@ ATC_CSS = """
   line-height:1.35;
   margin-top:3px;
 }
+
+
+/* V7 — Global market session clock */
+.session-panel{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(7,19,27,.98),rgba(3,9,13,.98));
+  padding:16px 18px 14px;
+  margin:4px 0 12px;
+  box-shadow:0 14px 36px rgba(0,0,0,.16);
+}
+.session-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px;}
+.session-title-wrap{display:flex;align-items:center;gap:11px;min-width:0;}
+.session-icon{width:34px;height:34px;border:1px solid #246176;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--cyan);font-size:18px;box-shadow:0 0 16px rgba(121,231,255,.10);}
+.session-title{font-size:15px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;}
+.session-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.session-zone-pill{border:1px solid #1d4d60;border-radius:9px;background:#061019;color:var(--text);padding:7px 10px;font-size:10px;font-weight:900;white-space:nowrap;}
+.session-layout{display:grid;grid-template-columns:1fr 205px;gap:16px;align-items:stretch;}
+.session-timeline{min-width:0;}
+.session-axis{display:grid;grid-template-columns:112px repeat(7,1fr);gap:0;margin-bottom:4px;color:#78909e;font-size:8px;font-weight:900;}
+.session-axis span{text-align:center;}.session-axis span:first-child{text-align:left;}
+.session-row{display:grid;grid-template-columns:112px 1fr 72px;gap:9px;align-items:center;margin:7px 0;}
+.session-city{font-size:11px;color:var(--text);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.session-city small{display:block;color:var(--muted);font-size:8px;font-weight:800;margin-top:1px;}
+.session-track{height:19px;position:relative;border:1px solid #15313e;border-radius:4px;background:linear-gradient(90deg,rgba(25,58,72,.22) 1px,transparent 1px),#03090d;background-size:12.5% 100%;overflow:hidden;}
+.session-window{position:absolute;top:3px;height:11px;border-radius:3px;opacity:.95;box-shadow:0 0 10px rgba(255,255,255,.04);}
+.session-now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--cyan);box-shadow:0 0 8px rgba(121,231,255,.55);z-index:5;}
+.session-now:before{content:"";position:absolute;top:-2px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--cyan);}
+.session-status{display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:9px;font-weight:1000;text-transform:uppercase;white-space:nowrap;}
+.session-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.session-side{border-left:1px solid var(--line);padding-left:14px;}
+.session-side-title{font-size:9px;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px;}
+.session-clock-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #142b36;}
+.session-clock-row:last-child{border-bottom:0;}
+.session-clock-city{font-size:10px;font-weight:900;color:var(--text);}.session-clock-city small{display:block;color:var(--muted);font-size:8px;margin-top:2px;}
+.session-clock-time{font-size:12px;font-weight:1000;text-align:right;}.session-clock-state{font-size:8px;font-weight:1000;text-transform:uppercase;margin-top:2px;text-align:right;}
+.command-metric.clock{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,rgba(85,191,255,.07),rgba(4,11,17,.92));}
+.command-metric.clock .cm-v{font-size:21px;letter-spacing:.04em;}
+@media(max-width:1050px){.session-layout{grid-template-columns:1fr}.session-side{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.session-side-title{grid-column:1/-1}.session-clock-row{display:block;border:1px solid #142b36;border-radius:9px;padding:8px}.session-clock-time,.session-clock-state{text-align:left;margin-top:3px}}
+@media(max-width:700px){.session-row{grid-template-columns:82px 1fr 60px}.session-axis{grid-template-columns:82px repeat(7,1fr)}.session-side{grid-template-columns:1fr 1fr}.session-head{display:block}.session-zone-pill{display:inline-block;margin-top:8px}}
+
 @media(max-width:1550px){
   .market-command-rail{
     position:relative;
@@ -3010,6 +3052,75 @@ def render_market_command_rail(flights, sectors, market):
 """
 
 
+def _decimal_hour(dt):
+    return dt.hour + dt.minute / 60.0 + dt.second / 3600.0
+
+
+def _session_segments_utc(zone_name, start_hour, end_hour, now_utc):
+    """Return UTC 0-24 timeline segments for a regional activity window."""
+    zone = ZoneInfo(zone_name)
+    local_now = now_utc.astimezone(zone)
+    local_date = local_now.date()
+    sh, sm = int(start_hour), int(round((start_hour - int(start_hour)) * 60))
+    eh, em = int(end_hour), int(round((end_hour - int(end_hour)) * 60))
+    start_local = datetime(local_date.year, local_date.month, local_date.day, sh, sm, tzinfo=zone)
+    end_local = datetime(local_date.year, local_date.month, local_date.day, eh, em, tzinfo=zone)
+    start_utc = _decimal_hour(start_local.astimezone(timezone.utc))
+    end_utc = _decimal_hour(end_local.astimezone(timezone.utc))
+    if end_utc > start_utc:
+        return [(start_utc, end_utc)]
+    return [(0.0, end_utc), (start_utc, 24.0)]
+
+
+def render_global_market_sessions():
+    """Major regional activity windows for crypto context; crypto itself remains 24/7."""
+    now_utc = datetime.now(timezone.utc)
+    sessions = [
+        {"city":"Sydney", "abbr":"AEST/AEDT", "zone":"Australia/Sydney", "start":10.0, "end":16.0, "color":"#55a8ff"},
+        {"city":"Tokyo", "abbr":"JST", "zone":"Asia/Tokyo", "start":9.0, "end":15.0, "color":"#49d995"},
+        {"city":"London", "abbr":"GMT/BST", "zone":"Europe/London", "start":8.0, "end":16.5, "color":"#ffbd4a"},
+        {"city":"New York", "abbr":"ET", "zone":"America/New_York", "start":9.5, "end":16.0, "color":"#9b72ff"},
+    ]
+    now_pct = max(0.0, min(100.0, _decimal_hour(now_utc) / 24.0 * 100.0))
+    rows, clocks = [], []
+    for sess in sessions:
+        local = now_utc.astimezone(ZoneInfo(sess["zone"]))
+        lh = _decimal_hour(local)
+        active = sess["start"] <= lh < sess["end"]
+        state_color = "#72ff9a" if active else "#607583"
+        state = "ACTIVE" if active else "QUIET"
+        segments = _session_segments_utc(sess["zone"], sess["start"], sess["end"], now_utc)
+        windows = "".join(
+            f'<div class="session-window" style="left:{a/24*100:.3f}%;width:{max(0.5,(b-a)/24*100):.3f}%;background:{sess["color"]};"></div>'
+            for a,b in segments
+        )
+        rows.append(
+            '<div class="session-row">'
+            f'<div class="session-city">{clean_text(sess["city"])} <small>{clean_text(sess["abbr"])}</small></div>'
+            f'<div class="session-track">{windows}<div class="session-now" style="left:{now_pct:.3f}%;"></div></div>'
+            f'<div class="session-status" style="color:{state_color};"><span class="session-dot" style="background:{state_color};box-shadow:0 0 8px {state_color};"></span>{state}</div>'
+            '</div>'
+        )
+        clocks.append(
+            '<div class="session-clock-row">'
+            f'<div class="session-clock-city">{clean_text(sess["city"])}<small>{clean_text(sess["abbr"])}</small></div>'
+            f'<div><div class="session-clock-time">{local.strftime("%-I:%M %p")}</div><div class="session-clock-state" style="color:{state_color};">{state}</div></div>'
+            '</div>'
+        )
+
+    axis = '<div class="session-axis"><span>UTC</span>' + ''.join(f'<span>{h:02d}:00</span>' for h in (0,4,8,12,16,20,24)) + '</div>'
+    return (
+        '<section class="session-panel">'
+        '<div class="session-head">'
+        '<div class="session-title-wrap"><div class="session-icon">◷</div><div><div class="session-title">Global Market Sessions</div>'
+        '<div class="session-sub">Regional liquidity windows for context · crypto itself stays open 24/7.</div></div></div>'
+        '<div class="session-zone-pill">TIMELINE · UTC</div>'
+        '</div>'
+        '<div class="session-layout"><div class="session-timeline">' + axis + ''.join(rows) + '</div>'
+        '<aside class="session-side"><div class="session-side-title">Local Session Clocks</div>' + ''.join(clocks) + '</aside></div>'
+        '</section>'
+    )
+
 
 with st.sidebar:
     st.markdown("### Tower Controls")
@@ -3225,6 +3336,10 @@ elif buyers <= 45:
 else:
     control_label = "BALANCED"
 
+now_utc = datetime.now(timezone.utc)
+utc_clock = now_utc.strftime("%H:%M:%S")
+utc_date = now_utc.strftime("%a, %b %d")
+
 departures = [f for f in flights if f["phase"] in {"Taxiing","Takeoff"}]
 climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
@@ -3250,11 +3365,14 @@ st.markdown(f"""
     <div class="control-bar"><div class="control-fill-buy" style="width:{buyers}%;"></div><div class="control-mid"></div></div>
     <div class="control-read"><span>{clean_text(control_label)}</span><span>EDGE {control_edge:+d} · BREADTH {breadth}%</span></div>
   </div>
+  <div class="command-metric clock"><div class="cm-k">UTC Clock</div><div class="cm-v">{utc_clock}</div><div class="cm-sub">{clean_text(utc_date)}</div></div>
   <div class="command-metric"><div class="cm-k">Ready</div><div class="cm-v" style="color:#72ff9a;">{len([f for f in flights if f['action']=='ENTER'])}</div><div class="cm-sub">entry cleared</div></div>
   <div class="command-metric"><div class="cm-k">Taxi / Takeoff</div><div class="cm-v" style="color:#ffd85a;">{len(departures)}</div><div class="cm-sub">near entry</div></div>
   <div class="command-metric"><div class="cm-k">Scanning</div><div class="cm-v">{active}</div><div class="cm-sub">Kraken USD pairs</div></div>
   <div class="command-metric"><div class="cm-k">Cycle</div><div class="cm-v">{cycle}</div><div class="cm-sub">radar synced</div></div>
 </div>
+
+{render_global_market_sessions()}
 
 <div class="lifecycle-rail">
   <div class="life-stage hot">Scanning</div><div class="life-stage hot">Taxiing</div><div class="life-stage hot">Takeoff</div><div class="life-stage">Airborne</div><div class="life-stage">Landing</div>
