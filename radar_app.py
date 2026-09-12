@@ -2961,7 +2961,7 @@ def render_market_command_rail(flights, sectors, market):
 
     return f"""
 <aside class="market-command-rail">
-  <div class="market-command-title">Market Command Center</div>
+  <div class="market-command-title">Market Pulse</div>
 
   <div class="control-block">
     <div class="control-label"><span>Airspace Control</span><span style="color:{buyer_color};">{m['buyers']}% Buyers</span></div>
@@ -3230,7 +3230,7 @@ climbing = [f for f in flights if f["phase"] == "Climbing"]
 cruising = [f for f in flights if f["phase"] == "Cruising"]
 landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
 
-st.markdown(render_aplus_live_feed(flights, updated, limit=10), unsafe_allow_html=True)
+st.markdown(render_market_command_rail(flights, sectors, market), unsafe_allow_html=True)
 st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
 
 st.markdown(f"""
