@@ -137,11 +137,12 @@ div.stButton > button:first-child:hover{border-color:white;color:white;backgroun
 .why-chip b{float:right;}
 .why-pos b{color:var(--green);} .why-neg b{color:var(--red);} .why-warn b{color:var(--yellow);}
 .status-chip{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:1000;text-transform:uppercase;}
+.awareness-panel{border:1px solid #27343D;border-radius:14px;background:#05080C;padding:14px 16px;margin:14px 0 0}.awareness-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.awareness-title{font-size:15px;font-weight:1000;color:var(--green);text-transform:uppercase;letter-spacing:.7px}.awareness-verdict{font-size:20px;font-weight:1000;text-transform:uppercase}.awareness-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.awareness-cell{border:1px solid #1B2933;border-radius:10px;background:#071017;padding:9px;text-align:center}.awareness-cell span{display:block;font-size:10px;color:var(--muted);font-weight:1000;text-transform:uppercase}.awareness-cell b{display:block;font-size:15px;color:white;margin-top:3px}.awareness-action{font-size:13px;color:white;line-height:1.4;margin-top:10px}.tf-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.tf-chip{border:1px solid #22303A;border-radius:8px;padding:6px 8px;font-size:11px;color:white;text-align:center}.tf-chip b{display:block;font-size:12px}.tf-up b{color:var(--green)}.tf-down b{color:var(--red)}.tf-mixed b{color:var(--yellow)}
 @media(max-width:900px){
   .setup-top{grid-template-columns:1fr;}
   .rank-wrap{height:auto;padding:14px;}
   .score-block{border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .decision-banner,.header,.tool-grid,.bottom-grid,.billboard-grid,.proof-grid,.perf-grid{grid-template-columns:1fr;}
+  .decision-banner,.header,.tool-grid,.bottom-grid,.billboard-grid,.proof-grid,.perf-grid,.awareness-grid,.tf-strip{grid-template-columns:1fr;}
 }
 
 </style>
@@ -1106,6 +1107,36 @@ def environment_adjustments_html(setup, limit=4):
         rows.append(f"<div><span class='{cls}'>{sign}{int(points)}</span> {reason}</div>")
     return "".join(rows) or "<div>No environment adjustments yet.</div>"
 
+def awareness_html(setup):
+    a = setup.get("awareness", {}) or {}
+    if not a:
+        return ""
+    verdict = str(a.get("verdict", "WATCH")).upper()
+    color = "#78FF2E" if verdict == "TREND OPPORTUNITY" else "#FFD93D" if verdict in {"WATCH", "MATURE", "COUNTERTREND MINI-PUMP"} else "#FF4D4D"
+    tf_html = ""
+    for tf in ("1m", "5m", "15m", "1H"):
+        d = (a.get("timeframes", {}) or {}).get(tf, {}) or {}
+        trend = str(d.get("trend", "UNKNOWN")).upper()
+        cls = "tf-up" if trend == "UP" else "tf-down" if trend == "DOWN" else "tf-mixed"
+        tf_html += f'<div class="tf-chip {cls}">{clean_text(tf)}<b>{clean_text(trend)}</b><span>{safe_float(d.get("change_pct"),0):+.2f}%</span></div>'
+    return f'''
+      <div class="awareness-panel">
+        <div class="awareness-head">
+          <div class="awareness-title">Awareness Layer · Context Above Entry Score</div>
+          <div class="awareness-verdict" style="color:{color};">{clean_text(verdict)}</div>
+        </div>
+        <div class="awareness-grid">
+          <div class="awareness-cell"><span>Dominant TF</span><b>{clean_text(a.get('dominant_timeframe','—'))}</b></div>
+          <div class="awareness-cell"><span>Broader Trend</span><b>{clean_text(a.get('broader_trend','—'))}</b></div>
+          <div class="awareness-cell"><span>Move Legs</span><b>{int(safe_float(a.get('move_legs'),0))}</b></div>
+          <div class="awareness-cell"><span>Typical Legs</span><b>{safe_float(a.get('typical_legs'),0):.1f}</b></div>
+          <div class="awareness-cell"><span>Maturity</span><b>{clean_text(a.get('maturity','—'))}</b></div>
+        </div>
+        <div class="tf-strip">{tf_html}</div>
+        <div class="awareness-action"><b style="color:{color};">Context:</b> {clean_text(a.get('action',''))}</div>
+      </div>
+    '''
+
 def render_setup_card(setup, idx, market, state_generated_at=""):
     accents = ["#78FF2E", "#FF8A3D", "#35A7FF", "#BF65FF", "#FFD93D"]
     accent = accents[(idx-1) % len(accents)]
@@ -1141,6 +1172,7 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
     )
     why_html = why_score_breakdown_html(setup, market, clock)
     env_adj_html = environment_adjustments_html(setup)
+    awareness_block = awareness_html(setup)
 
     stages, current = setup_stages(setup)
     stage_html = ""
@@ -1207,6 +1239,8 @@ def render_setup_card(setup, idx, market, state_generated_at=""):
           </div>
         </div>
       </div>
+
+      {awareness_block}
 
       <div class="tool-grid">
         <div class="tool-panel">
@@ -1331,6 +1365,7 @@ ATC_CSS = """
 .check{border:1px solid #142c38;border-radius:10px;background:#040b11;padding:10px;font-size:13px;}
 .broadcast-badge{position:fixed;top:14px;right:18px;z-index:9999;border:1px solid var(--red);background:rgba(2,7,11,.9);color:var(--red);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:1000;letter-spacing:.13em;text-transform:uppercase;}
 .broadcast-mode [data-testid="stSidebar"],.broadcast-mode [data-testid="collapsedControl"],.broadcast-mode div.stButton,.broadcast-mode .stSelectbox>label{display:none!important;}
+.awareness-panel{border:1px solid #27343D;border-radius:14px;background:#05080C;padding:14px 16px;margin:14px 0 0}.awareness-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.awareness-title{font-size:15px;font-weight:1000;color:var(--green);text-transform:uppercase;letter-spacing:.7px}.awareness-verdict{font-size:20px;font-weight:1000;text-transform:uppercase}.awareness-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.awareness-cell{border:1px solid #1B2933;border-radius:10px;background:#071017;padding:9px;text-align:center}.awareness-cell span{display:block;font-size:10px;color:var(--muted);font-weight:1000;text-transform:uppercase}.awareness-cell b{display:block;font-size:15px;color:white;margin-top:3px}.awareness-action{font-size:13px;color:white;line-height:1.4;margin-top:10px}.tf-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.tf-chip{border:1px solid #22303A;border-radius:8px;padding:6px 8px;font-size:11px;color:white;text-align:center}.tf-chip b{display:block;font-size:12px}.tf-up b{color:var(--green)}.tf-down b{color:var(--red)}.tf-mixed b{color:var(--yellow)}
 @media(max-width:900px){
   .tower-grid,.detail-grid{grid-template-columns:1fr;}
   .flight-grid{grid-template-columns:1fr;}
