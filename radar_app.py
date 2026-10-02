@@ -1134,10 +1134,10 @@ def awareness_html(setup):
         up = " / ".join(f'+{float(v):.2f}%' for v in r.get("favorable_series", []))
         down = " / ".join(f'-{float(v):.2f}%' for v in r.get("adverse_series", []))
         series = f'<div class="awareness-action">P25 / P50 / P75 · {up}<br>{down}</div>'
-    return f'''
+    return normalize_streamlit_html(f'''
     <div class="awareness-panel">
       <div class="awareness-verdict" style="color:{color}">{verdict} <span style="font-size:12px">· {phase}</span></div>
-      <div class="awareness-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="awareness-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));overflow-wrap:anywhere;">
         <div class="awareness-cell"><span>Dominant TF</span><b>{clean_text(a.get('dominant_timeframe','—'))} {arrow}</b></div>
         <div class="awareness-cell"><span>Maturity</span><b>{clean_text(a.get('maturity','UNKNOWN'))}</b></div>
         <div class="awareness-cell"><span>Range · 60m</span><b>{ranges}</b></div>
@@ -1146,7 +1146,7 @@ def awareness_html(setup):
       <div class="awareness-action">{n} matched samples · favorable P50 / adverse P75{ ' · bearish context only' if direction == 'SHORT' else ''}</div>
       {series}
       <div class="awareness-action">{clean_text(a.get('action',''))}</div>
-    </div>'''
+    </div>''')
 
 def render_setup_card(setup, idx, market, state_generated_at=""):
     accents = ["#78FF2E", "#FF8A3D", "#35A7FF", "#BF65FF", "#FFD93D"]
