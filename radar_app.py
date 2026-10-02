@@ -10,7 +10,13 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import quote_plus
-from engines import *
+try:
+    from engines import *
+    HAS_UI_ENGINES = True
+except ModuleNotFoundError as exc:
+    if exc.name != "engines":
+        raise
+    HAS_UI_ENGINES = False
 
 import requests
 import streamlit as st
@@ -1107,35 +1113,40 @@ def environment_adjustments_html(setup, limit=4):
         rows.append(f"<div><span class='{cls}'>{sign}{int(points)}</span> {reason}</div>")
     return "".join(rows) or "<div>No environment adjustments yet.</div>"
 
+
 def awareness_html(setup):
     a = setup.get("awareness", {}) or {}
-    if not a:
-        return ""
-    verdict = str(a.get("verdict", "WATCH")).upper()
-    color = "#78FF2E" if verdict == "TREND OPPORTUNITY" else "#FFD93D" if verdict in {"WATCH", "MATURE", "COUNTERTREND MINI-PUMP"} else "#FF4D4D"
-    tf_html = ""
-    for tf in ("1m", "5m", "15m", "1H"):
-        d = (a.get("timeframes", {}) or {}).get(tf, {}) or {}
-        trend = str(d.get("trend", "UNKNOWN")).upper()
-        cls = "tf-up" if trend == "UP" else "tf-down" if trend == "DOWN" else "tf-mixed"
-        tf_html += f'<div class="tf-chip {cls}">{clean_text(tf)}<b>{clean_text(trend)}</b><span>{safe_float(d.get("change_pct"),0):+.2f}%</span></div>'
+    if a.get("version") != "2.0":
+        return '<div class="awareness-panel">WAIT · Awaiting updated engine data</div>'
+    verdict = clean_text(a.get("verdict", "WAIT"))
+    direction = str(a.get("direction", "WAIT"))
+    color = "#78FF2E" if "LONG" in verdict else "#FF6262" if "SHORT" in verdict else "#FFD93D"
+    r = a.get("range", {}) or {}
+    n = int(safe_float(r.get("samples")))
+    ranges = (f'+{safe_float(r.get("favorable_pct")):.2f}% / -{safe_float(r.get("adverse_pct")):.2f}%'
+              if r.get("status") == "EMPIRICAL" else "Collecting history" if r.get("status") != "UNAVAILABLE" else "Unavailable")
+    stop = a.get("stop_pct")
+    stop_text = f'{"-" if direction == "LONG" else "+"}{float(stop):.2f}%' if stop is not None else "—"
+    arrow = "↑" if a.get("dominant_direction") == "UP" else "↓" if a.get("dominant_direction") == "DOWN" else "↔"
+    phase = clean_text(a.get("phase", "WATCH"))
+    series = ''
+    if r.get("status") == "EMPIRICAL":
+        up = " / ".join(f'+{float(v):.2f}%' for v in r.get("favorable_series", []))
+        down = " / ".join(f'-{float(v):.2f}%' for v in r.get("adverse_series", []))
+        series = f'<div class="awareness-action">P25 / P50 / P75 · {up}<br>{down}</div>'
     return f'''
-      <div class="awareness-panel">
-        <div class="awareness-head">
-          <div class="awareness-title">Awareness Layer · Context Above Entry Score</div>
-          <div class="awareness-verdict" style="color:{color};">{clean_text(verdict)}</div>
-        </div>
-        <div class="awareness-grid">
-          <div class="awareness-cell"><span>Dominant TF</span><b>{clean_text(a.get('dominant_timeframe','—'))}</b></div>
-          <div class="awareness-cell"><span>Broader Trend</span><b>{clean_text(a.get('broader_trend','—'))}</b></div>
-          <div class="awareness-cell"><span>Move Legs</span><b>{int(safe_float(a.get('move_legs'),0))}</b></div>
-          <div class="awareness-cell"><span>Typical Legs</span><b>{safe_float(a.get('typical_legs'),0):.1f}</b></div>
-          <div class="awareness-cell"><span>Maturity</span><b>{clean_text(a.get('maturity','—'))}</b></div>
-        </div>
-        <div class="tf-strip">{tf_html}</div>
-        <div class="awareness-action"><b style="color:{color};">Context:</b> {clean_text(a.get('action',''))}</div>
+    <div class="awareness-panel">
+      <div class="awareness-verdict" style="color:{color}">{verdict} <span style="font-size:12px">· {phase}</span></div>
+      <div class="awareness-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="awareness-cell"><span>Dominant TF</span><b>{clean_text(a.get('dominant_timeframe','—'))} {arrow}</b></div>
+        <div class="awareness-cell"><span>Maturity</span><b>{clean_text(a.get('maturity','UNKNOWN'))}</b></div>
+        <div class="awareness-cell"><span>Range · 60m</span><b>{ranges}</b></div>
+        <div class="awareness-cell"><span>SL zone</span><b>{stop_text}</b></div>
       </div>
-    '''
+      <div class="awareness-action">{n} matched samples · favorable P50 / adverse P75{ ' · bearish context only' if direction == 'SHORT' else ''}</div>
+      {series}
+      <div class="awareness-action">{clean_text(a.get('action',''))}</div>
+    </div>'''
 
 def render_setup_card(setup, idx, market, state_generated_at=""):
     accents = ["#78FF2E", "#FF8A3D", "#35A7FF", "#BF65FF", "#FFD93D"]
@@ -2112,7 +2123,10 @@ def atc_metrics(setup, market, generated_at):
 
 def build_flights(state, market, generated_at):
     board = ((state or {}).get("billboard", {}) or {}).get("one_hour", []) or []
-    setups = (state or {}).get("top_setups", []) or []
+    setups = list((state or {}).get("top_setups", []) or [])
+    known = {str(s.get("pair", "")).upper() for s in setups}
+    setups.extend(s for s in (state or {}).get("anticipation_setups", []) or []
+                  if str(s.get("pair", "")).upper() not in known)
     board_map = {str(x.get("pair", "")).upper(): x for x in board}
     flights, seen = [], set()
 
@@ -2326,65 +2340,12 @@ def _pair_analysis(f):
 
 
 def render_flight_card(f):
-    """Landing card: the entire opportunity card links to its TradingView chart."""
-    a = _pair_analysis(f)
     setup = f.get("setup", {}) or {}
-    action_raw = str(f.get("action", "WATCH")).upper()
-    action = clean_text(action_raw)
-    action_color = f.get("color", "#8498a6")
-    timing = clean_text(f.get("timing", "WATCH"))
-    window = clean_text(f.get("window", "Needs trigger"))
-    levels = a["levels"]
-    trigger = clamp_score(setup.get("trigger_score", 0))
-    trade = clamp_score(setup.get("trade_score", 0))
-    conf = clamp_score(setup.get("confidence", 0))
-    quality = int(round((trigger * .40) + (trade * .35) + (conf * .25)))
-    phase = str(f.get("phase", "Taxiing"))
-    phase_pct = {"Taxiing":20,"Takeoff":40,"Climbing":60,"Cruising":80,"Descending":90,"Landing":100}.get(phase,20)
-    rsi1 = safe_float(setup.get("rsi_1m", 0))
-    rsi5 = safe_float(setup.get("rsi_5m", 0))
-    vwap = clean_text(f.get("vwap", "—"))
-    rr = clean_text(levels.get("rr", "—"))
-    card_cls = "flight-card enter-card" if action_raw == "ENTER" else "flight-card"
-    need_label = "ENTRY CLEARANCE" if action_raw == "ENTER" else "NEEDS ONE THING"
-    need_text = a["next_text"] if action_raw != "ENTER" else f"Confirmation active · {window}"
     tv_url = html.escape(tradingview_url(f.get("pair", "")))
-
-    parts = [
-        f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer" aria-label="Open {clean_text(f.get("pair","UNKNOWN"))} TradingView chart">',
-        f'<div class="{card_cls}" style="color:{action_color};">',
-        '<div class="flight-top"><div>',
-        f'<div class="flight-pair">{clean_text(f.get("pair","UNKNOWN"))}</div>',
-        f'<div class="flight-sector">{clean_text(f.get("sector","OTHER"))} sector</div>',
-        '</div>',
-        '<div style="text-align:right;">',
-        f'<div class="flight-phase">{clean_text(phase)}</div>',
-        '<div class="card-chart-cue">CHART ↗</div>',
-        '</div></div>',
-        f'<div class="flight-action">{action}</div>',
-        f'<div class="flight-reason">{timing} · {window}</div>',
-        '<div class="flight-quality">',
-        f'<div><div class="quality-label">Entry Quality</div><div class="quality-score">{quality}<span style="font-size:12px;color:#8498a6;">/100</span></div></div>',
-        f'<div style="text-align:right;"><div class="quality-label">Lifecycle</div><div class="data-v">{phase_pct}%</div></div>',
-        '</div>',
-        f'<div class="progress-track"><div class="progress-fill" style="width:{phase_pct}%;"></div></div>',
-        '<div class="mini-metrics">',
-        f'<div class="mini-metric"><div class="mini-k">RSI 1m</div><div class="mini-v">{rsi1:.1f}</div></div>',
-        f'<div class="mini-metric"><div class="mini-k">RSI 5m</div><div class="mini-v">{rsi5:.1f}</div></div>',
-        f'<div class="mini-metric"><div class="mini-k">VWAP</div><div class="mini-v">{vwap}</div></div>',
-        f'<div class="mini-metric"><div class="mini-k">R:R</div><div class="mini-v">{rr}</div></div>',
-        '</div>',
-        '<div class="need-box">',
-        f'<div class="need-k">{need_label}</div>',
-        f'<div class="need-v">{clean_text(need_text)}</div>',
-        '</div>',
-        '<div class="card-footer-row">',
-        f'<div class="next-step" style="margin:0;flex:1;"><b>Target {clean_text(levels.get("target","—"))}</b> · Stop {clean_text(levels.get("stop","—"))} · Model {a["move_conf"]}%</div>',
-        '</div>',
-        '</div>',
-        '</a>',
-    ]
-    return "".join(parts)
+    pair = clean_text(f.get("pair", "UNKNOWN"))
+    return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
+            f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
+            + awareness_html(setup) + '</div></a>')
 
 def sharpshooter_candidates(flights):
     """Use existing radar timing + structure to identify top sharpshooter options."""
@@ -3201,6 +3162,26 @@ if broadcast_mode:
 </script>
 """, unsafe_allow_html=True)
 
+# Refresh reloads exported scanner data; it does not launch a server scan.
+refresh_cols = st.columns([2, 1])
+auto_refresh = refresh_cols[0].toggle("Auto Refresh · 7 min", value=False, key="radar_auto_refresh")
+if refresh_cols[1].button("Refresh Now", key="radar_refresh_now"):
+    load_state.clear()
+    load_performance.clear()
+    st.rerun()
+if hasattr(st, "fragment"):
+    @st.fragment(run_every=420 if auto_refresh else None)
+    def _refresh_clock():
+        last = st.session_state.get("radar_full_refresh_at", time.monotonic())
+        if auto_refresh and time.monotonic() - last >= 419:
+            load_state.clear()
+            load_performance.clear()
+            st.rerun()
+    st.session_state["radar_full_refresh_at"] = time.monotonic()
+    _refresh_clock()
+elif auto_refresh:
+    st.warning("Auto Refresh requires Streamlit 1.37 or newer. Refresh Now is available.")
+
 state, ok, source = load_state()
 market = state.get("market_state") or state.get("regime_name") or "WAITING"
 updated = state.get("generated_at") or state.get("timestamp") or ""
@@ -3216,143 +3197,144 @@ dropdown_news = build_dropdown_news_cache(flights, limit=10)
 # A+ RADAR 8-PHASE ENGINE PIPELINE
 # ============================================================
 
-engine_pairs = flights
-
-# Phase 1 — Market Engine
-engine_market = build_market_state(
-    engine_pairs,
-    market,
-)
-
-# Phase 2 — Pair Engine
-engine_pairs_ranked = build_pair_rankings(
-    engine_pairs,
-    engine_market,
-)
-
-# Phase 3 — Entry Engine
-engine_entries = evaluate_entries(
-    engine_pairs_ranked.get("watchlist")
-    or engine_pairs_ranked.get("top_5")
-    or [],
-    engine_market,
-)
-
-# Phase 4 — Replay Engine
-replay_engine = ReplayEngine(
-    "radar_replay.db"
-)
-
-# Phase 5 — Analyst Engine
-engine_analysis = []
-
-ranked_lookup = {
-    row["pair"]: row
-    for row in engine_pairs_ranked.get(
-        "ranked_pairs",
-        [],
+if HAS_UI_ENGINES:
+    engine_pairs = flights
+    
+    # Phase 1 — Market Engine
+    engine_market = build_market_state(
+        engine_pairs,
+        market,
     )
-}
-
-for entry in engine_entries.get("evaluated", []):
-    pair_row = ranked_lookup.get(
-        entry.get("pair"),
-        {"pair": entry.get("pair")},
+    
+    # Phase 2 — Pair Engine
+    engine_pairs_ranked = build_pair_rankings(
+        engine_pairs,
+        engine_market,
     )
-
-    engine_analysis.append(
-        analyze_setup(
-            pair_row,
-            entry,
-            engine_market,
+    
+    # Phase 3 — Entry Engine
+    engine_entries = evaluate_entries(
+        engine_pairs_ranked.get("watchlist")
+        or engine_pairs_ranked.get("top_5")
+        or [],
+        engine_market,
+    )
+    
+    # Phase 4 — Replay Engine
+    replay_engine = ReplayEngine(
+        "radar_replay.db"
+    )
+    
+    # Phase 5 — Analyst Engine
+    engine_analysis = []
+    
+    ranked_lookup = {
+        row["pair"]: row
+        for row in engine_pairs_ranked.get(
+            "ranked_pairs",
+            [],
         )
+    }
+    
+    for entry in engine_entries.get("evaluated", []):
+        pair_row = ranked_lookup.get(
+            entry.get("pair"),
+            {"pair": entry.get("pair")},
+        )
+    
+        engine_analysis.append(
+            analyze_setup(
+                pair_row,
+                entry,
+                engine_market,
+            )
+        )
+    
+    # Phase 6 — Confidence Calibration
+    confidence_calibrator = ConfidenceCalibrator(
+        replay_engine
     )
-
-# Phase 6 — Confidence Calibration
-confidence_calibrator = ConfidenceCalibrator(
-    replay_engine
-)
-
-# Phase 7 — Radar AI
-radar_ai_engine = RadarAI(
-    market_builder=build_market_state,
-    pair_builder=build_pair_rankings,
-    entry_builder=evaluate_entries,
-    analyst=analyze_setup,
-    calibrator=confidence_calibrator,
-    replay=replay_engine,
-)
-
-radar_ai_state = radar_ai_engine.run(
-    engine_pairs,
-    market,
-)
-
-
-
-# Phase 8 — Learning Engine
-learning_engine = LearningEngine(
-    replay_engine
-)
-
-learning_report = learning_engine.build_learning_report()
-
-
-st.sidebar.write(
-    "1. Market:",
-    engine_market.get("market_mode")
-)
-
-st.sidebar.write(
-    "2. Pair:",
-    len(engine_pairs_ranked.get("ranked_pairs", [])),
-    "ranked"
-)
-
-st.sidebar.write(
-    "3. Entry:",
-    engine_entries.get("summary", {}).get("enter_count", 0),
-    "ENTER"
-)
-
-st.sidebar.write(
-    "4. Replay:",
-    len(replay_engine.open_signals()),
-    "open"
-)
-
-st.sidebar.write(
-    "5. Analyst:",
-    len(engine_analysis),
-    "analyses"
-)
-
-st.sidebar.write(
-    "6. Confidence:",
-    "ACTIVE" if confidence_calibrator else "OFF"
-)
-
-st.sidebar.write(
-    "7. Radar AI:",
-    radar_ai_state.get("command_brief", {}).get("best_pair")
-    or "No setup"
-)
-
-st.sidebar.write(
-    "8. Learning:",
-    learning_report.get("summary", {}).get("trades_analyzed", 0),
-    "trades"
-)
-
-print(
-    "✅ Radar 8-phase pipeline active:",
-    engine_market.get("market_mode"),
-    radar_ai_state.get(
-        "command_brief",
-        {},
-    ).get("best_pair"),
-)
-
+    
+    # Phase 7 — Radar AI
+    radar_ai_engine = RadarAI(
+        market_builder=build_market_state,
+        pair_builder=build_pair_rankings,
+        entry_builder=evaluate_entries,
+        analyst=analyze_setup,
+        calibrator=confidence_calibrator,
+        replay=replay_engine,
+    )
+    
+    radar_ai_state = radar_ai_engine.run(
+        engine_pairs,
+        market,
+    )
+    
+    
+    
+    # Phase 8 — Learning Engine
+    learning_engine = LearningEngine(
+        replay_engine
+    )
+    
+    learning_report = learning_engine.build_learning_report()
+    
+    
+    st.sidebar.write(
+        "1. Market:",
+        engine_market.get("market_mode")
+    )
+    
+    st.sidebar.write(
+        "2. Pair:",
+        len(engine_pairs_ranked.get("ranked_pairs", [])),
+        "ranked"
+    )
+    
+    st.sidebar.write(
+        "3. Entry:",
+        engine_entries.get("summary", {}).get("enter_count", 0),
+        "ENTER"
+    )
+    
+    st.sidebar.write(
+        "4. Replay:",
+        len(replay_engine.open_signals()),
+        "open"
+    )
+    
+    st.sidebar.write(
+        "5. Analyst:",
+        len(engine_analysis),
+        "analyses"
+    )
+    
+    st.sidebar.write(
+        "6. Confidence:",
+        "ACTIVE" if confidence_calibrator else "OFF"
+    )
+    
+    st.sidebar.write(
+        "7. Radar AI:",
+        radar_ai_state.get("command_brief", {}).get("best_pair")
+        or "No setup"
+    )
+    
+    st.sidebar.write(
+        "8. Learning:",
+        learning_report.get("summary", {}).get("trades_analyzed", 0),
+        "trades"
+    )
+    
+    print(
+        "✅ Radar 8-phase pipeline active:",
+        engine_market.get("market_mode"),
+        radar_ai_state.get(
+            "command_brief",
+            {},
+        ).get("best_pair"),
+    )
+    
 sectors = sector_summary(flights)
 command, command_color, command_copy, primary = tower_command(flights)
 market_metrics = market_command_metrics(flights, sectors, market)
@@ -3453,6 +3435,14 @@ if sectors:
 </div>""")
     st.markdown('<div class="sector-strip">' + "".join(sector_html) + '</div>', unsafe_allow_html=True)
 
+st.markdown('<div class="section-head"><div class="section-title">Anticipation Radar</div><div class="section-note">Direction bias · closed candles · confirmation stays separate</div></div>', unsafe_allow_html=True)
+early_rows = (state or {}).get("anticipation_setups", []) or []
+if early_rows:
+    early_cards = [render_flight_card({"pair": s.get("pair"), "setup": s}) for s in early_rows[:9]]
+    st.markdown('<div class="flight-grid">' + ''.join(early_cards) + '</div>', unsafe_allow_html=True)
+else:
+    st.caption("Awaiting awareness v2 engine scan.")
+
 st.markdown('<div class="section-head"><div class="section-title">Departures Board</div><div class="section-note">Pairs closest to a qualified entry</div></div>', unsafe_allow_html=True)
 departure_board = [f for f in flights if f["action"] in {"ENTER","WAIT"}][:6]
 if departure_board:
@@ -3481,6 +3471,7 @@ if flights:
         selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
         selected = next(f for f in flights if f["pair"] == selected_pair)
 
+    st.markdown(awareness_html(selected.get("setup", {})), unsafe_allow_html=True)
     st.markdown(render_news_rail(selected, dropdown_news), unsafe_allow_html=True)
 
     checks = [
@@ -3503,7 +3494,7 @@ if flights:
       <div class="flight-sector">{clean_text(selected['sector'])} · {clean_text(selected['phase'])}</div>
     </div>
     <div>
-      <div class="kicker">Action Checklist</div>
+      <div class="kicker">Existing Confirmation Checklist</div>
       <div class="detail-checks" style="margin-top:10px;">{check_html}</div>
       <div class="next-step"><b>TOWER READ:</b> {clean_text(selected['tower_note'])}</div>
       <div class="next-step"><b>BEST ENTRY:</b> {clean_text(selected['entry_condition'])}</div>
