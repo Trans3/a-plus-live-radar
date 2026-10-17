@@ -1116,7 +1116,7 @@ def environment_adjustments_html(setup, limit=4):
 
 def awareness_html(setup):
     a = setup.get("awareness", {}) or {}
-    if str(a.get("version", "")) != "2.0":
+    if str(a.get("version", "")) not in {"2.0", "2.1-evidence-gated"}:
         # Legacy scanner snapshots may contain useful metrics but not the v2 awareness schema.
         # Display observed values only; never synthesize an entry, stop, or model confidence.
         def observed(value, suffix="", digits=1):
@@ -1144,7 +1144,7 @@ def awareness_html(setup):
             <div class="awareness-cell"><span>Trigger / Trade</span><b>{trigger} / {trade}</b></div>
             <div class="awareness-cell"><span>Confirmed flags</span><b>{confirmed}/4</b></div>
           </div>
-          <div class="awareness-action">Awareness v2 is not present in this scanner snapshot. These are available legacy readings, not a verified entry or stop-loss signal.</div>
+          <div class="awareness-action">Supported Awareness v2 data is not present in this scanner snapshot. These are available legacy readings, not a verified entry or stop-loss signal.</div>
         </div>''')
     verdict = clean_text(a.get("verdict", "WAIT"))
     direction = str(a.get("direction", "WAIT"))
@@ -1153,8 +1153,10 @@ def awareness_html(setup):
     n = int(safe_float(r.get("samples")))
     ranges = (f'+{safe_float(r.get("favorable_pct")):.2f}% / -{safe_float(r.get("adverse_pct")):.2f}%'
               if r.get("status") == "EMPIRICAL" else "Collecting history" if r.get("status") != "UNAVAILABLE" else "Unavailable")
-    stop = a.get("stop_pct")
-    stop_text = f'{"-" if direction == "LONG" else "+"}{float(stop):.2f}%' if stop is not None else "—"
+    stop = a.get("stop_pnl_pct")
+    if stop is None and a.get("stop_pct") is not None:
+        stop = -abs(float(a["stop_pct"])) if direction == "LONG" else abs(float(a["stop_pct"]))
+    stop_text = f"{float(stop):+.2f}%" if stop is not None else "—"
     arrow = "↑" if a.get("dominant_direction") == "UP" else "↓" if a.get("dominant_direction") == "DOWN" else "↔"
     phase = clean_text(a.get("phase", "WATCH"))
     series = ''
