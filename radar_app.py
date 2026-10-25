@@ -2369,13 +2369,44 @@ def _pair_analysis(f):
     }
 
 
+def liquidity_support_html(setup):
+    """Read scanner-exported observation data; never infer an ENTRY."""
+    q = setup.get("live_liquidity_support") or {}
+    if not isinstance(q, dict):
+        q = {}
+    verdict = str(q.get("verdict") or "INSUFFICIENT_DATA").upper()
+    status = str(q.get("status") or "UNAVAILABLE").upper()
+    palette = {"SUPPORTIVE": "#72ff9a", "OPPOSING": "#ff6262",
+               "CAUTION": "#ff9c58", "NEUTRAL": "#ffd85a"}
+    color = palette.get(verdict, "#9aa6b2")
+    def money(v):
+        n = safe_float(v, -1)
+        if n < 0: return "—"
+        return f"${n:,.6f}" if n < 1 else f"${n:,.4f}" if n < 100 else f"${n:,.2f}"
+    def usd(v):
+        n = safe_float(v, -1)
+        return f"${n:,.0f}" if n >= 0 else "—"
+    def distance(v):
+        return f"{safe_float(v):+.2f}%" if v is not None else "—"
+    live = status == "LIVE_UNVERIFIED"
+    label = verdict.replace("_", " ") if live else "AWAITING LIVE BOOK"
+    reason = clean_text(q.get("reason") or "Scanner has not exported a fresh order-book reading")
+    detail = (f"Bid wall {money(q.get('bid_wall_price'))} ({usd(q.get('bid_wall_usd'))}, {distance(q.get('bid_wall_distance_pct'))})"
+              f" · Ask wall {money(q.get('ask_wall_price'))} ({usd(q.get('ask_wall_usd'))}, {distance(q.get('ask_wall_distance_pct'))})") if live else "No confirmed live liquidity snapshot"
+    return (f'<div style="border:1px solid #27343D;border-radius:10px;background:#071017;padding:10px;margin-top:9px;overflow-wrap:anywhere;">'
+            f'<div style="font-size:11px;font-weight:900;color:#9aa6b2;">LIVE LIQUIDITY · OBSERVATION ONLY</div>'
+            f'<div style="color:{color};font-size:15px;font-weight:900;">{clean_text(label)}</div>'
+            f'<div style="font-size:12px;color:white;">{detail}</div>'
+            f'<div style="font-size:11px;color:#9aa6b2;">{reason} · Book not checksum verified; not an entry trigger.</div></div>')
+
+
 def render_flight_card(f):
     setup = f.get("setup", {}) or {}
     tv_url = html.escape(tradingview_url(f.get("pair", "")))
     pair = clean_text(f.get("pair", "UNKNOWN"))
     return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
             f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
-            + awareness_html(setup) + '</div></a>')
+            + awareness_html(setup) + liquidity_support_html(setup) + '</div></a>')
 
 def sharpshooter_candidates(flights):
     """Use existing radar timing + structure to identify top sharpshooter options."""
@@ -3501,7 +3532,7 @@ if flights:
         selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
         selected = next(f for f in flights if f["pair"] == selected_pair)
 
-    st.markdown(awareness_html(selected.get("setup", {})), unsafe_allow_html=True)
+    st.markdown(awareness_html(selected.get("setup", {})) + liquidity_support_html(selected.get("setup", {})), unsafe_allow_html=True)
     st.markdown(render_news_rail(selected, dropdown_news), unsafe_allow_html=True)
 
     checks = [
