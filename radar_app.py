@@ -3219,7 +3219,8 @@ if auto_scroll:
     </script>
     """, height=0)
 
-    speed = st.select_slider("Scroll speed", ["Slow","Normal","Fast"], value="Normal", disabled=not broadcast_mode)
+with st.sidebar:
+    speed = st.select_slider("Broadcast speed", ["Slow","Normal","Fast"], value="Normal", disabled=not broadcast_mode)
     manual = st.button("Sync Radar", key="atc_manual")
     clear_cache = st.button("Clear Cache", key="atc_clear")
     st.caption("ATC lifecycle · Entry windows · 24H context · Sector traffic")
