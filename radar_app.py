@@ -3219,6 +3219,10 @@ if auto_scroll:
     </script>
     """, height=0)
 
+# Defensive defaults: refresh actions must exist on every render.
+manual = False
+clear_cache = False
+
 with st.sidebar:
     speed = st.select_slider("Broadcast speed", ["Slow","Normal","Fast"], value="Normal", disabled=not broadcast_mode)
     manual = st.button("Sync Radar", key="atc_manual")
