@@ -20,6 +20,7 @@ except ModuleNotFoundError as exc:
 
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
 print("✅ All Radar engines loaded.")
@@ -3183,6 +3184,41 @@ with st.sidebar:
     st.markdown("### Tower Controls")
     auto = st.toggle("Auto sync", value=True, key="atc_auto")
     broadcast_mode = st.toggle("Broadcast Mode", value=False, key="atc_broadcast")
+    auto_scroll = st.toggle("Auto scroll page", value=False, key="atc_autoscroll", help="Slowly scroll down the dashboard; pauses on hover or manual interaction.")
+    scroll_speed = st.slider("Scroll speed", min_value=1, max_value=5, value=2, key="atc_scroll_speed", disabled=not auto_scroll)
+
+# Embedded browser controller; no scanner or trading decision logic is changed.
+# A new Streamlit rerun replaces the iframe and clears its prior interval.
+if auto_scroll:
+    components.html(f"""
+    <script>
+    (() => {{
+      try {{
+        const doc = window.parent.document;
+        const root = doc.scrollingElement || doc.documentElement;
+        const step = {int(scroll_speed)} * 0.45;
+        let pausedUntil = Date.now() + 1200;
+        const pause = () => {{ pausedUntil = Date.now() + 4500; }};
+        doc.addEventListener('wheel', pause, {{passive:true}});
+        doc.addEventListener('touchstart', pause, {{passive:true}});
+        doc.addEventListener('keydown', pause);
+        doc.addEventListener('pointermove', pause, {{passive:true}});
+        const timer = window.setInterval(() => {{
+          if (!window.frameElement?.isConnected) {{ clearInterval(timer); return; }}
+          if (doc.hidden || Date.now() < pausedUntil) return;
+          const bottom = root.scrollHeight - root.clientHeight;
+          if (root.scrollTop >= bottom - 2) {{
+            pausedUntil = Date.now() + 2500;
+            root.scrollTo({{top:0, behavior:'instant'}});
+          }} else {{ root.scrollTop += step; }}
+        }}, 40);
+      }} catch (err) {{
+        document.body.textContent = 'Auto-scroll unavailable in this browser embedding.';
+      }}
+    }})();
+    </script>
+    """, height=0)
+
     speed = st.select_slider("Scroll speed", ["Slow","Normal","Fast"], value="Normal", disabled=not broadcast_mode)
     manual = st.button("Sync Radar", key="atc_manual")
     clear_cache = st.button("Clear Cache", key="atc_clear")
