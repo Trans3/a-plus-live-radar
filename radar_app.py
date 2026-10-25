@@ -3184,8 +3184,11 @@ with st.sidebar:
     st.markdown("### Tower Controls")
     auto = st.toggle("Auto sync", value=True, key="atc_auto")
     broadcast_mode = st.toggle("Broadcast Mode", value=False, key="atc_broadcast")
-    auto_scroll = st.toggle("Auto scroll page", value=False, key="atc_autoscroll", help="Slowly scroll down the dashboard; pauses on hover or manual interaction.")
-    scroll_speed = st.slider("Scroll speed", min_value=1, max_value=5, value=2, key="atc_scroll_speed", disabled=not auto_scroll)
+
+# Visible controls on the main dashboard, independent of the collapsed sidebar.
+scroll_controls = st.columns([1.25, 1, 2])
+auto_scroll = scroll_controls[0].toggle("Auto Scroll", value=False, key="atc_autoscroll", help="Scroll the dashboard automatically. Move the mouse to pause briefly.")
+scroll_speed = scroll_controls[1].select_slider("Scroll speed", options=[1, 2, 3, 4, 5], value=2, key="atc_scroll_speed", disabled=not auto_scroll)
 
 # Embedded browser controller; no scanner or trading decision logic is changed.
 # A new Streamlit rerun replaces the iframe and clears its prior interval.
@@ -3195,7 +3198,7 @@ if auto_scroll:
     (() => {{
       try {{
         const doc = window.parent.document;
-        const root = doc.scrollingElement || doc.documentElement;
+        const root = doc.querySelector('[data-testid="stMain"]') || doc.scrollingElement || doc.documentElement;
         const step = {int(scroll_speed)} * 0.45;
         let pausedUntil = Date.now() + 1200;
         const pause = () => {{ pausedUntil = Date.now() + 4500; }};
