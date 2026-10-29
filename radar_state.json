@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-10-28T21:38:47",
-  "cycle_number": 1508,
-  "active_pairs": 11,
+  "generated_at": "2026-10-28T21:40:34",
+  "cycle_number": 1509,
+  "active_pairs": 12,
   "market_state": "DISTRIBUTION",
   "regime_name": "DISTRIBUTION",
   "btc": {
     "reason": "BTC price elevated but RSI/MACD momentum is weakening",
     "market_phase": "DISTRIBUTION",
     "volatility_state": "COMPRESSING",
-    "price_5m": 80625.4,
-    "price_15m": 80629.9,
-    "price_60m": 80629.9,
-    "rsi_15m": 12.74,
-    "rsi_60m": 40.06,
+    "price_5m": 80519.8,
+    "price_15m": 80519.8,
+    "price_60m": 80519.8,
+    "rsi_15m": 11.15,
+    "rsi_60m": 38.59,
     "above_vwap_15m": false,
     "above_vwap_60m": true
   },
@@ -24,7 +24,7 @@
     "READY": 0,
     "BUILDING": 0,
     "EARLY": 0,
-    "BLOCKED": 11,
+    "BLOCKED": 12,
     "LATE": 0
   },
   "billboard": {
@@ -35,31 +35,15 @@
         "change_1h_pct": 5.857,
         "change_24h_pct": 7.383,
         "usd_volume": 784599.0,
-        "billboard_score": 0.9598
+        "billboard_score": 0.9578
       },
       {
         "pair": "CSPR/USD",
         "coin": "CSPR",
-        "change_1h_pct": 4.274,
-        "change_24h_pct": 14.221,
-        "usd_volume": 171881.88,
-        "billboard_score": 0.8918
-      },
-      {
-        "pair": "UAI/USD",
-        "coin": "UAI",
-        "change_1h_pct": 1.074,
-        "change_24h_pct": 0.782,
-        "usd_volume": 473168.52,
-        "billboard_score": 0.8795
-      },
-      {
-        "pair": "APR/USD",
-        "coin": "APR",
-        "change_1h_pct": 0.833,
-        "change_24h_pct": 1.958,
-        "usd_volume": 1749603.34,
-        "billboard_score": 0.8541
+        "change_1h_pct": 2.619,
+        "change_24h_pct": 12.408,
+        "usd_volume": 176295.26,
+        "billboard_score": 0.8638
       },
       {
         "pair": "ACU/USD",
@@ -67,7 +51,7 @@
         "change_1h_pct": 0.842,
         "change_24h_pct": 2.488,
         "usd_volume": 248933.38,
-        "billboard_score": 0.8246
+        "billboard_score": 0.8379
       },
       {
         "pair": "GST/USD",
@@ -75,31 +59,23 @@
         "change_1h_pct": 3.39,
         "change_24h_pct": 3.39,
         "usd_volume": 79441.68,
-        "billboard_score": 0.8074
+        "billboard_score": 0.8207
       },
       {
-        "pair": "ZBCN/USD",
-        "coin": "ZBCN",
-        "change_1h_pct": 0.865,
-        "change_24h_pct": 0.383,
-        "usd_volume": 164687.56,
-        "billboard_score": 0.8008
+        "pair": "UAI/USD",
+        "coin": "UAI",
+        "change_1h_pct": 0.68,
+        "change_24h_pct": 0.405,
+        "usd_volume": 469902.01,
+        "billboard_score": 0.8172
       },
       {
-        "pair": "PTB/USD",
-        "coin": "PTB",
-        "change_1h_pct": 1.562,
-        "change_24h_pct": 1.562,
-        "usd_volume": 95668.09,
-        "billboard_score": 0.7811
-      },
-      {
-        "pair": "ICNT/USD",
-        "coin": "ICNT",
-        "change_1h_pct": 0.482,
-        "change_24h_pct": 0.375,
-        "usd_volume": 284964.0,
-        "billboard_score": 0.7451
+        "pair": "APR/USD",
+        "coin": "APR",
+        "change_1h_pct": 0.523,
+        "change_24h_pct": 1.644,
+        "usd_volume": 1736316.1,
+        "billboard_score": 0.7905
       },
       {
         "pair": "NOS/USD",
@@ -107,23 +83,47 @@
         "change_1h_pct": 0.705,
         "change_24h_pct": 1.026,
         "usd_volume": 155095.47,
-        "billboard_score": 0.741
+        "billboard_score": 0.7672
       },
       {
-        "pair": "PEPE/USD",
-        "coin": "PEPE",
-        "change_1h_pct": 0.177,
-        "change_24h_pct": 1.114,
-        "usd_volume": 7770244.38,
-        "billboard_score": 0.7385
+        "pair": "ICNT/USD",
+        "coin": "ICNT",
+        "change_1h_pct": 0.429,
+        "change_24h_pct": 0.321,
+        "usd_volume": 284597.67,
+        "billboard_score": 0.7491
       },
       {
         "pair": "TRX/USD",
         "coin": "TRX",
-        "change_1h_pct": 0.193,
-        "change_24h_pct": 0.009,
-        "usd_volume": 2204126.93,
-        "billboard_score": 0.732
+        "change_1h_pct": 0.183,
+        "change_24h_pct": 0.0,
+        "usd_volume": 2204588.12,
+        "billboard_score": 0.7293
+      },
+      {
+        "pair": "XAUT/USDT",
+        "coin": "XAUT",
+        "change_1h_pct": 0.622,
+        "change_24h_pct": 0.284,
+        "usd_volume": 157579.53,
+        "billboard_score": 0.7284
+      },
+      {
+        "pair": "AVA/USD",
+        "coin": "AVA",
+        "change_1h_pct": 1.594,
+        "change_24h_pct": 2.049,
+        "usd_volume": 48703.29,
+        "billboard_score": 0.7155
+      },
+      {
+        "pair": "KAT/USD",
+        "coin": "KAT",
+        "change_1h_pct": 0.661,
+        "change_24h_pct": 2.928,
+        "usd_volume": 115104.32,
+        "billboard_score": 0.7155
       }
     ],
     "twenty_four_hour": [
@@ -131,8 +131,8 @@
         "pair": "CSPR/USD",
         "coin": "CSPR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 14.221,
-        "usd_volume": 171881.88,
+        "change_24h_pct": 12.408,
+        "usd_volume": 176295.26,
         "billboard_score": 0.0
       },
       {
@@ -144,19 +144,19 @@
         "billboard_score": 0.0
       },
       {
-        "pair": "CPOOL/USD",
-        "coin": "CPOOL",
-        "change_1h_pct": 0.0,
-        "change_24h_pct": 7.194,
-        "usd_volume": 39771.6,
-        "billboard_score": 0.0
-      },
-      {
         "pair": "QUID/USD",
         "coin": "QUID",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 4.266,
-        "usd_volume": 73049.85,
+        "change_24h_pct": 6.526,
+        "usd_volume": 76659.93,
+        "billboard_score": 0.0
+      },
+      {
+        "pair": "CPOOL/USD",
+        "coin": "CPOOL",
+        "change_1h_pct": 0.0,
+        "change_24h_pct": 4.303,
+        "usd_volume": 40989.05,
         "billboard_score": 0.0
       },
       {
@@ -208,19 +208,19 @@
         "billboard_score": 0.0
       },
       {
-        "pair": "APR/USD",
-        "coin": "APR",
+        "pair": "PRIME/USD",
+        "coin": "PRIME",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 1.958,
-        "usd_volume": 1749603.34,
+        "change_24h_pct": 1.734,
+        "usd_volume": 36057.41,
         "billboard_score": 0.0
       },
       {
-        "pair": "XMN/USD",
-        "coin": "XMN",
+        "pair": "APR/USD",
+        "coin": "APR",
         "change_1h_pct": 0.0,
-        "change_24h_pct": 1.871,
-        "usd_volume": 286544.88,
+        "change_24h_pct": 1.644,
+        "usd_volume": 1736316.1,
         "billboard_score": 0.0
       }
     ],
@@ -232,10 +232,10 @@
       "pair": "TRX/USD",
       "coin": "TRX",
       "tag": "WATCHLIST",
-      "price": 0.329502,
+      "price": 0.329501,
       "change_24h_pct": 0.0,
       "trigger_score": 60,
-      "trade_score": 28,
+      "trade_score": 30,
       "confidence": 60,
       "entry_readiness_score": 0,
       "entry_readiness_label": "WATCH",
@@ -245,7 +245,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.712,
+        "relative_strength_pct": 0.848,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -284,36 +284,35 @@
         "no volume spike",
         "no structure break",
         "momentum weakening",
-        "RSI<56.0 or RSI>70.0 (RSI=50.80)"
+        "RSI<56.0 or RSI>70.0 (RSI=50.68)"
       ],
-      "rsi_1m": 50.801,
-      "rsi_5m": 79.604,
-      "rsi_ma_1m": 80.711,
-      "rsi_ma_5m": 48.926,
-      "rsi_ma_slope_1m": -7.382,
-      "rsi_ma_slope_5m": 9.918,
-      "rsi_ma_gap_1m": -29.91,
-      "rsi_ma_gap_5m": 30.678,
-      "rsi_ma_hold_1m": 5,
+      "rsi_1m": 50.685,
+      "rsi_5m": 79.506,
+      "rsi_ma_1m": 78.344,
+      "rsi_ma_5m": 48.919,
+      "rsi_ma_slope_1m": -7.689,
+      "rsi_ma_slope_5m": 9.911,
+      "rsi_ma_gap_1m": -27.659,
+      "rsi_ma_gap_5m": 30.587,
+      "rsi_ma_hold_1m": 6,
       "rsi_ma_hold_5m": 7,
       "rsi_ma_state_1m": "BEARISH_FALLING",
       "rsi_ma_state_5m": "BULLISH_RISING",
       "rsi_ma_score": -1,
       "rsi_reversion": {
-        "phase": "DEVELOPING",
-        "direction": "BULLISH",
-        "gap": -29.91,
-        "gap_change": 4.064,
-        "stretch_percentile": 98.0,
+        "phase": "STRETCHED",
+        "direction": "BELOW_MA",
+        "gap": -27.659,
+        "gap_change": 2.358,
+        "stretch_percentile": 94.9,
         "recent_extreme_gap": -33.974,
-        "rsi_turn": true,
+        "rsi_turn": false,
         "cross_confirmed": false,
         "higher_tf_support": true
       },
-      "vwap": 0.3289310054437857,
-      "macd_hist_15m": 5.805144181538952e-05,
+      "vwap": 0.3289323462309791,
+      "macd_hist_15m": 5.798762415156939e-05,
       "close_30m": [
-        0.329201,
         0.329272,
         0.32928,
         0.329243,
@@ -342,7 +341,8 @@
         0.329532,
         0.329532,
         0.329502,
-        0.329502
+        0.329501,
+        0.329501
       ],
       "close_1h": [
         0.327352,
@@ -384,14 +384,14 @@
         0.329654,
         0.329396,
         0.329075,
-        0.329502
+        0.329501
       ],
       "chart_read": {
         "read_30m": "Pullback holding VWAP",
         "read_1h": "Strong but needs proof",
         "timing": "ON TIME",
-        "change_30m_pct": 0.091,
-        "change_1h_pct": 0.657
+        "change_30m_pct": 0.07,
+        "change_1h_pct": 0.656
       },
       "awareness": {
         "version": "2.1-evidence-gated",
@@ -443,8 +443,8 @@
           "basis": "matched pair / MACD / BTC / scan breadth",
           "status": "COLLECTING"
         },
-        "reference_price": 0.329502,
-        "reference_ts": 1793237880,
+        "reference_price": 0.329501,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -456,10 +456,10 @@
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "RANGE",
-      "relative_strength_pct": 0.712,
-      "distance_from_vwap_pct": 0.174,
-      "composite_score": 51,
-      "environment_score": 51,
+      "relative_strength_pct": 0.848,
+      "distance_from_vwap_pct": 0.173,
+      "composite_score": 55,
+      "environment_score": 55,
       "environment_tier": "UNKNOWN",
       "environment_adjustments": [],
       "billboard_score": 0,
@@ -496,7 +496,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -695,7 +695,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -707,7 +707,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": 0.0,
       "composite_score": 44,
       "environment_score": 44,
@@ -747,7 +747,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.579,
+        "relative_strength_pct": 0.715,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -910,8 +910,8 @@
             "trend": "UP",
             "strength": 0.003649,
             "rhythm": "TURNING DOWN",
-            "hist_pct": 0.001438,
-            "progress": 0.562,
+            "hist_pct": 0.001022,
+            "progress": 0.625,
             "fading": true
           },
           "15m": {
@@ -945,7 +945,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -957,7 +957,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.579,
+      "relative_strength_pct": 0.715,
       "distance_from_vwap_pct": 0.0,
       "composite_score": 56,
       "environment_score": 56,
@@ -997,7 +997,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -1158,9 +1158,9 @@
         "timeframes": {
           "5m": {
             "trend": "UP",
-            "strength": 0.003007,
+            "strength": 0.003207,
             "rhythm": "TURNING DOWN",
-            "hist_pct": 0.000378,
+            "hist_pct": 0.000178,
             "progress": 1.0,
             "fading": true
           },
@@ -1195,7 +1195,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -1207,7 +1207,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": 0.025,
       "composite_score": 56,
       "environment_score": 56,
@@ -1247,7 +1247,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -1274,7 +1274,7 @@
         "rsi_above_ma_1m": true,
         "rsi_cross_up_1m": false,
         "rsi_cross_down_1m": false,
-        "rsi_ma_rising_1m": false,
+        "rsi_ma_rising_1m": true,
         "rsi_above_ma_5m": false,
         "rsi_cross_up_5m": false,
         "rsi_cross_down_5m": false,
@@ -1291,29 +1291,29 @@
       ],
       "rsi_1m": 100.0,
       "rsi_5m": 50.0,
-      "rsi_ma_1m": 35.714,
+      "rsi_ma_1m": 42.857,
       "rsi_ma_5m": 50.0,
-      "rsi_ma_slope_1m": 0.0,
+      "rsi_ma_slope_1m": 10.714,
       "rsi_ma_slope_5m": -3.571,
-      "rsi_ma_gap_1m": 64.286,
+      "rsi_ma_gap_1m": 57.143,
       "rsi_ma_gap_5m": 0.0,
-      "rsi_ma_hold_1m": 7,
+      "rsi_ma_hold_1m": 8,
       "rsi_ma_hold_5m": 0,
-      "rsi_ma_state_1m": "ABOVE_MA",
+      "rsi_ma_state_1m": "BULLISH_RISING",
       "rsi_ma_state_5m": "BEARISH_FALLING",
-      "rsi_ma_score": 0,
+      "rsi_ma_score": 3,
       "rsi_reversion": {
         "phase": "STRETCHED",
         "direction": "ABOVE_MA",
-        "gap": 64.286,
-        "gap_change": 42.857,
-        "stretch_percentile": 87.9,
-        "recent_extreme_gap": 21.429,
+        "gap": 57.143,
+        "gap_change": -7.143,
+        "stretch_percentile": 86.9,
+        "recent_extreme_gap": 64.286,
         "rsi_turn": false,
         "cross_confirmed": false,
         "higher_tf_support": false
       },
-      "vwap": 1.0000938495479577,
+      "vwap": 1.0000938975187055,
       "macd_hist_15m": -7.715653747395074e-06,
       "close_30m": [
         1.0001,
@@ -1330,13 +1330,13 @@
         1.0001,
         1.0001,
         1.0001,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
         1.0001,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
         1.0001,
         1.0001,
         1.0001,
@@ -1447,7 +1447,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -1459,7 +1459,7 @@
       "trap_risk": "LOW",
       "volatility_state": "NORMAL",
       "structure_type": "BASE",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": 0.001,
       "composite_score": 71,
       "environment_score": 71,
@@ -1499,7 +1499,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -1698,7 +1698,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0002,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -1710,7 +1710,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": -0.0,
       "composite_score": 33,
       "environment_score": 33,
@@ -1750,7 +1750,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -1779,9 +1779,9 @@
         "rsi_cross_down_1m": false,
         "rsi_ma_rising_1m": false,
         "rsi_above_ma_5m": true,
-        "rsi_cross_up_5m": true,
+        "rsi_cross_up_5m": false,
         "rsi_cross_down_5m": false,
-        "rsi_ma_rising_5m": false
+        "rsi_ma_rising_5m": true
       },
       "missing": [
         "no impulse",
@@ -1796,16 +1796,16 @@
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
       "rsi_ma_1m": 100.0,
-      "rsi_ma_5m": 7.143,
+      "rsi_ma_5m": 14.286,
       "rsi_ma_slope_1m": 0.0,
-      "rsi_ma_slope_5m": -7.143,
+      "rsi_ma_slope_5m": 7.143,
       "rsi_ma_gap_1m": 0.0,
-      "rsi_ma_gap_5m": 92.857,
+      "rsi_ma_gap_5m": 85.714,
       "rsi_ma_hold_1m": 0,
-      "rsi_ma_hold_5m": 1,
+      "rsi_ma_hold_5m": 2,
       "rsi_ma_state_1m": "BELOW_MA",
-      "rsi_ma_state_5m": "CROSS_UP",
-      "rsi_ma_score": -2,
+      "rsi_ma_state_5m": "BULLISH_RISING",
+      "rsi_ma_score": 1,
       "rsi_reversion": {
         "phase": "NEUTRAL",
         "direction": "NONE",
@@ -1815,7 +1815,7 @@
         "recent_extreme_gap": 0.0,
         "rsi_turn": false,
         "cross_confirmed": false,
-        "higher_tf_support": false
+        "higher_tf_support": true
       },
       "vwap": 1.000154439373191,
       "macd_hist_15m": -4.612637294843766e-05,
@@ -1914,9 +1914,9 @@
         "timeframes": {
           "5m": {
             "trend": "DOWN",
-            "strength": 0.005486,
+            "strength": 0.005493,
             "rhythm": "TURNING UP",
-            "hist_pct": -0.000481,
+            "hist_pct": -0.000118,
             "progress": 1.0,
             "fading": true
           },
@@ -1951,7 +1951,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.9998,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -1963,7 +1963,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": -0.035,
       "composite_score": 45,
       "environment_score": 45,
@@ -2003,7 +2003,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -2047,13 +2047,13 @@
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
       "rsi_ma_1m": 100.0,
-      "rsi_ma_5m": 79.082,
+      "rsi_ma_5m": 82.143,
       "rsi_ma_slope_1m": 0.0,
       "rsi_ma_slope_5m": 9.184,
       "rsi_ma_gap_1m": 0.0,
-      "rsi_ma_gap_5m": 20.918,
+      "rsi_ma_gap_5m": 17.857,
       "rsi_ma_hold_1m": 0,
-      "rsi_ma_hold_5m": 17,
+      "rsi_ma_hold_5m": 18,
       "rsi_ma_state_1m": "BELOW_MA",
       "rsi_ma_state_5m": "BULLISH_RISING",
       "rsi_ma_score": 1,
@@ -2062,7 +2062,7 @@
         "direction": "NONE",
         "gap": 0.0,
         "gap_change": 0.0,
-        "stretch_percentile": 66.7,
+        "stretch_percentile": 68.7,
         "recent_extreme_gap": 0.0,
         "rsi_turn": false,
         "cross_confirmed": false,
@@ -2167,8 +2167,8 @@
             "trend": "DOWN",
             "strength": 0.000414,
             "rhythm": "REACCELERATING",
-            "hist_pct": -1.3e-05,
-            "progress": 0.0,
+            "hist_pct": -2.5e-05,
+            "progress": 0.062,
             "fading": false
           },
           "15m": {
@@ -2202,7 +2202,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.99999,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -2214,7 +2214,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": -0.001,
       "composite_score": 33,
       "environment_score": 33,
@@ -2254,7 +2254,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -2300,13 +2300,13 @@
       "rsi_1m": 100.0,
       "rsi_5m": 100.0,
       "rsi_ma_1m": 100.0,
-      "rsi_ma_5m": 60.714,
+      "rsi_ma_5m": 66.071,
       "rsi_ma_slope_1m": 0.0,
       "rsi_ma_slope_5m": 16.071,
       "rsi_ma_gap_1m": 0.0,
-      "rsi_ma_gap_5m": 39.286,
+      "rsi_ma_gap_5m": 33.929,
       "rsi_ma_hold_1m": 0,
-      "rsi_ma_hold_5m": 7,
+      "rsi_ma_hold_5m": 8,
       "rsi_ma_state_1m": "BELOW_MA",
       "rsi_ma_state_5m": "BULLISH_RISING",
       "rsi_ma_score": 1,
@@ -2315,7 +2315,7 @@
         "direction": "NONE",
         "gap": 0.0,
         "gap_change": 0.0,
-        "stretch_percentile": 73.7,
+        "stretch_percentile": 75.8,
         "recent_extreme_gap": 0.0,
         "rsi_turn": false,
         "cross_confirmed": false,
@@ -2418,10 +2418,10 @@
         "timeframes": {
           "5m": {
             "trend": "UP",
-            "strength": 0.002023,
+            "strength": 0.002061,
             "rhythm": "REACCELERATING",
-            "hist_pct": 0.000208,
-            "progress": 0.188,
+            "hist_pct": 0.000246,
+            "progress": 0.25,
             "fading": false
           },
           "15m": {
@@ -2455,7 +2455,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.99989,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -2467,7 +2467,7 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.549,
+      "relative_strength_pct": 0.685,
       "distance_from_vwap_pct": -0.01,
       "composite_score": 45,
       "environment_score": 45,
@@ -2507,7 +2507,7 @@
       "btc_context": {
         "bias": "HEADWIND",
         "score_adjustment": -10,
-        "relative_strength_pct": 0.549,
+        "relative_strength_pct": 0.685,
         "independent_watch": false,
         "trade_permission": null
       },
@@ -2554,13 +2554,13 @@
       "rsi_1m": 100.0,
       "rsi_5m": 0.0,
       "rsi_ma_1m": 100.0,
-      "rsi_ma_5m": 8.652,
+      "rsi_ma_5m": 1.509,
       "rsi_ma_slope_1m": 0.0,
       "rsi_ma_slope_5m": -21.429,
       "rsi_ma_gap_1m": 0.0,
-      "rsi_ma_gap_5m": -8.652,
+      "rsi_ma_gap_5m": -1.509,
       "rsi_ma_hold_1m": 0,
-      "rsi_ma_hold_5m": 13,
+      "rsi_ma_hold_5m": 14,
       "rsi_ma_state_1m": "BELOW_MA",
       "rsi_ma_state_5m": "BEARISH_FALLING",
       "rsi_ma_score": -6,
@@ -2575,7 +2575,7 @@
         "cross_confirmed": false,
         "higher_tf_support": false
       },
-      "vwap": 1.1152412453403142,
+      "vwap": 1.115054825230033,
       "macd_hist_15m": -0.0002904637219532841,
       "close_30m": [
         1.1138,
@@ -2674,8 +2674,8 @@
             "trend": "DOWN",
             "strength": 0.023392,
             "rhythm": "TURNING UP",
-            "hist_pct": -0.004349,
-            "progress": 0.688,
+            "hist_pct": -0.002295,
+            "progress": 0.75,
             "fading": true
           },
           "15m": {
@@ -2709,7 +2709,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.1138,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -2721,8 +2721,8 @@
       "trap_risk": "LOW",
       "volatility_state": "UNKNOWN",
       "structure_type": "WEAK",
-      "relative_strength_pct": 0.549,
-      "distance_from_vwap_pct": -0.129,
+      "relative_strength_pct": 0.685,
+      "distance_from_vwap_pct": -0.113,
       "composite_score": 45,
       "environment_score": 45,
       "environment_tier": "UNKNOWN",
@@ -2748,8 +2748,8 @@
     {
       "pair": "TRX/USD",
       "coin": "TRX",
-      "price": 0.329502,
-      "vwap": 0.3289310054437857,
+      "price": 0.329501,
+      "vwap": 0.3289323462309791,
       "awareness": {
         "version": "2.1-evidence-gated",
         "verdict": "WATCH",
@@ -2800,8 +2800,8 @@
           "basis": "matched pair / MACD / BTC / scan breadth",
           "status": "COLLECTING"
         },
-        "reference_price": 0.329502,
-        "reference_ts": 1793237880,
+        "reference_price": 0.329501,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -2843,12 +2843,12 @@
         "checksum_verified": false
       },
       "trigger_score": 60,
-      "trade_score": 28,
+      "trade_score": 30,
       "confidence": 60,
       "sector": "L1",
-      "rsi_1m": 50.80091533181183,
-      "rsi_5m": 79.60444993819763,
-      "change_24h_pct": 0.0003034892155194539,
+      "rsi_1m": 50.684931506850006,
+      "rsi_5m": 79.50617283950567,
+      "change_24h_pct": 0.0,
       "state": "BLOCKED"
     },
     {
@@ -2872,8 +2872,8 @@
             "trend": "UP",
             "strength": 0.003649,
             "rhythm": "TURNING DOWN",
-            "hist_pct": 0.001438,
-            "progress": 0.562,
+            "hist_pct": 0.001022,
+            "progress": 0.625,
             "fading": true
           },
           "15m": {
@@ -2907,7 +2907,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -2976,9 +2976,9 @@
         "timeframes": {
           "5m": {
             "trend": "UP",
-            "strength": 0.003007,
+            "strength": 0.003207,
             "rhythm": "TURNING DOWN",
-            "hist_pct": 0.000378,
+            "hist_pct": 0.000178,
             "progress": 1.0,
             "fading": true
           },
@@ -3013,7 +3013,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3067,7 +3067,7 @@
       "pair": "USDG/USD",
       "coin": "USDG",
       "price": 1.0001,
-      "vwap": 1.0000938495479577,
+      "vwap": 1.0000938975187055,
       "awareness": {
         "version": "2.1-evidence-gated",
         "verdict": "WATCH",
@@ -3119,7 +3119,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3146,7 +3146,7 @@
         "rsi_above_ma_1m": true,
         "rsi_cross_up_1m": false,
         "rsi_cross_down_1m": false,
-        "rsi_ma_rising_1m": false,
+        "rsi_ma_rising_1m": true,
         "rsi_above_ma_5m": false,
         "rsi_cross_up_5m": false,
         "rsi_cross_down_5m": false,
@@ -3225,7 +3225,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0002,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3294,9 +3294,9 @@
         "timeframes": {
           "5m": {
             "trend": "DOWN",
-            "strength": 0.005486,
+            "strength": 0.005493,
             "rhythm": "TURNING UP",
-            "hist_pct": -0.000481,
+            "hist_pct": -0.000118,
             "progress": 1.0,
             "fading": true
           },
@@ -3331,7 +3331,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.9998,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3360,9 +3360,9 @@
         "rsi_cross_down_1m": false,
         "rsi_ma_rising_1m": false,
         "rsi_above_ma_5m": true,
-        "rsi_cross_up_5m": true,
+        "rsi_cross_up_5m": false,
         "rsi_cross_down_5m": false,
-        "rsi_ma_rising_5m": false
+        "rsi_ma_rising_5m": true
       },
       "live_liquidity_support": {
         "status": "UNAVAILABLE",
@@ -3402,8 +3402,8 @@
             "trend": "DOWN",
             "strength": 0.000414,
             "rhythm": "REACCELERATING",
-            "hist_pct": -1.3e-05,
-            "progress": 0.0,
+            "hist_pct": -2.5e-05,
+            "progress": 0.062,
             "fading": false
           },
           "15m": {
@@ -3437,7 +3437,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.99999,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3506,10 +3506,10 @@
         "timeframes": {
           "5m": {
             "trend": "UP",
-            "strength": 0.002023,
+            "strength": 0.002061,
             "rhythm": "REACCELERATING",
-            "hist_pct": 0.000208,
-            "progress": 0.188,
+            "hist_pct": 0.000246,
+            "progress": 0.25,
             "fading": false
           },
           "15m": {
@@ -3543,7 +3543,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 0.99989,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3649,7 +3649,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.0001,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793237940,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3703,7 +3703,7 @@
       "pair": "EURC/USDC",
       "coin": "EURC",
       "price": 1.1138,
-      "vwap": 1.1152412453403142,
+      "vwap": 1.115054825230033,
       "awareness": {
         "version": "2.1-evidence-gated",
         "verdict": "WAIT",
@@ -3720,8 +3720,8 @@
             "trend": "DOWN",
             "strength": 0.023392,
             "rhythm": "TURNING UP",
-            "hist_pct": -0.004349,
-            "progress": 0.688,
+            "hist_pct": -0.002295,
+            "progress": 0.75,
             "fading": true
           },
           "15m": {
@@ -3755,7 +3755,7 @@
           "status": "COLLECTING"
         },
         "reference_price": 1.1138,
-        "reference_ts": 1793237880,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3806,10 +3806,116 @@
       "state": "BLOCKED"
     },
     {
+      "pair": "SOFID/USD",
+      "coin": "SOFID",
+      "price": 0.99972,
+      "vwap": 1.0913313306190888,
+      "awareness": {
+        "version": "2.1-evidence-gated",
+        "verdict": "WAIT",
+        "direction": "SHORT",
+        "dominant_timeframe": "5m",
+        "dominant_direction": "DOWN",
+        "broader_trend": "MIXED",
+        "countertrend": false,
+        "maturity": "LATE",
+        "phase": "WATCH",
+        "move_legs": 2,
+        "timeframes": {
+          "5m": {
+            "trend": "DOWN",
+            "strength": 9.389507,
+            "rhythm": "TURNING UP",
+            "hist_pct": -0.409195,
+            "progress": 1.0,
+            "fading": true
+          },
+          "15m": {
+            "trend": "DOWN",
+            "strength": 5.614565,
+            "rhythm": "REACCELERATING",
+            "hist_pct": -1.914602,
+            "progress": 0.188,
+            "fading": false
+          },
+          "1H": {
+            "trend": "UP",
+            "strength": 2.098638,
+            "rhythm": "RESETTING",
+            "hist_pct": 1.628806,
+            "progress": 0.062,
+            "fading": false
+          }
+        },
+        "action": "WATCH",
+        "stop_price": 1.00021986,
+        "stop_pct": 0.04999999999999449,
+        "stop_distance_pct": 0.04999999999999449,
+        "stop_pnl_pct": -0.04999999999999449,
+        "stop_display": "0.05% distance / -0.05% gross P&L",
+        "stop_basis": "5m confirmed pivot + 0.25 mean true-range buffer (not Wilder ATR)",
+        "range": {
+          "samples": 0,
+          "horizon_min": 60,
+          "basis": "matched pair / MACD / BTC / scan breadth",
+          "status": "COLLECTING"
+        },
+        "reference_price": 0.99972,
+        "reference_ts": 1793238000,
+        "btc_state": "DISTRIBUTION",
+        "market_state": "MIXED",
+        "reward_risk": null,
+        "validation_status": "RESEARCH ONLY",
+        "sample_sufficient": false,
+        "short_execution": false
+      },
+      "flags": {
+        "compression": true,
+        "impulse": false,
+        "vwap_accept": false,
+        "pullback": false,
+        "acceleration": false,
+        "rsi_ok": false,
+        "macd_turn_up": false,
+        "trend_ok": false,
+        "volume_spike": false,
+        "structure_break": false,
+        "momentum_building": false,
+        "momentum_failing": false,
+        "trap_risk_high": false,
+        "relative_strength_positive": true,
+        "composite_a_plus": false,
+        "rsi_above_ma_1m": true,
+        "rsi_cross_up_1m": false,
+        "rsi_cross_down_1m": false,
+        "rsi_ma_rising_1m": true,
+        "rsi_above_ma_5m": true,
+        "rsi_cross_up_5m": false,
+        "rsi_cross_down_5m": false,
+        "rsi_ma_rising_5m": true
+      },
+      "live_liquidity_support": {
+        "status": "UNAVAILABLE",
+        "verdict": "INSUFFICIENT_DATA",
+        "mode": "OBSERVATION_ONLY",
+        "entry_authority": false,
+        "reason": "No fresh validated snapshot",
+        "checksum_verified": false
+      },
+      "trigger_score": 20,
+      "trade_score": 14,
+      "confidence": 20,
+      "sector": "OTHER",
+      "rsi_1m": 100.0,
+      "rsi_5m": 50.0,
+      "change_24h_pct": 0.0,
+      "state": "BLOCKED"
+    },
+    {
       "pair": "PEPE/USD",
       "coin": "PEPE",
-      "price": 5.062e-06,
-      "vwap": 5.089236249840126e-06,
+      "price": 5.026e-06,
+      "vwap": 5.0871837996589e-06,
       "awareness": {
         "version": "2.1-evidence-gated",
         "verdict": "WAIT",
@@ -3819,15 +3925,15 @@
         "broader_trend": "MIXED",
         "countertrend": false,
         "maturity": "LATE",
-        "phase": "WATCH",
+        "phase": "BUILDING",
         "move_legs": 10,
         "timeframes": {
           "5m": {
-            "trend": "UP",
+            "trend": "DOWN",
             "strength": 0.338203,
-            "rhythm": "RESETTING",
-            "hist_pct": 0.035822,
-            "progress": 0.062,
+            "rhythm": "REACCELERATING",
+            "hist_pct": -0.043406,
+            "progress": 0.0,
             "fading": false
           },
           "15m": {
@@ -3847,21 +3953,21 @@
             "fading": false
           }
         },
-        "action": "WATCH",
-        "stop_price": 5.0805e-06,
-        "stop_pct": 0.36546819438956213,
-        "stop_distance_pct": 0.36546819438956213,
-        "stop_pnl_pct": -0.36546819438956213,
-        "stop_display": "0.37% distance / -0.37% gross P&L",
+        "action": "BUILDING",
+        "stop_price": 5.149732142857143e-06,
+        "stop_pct": 2.36001079024335,
+        "stop_distance_pct": 2.36001079024335,
+        "stop_pnl_pct": -2.36001079024335,
+        "stop_display": "2.36% distance / -2.36% gross P&L",
         "stop_basis": "5m confirmed pivot + 0.25 mean true-range buffer (not Wilder ATR)",
         "range": {
-          "samples": 0,
+          "samples": 1,
           "horizon_min": 60,
           "basis": "matched pair / MACD / BTC / scan breadth",
           "status": "COLLECTING"
         },
-        "reference_price": 5.062e-06,
-        "reference_ts": 1793237880,
+        "reference_price": 5.031e-06,
+        "reference_ts": 1793238000,
         "btc_state": "DISTRIBUTION",
         "market_state": "MIXED",
         "reward_risk": null,
@@ -3878,7 +3984,7 @@
         "rsi_ok": false,
         "macd_turn_up": false,
         "trend_ok": true,
-        "volume_spike": false,
+        "volume_spike": true,
         "structure_break": false,
         "momentum_building": false,
         "momentum_failing": true,
@@ -3903,17 +4009,17 @@
         "checksum_verified": false
       },
       "trigger_score": 0,
-      "trade_score": 14,
+      "trade_score": 18,
       "confidence": 0,
       "sector": "MEME",
-      "rsi_1m": 42.857142857142776,
-      "rsi_5m": 44.280442804428034,
-      "change_24h_pct": 0.7363184079601953,
+      "rsi_1m": 34.6153846153845,
+      "rsi_5m": 44.10774410774419,
+      "change_24h_pct": 0.019900497512430875,
       "state": "BLOCKED"
     }
   ],
   "awareness_market": {
-    "breadth": 0.091,
+    "breadth": 0.083,
     "state": "MIXED",
     "scope": "successfully scanned pairs"
   },
