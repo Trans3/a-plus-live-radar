@@ -2174,7 +2174,7 @@ def build_flights(state, market, generated_at):
         if pair.upper() in seen:
             continue
         m = atc_metrics(row, market, generated_at)
-        flights.append({"pair": pair, "setup": dict(row), **m, "verified": False})
+        flights.append({"pair": pair, "setup": dict(row), **m, "verified": False, "billboard_only": True})
 
     action_order = {"ENTER":0,"WAIT":1,"WATCH":2,"HOLD / SKIP":3,"SKIP":4}
     flights.sort(key=lambda x: (action_order.get(x["action"], 9), -x["remaining"], -x["change_1h"]))
@@ -2405,6 +2405,13 @@ def render_flight_card(f):
     setup = f.get("setup", {}) or {}
     tv_url = html.escape(tradingview_url(f.get("pair", "")))
     pair = clean_text(f.get("pair", "UNKNOWN"))
+    if f.get("billboard_only"):
+        change = safe_float(f.get("change_1h"), 0)
+        return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
+                f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
+                f'<div style="color:#FFD93D;font-weight:900">MARKET MOVER · NOT ANALYZED</div>'
+                f'<div style="color:#9aa6b2;font-size:13px">1H change {change:+.2f}% · Billboard observation only; no entry assessment.</div>'
+                '</div></a>')
     return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
             f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
             + awareness_html(setup) + liquidity_support_html(setup) + '</div></a>')
