@@ -804,6 +804,31 @@ def simple_setup_action(setup, market, updated):
     return clock.get("status", "WATCH"), clock.get("window", "Needs trigger"), clock.get("message", "Wait for clean confirmation.")
 
 
+def render_phoenix(state):
+    """Independent observation-only reversal watchlist."""
+    phoenix = (state or {}).get("phoenix", {}) or {}
+    rows = phoenix.get("setups", []) or []
+    st.markdown('<div class="section-title"><span>🔥 PHOENIX — 4H Reversal Watch</span></div>', unsafe_allow_html=True)
+    st.caption("4H bottom → 1H recovery → 15M confirmation → 1M precision watch. Observation only; not an entry order.")
+    if not rows:
+        st.info("PHOENIX is building its independent 4H watchlist. This does not depend on the 1H movers board.")
+        return
+    for r in rows[:10]:
+        pair = html.escape(str(r.get("pair", "UNKNOWN")))
+        stage = html.escape(str(r.get("stage", "BOTTOM WATCH")))
+        c1, c2, c3 = st.columns([2, 2, 3])
+        with c1:
+            st.markdown(f"**{pair}**")
+            st.caption(stage)
+        with c2:
+            st.metric("4H RSI", f"{safe_float(r.get('rsi_4h')):.1f}")
+        with c3:
+            stop = r.get("suggested_invalidation")
+            st.write(f"1H recovery: {'✓' if r.get('recovery_1h') else '—'} · 15M confirm: {'✓' if r.get('confirmation_15m') else '—'} · 1M trigger: {'✓' if r.get('micro_trigger_1m') else '—'}")
+            st.caption(f"Microstructure invalidation: {stop if stop is not None else 'Pending'} · Distance from 15M: {r.get('distance_15m_pct', '—')}%")
+        st.divider()
+
+
 def render_top5_simple(setups, market, updated, membership):
     st.markdown('<div class="section-title"><span> Top 5 Decision Setups </span></div>', unsafe_allow_html=True)
 
@@ -2174,7 +2199,7 @@ def build_flights(state, market, generated_at):
         if pair.upper() in seen:
             continue
         m = atc_metrics(row, market, generated_at)
-        flights.append({"pair": pair, "setup": dict(row), **m, "verified": False, "billboard_only": True})
+        flights.append({"pair": pair, "setup": dict(row), **m, "verified": False})
 
     action_order = {"ENTER":0,"WAIT":1,"WATCH":2,"HOLD / SKIP":3,"SKIP":4}
     flights.sort(key=lambda x: (action_order.get(x["action"], 9), -x["remaining"], -x["change_1h"]))
@@ -2405,13 +2430,6 @@ def render_flight_card(f):
     setup = f.get("setup", {}) or {}
     tv_url = html.escape(tradingview_url(f.get("pair", "")))
     pair = clean_text(f.get("pair", "UNKNOWN"))
-    if f.get("billboard_only"):
-        change = safe_float(f.get("change_1h"), 0)
-        return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
-                f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
-                f'<div style="color:#FFD93D;font-weight:900">MARKET MOVER · NOT ANALYZED</div>'
-                f'<div style="color:#9aa6b2;font-size:13px">1H change {change:+.2f}% · Billboard observation only; no entry assessment.</div>'
-                '</div></a>')
     return (f'<a class="flight-card-link" href="{tv_url}" target="_blank" rel="noopener noreferrer">'
             f'<div class="flight-card"><div class="flight-pair">{pair} <span style="font-size:12px">CHART ↗</span></div>'
             + awareness_html(setup) + liquidity_support_html(setup) + '</div></a>')
@@ -3546,6 +3564,8 @@ if sectors:
   <div class="sector-sub">{s['departures']} departing · {s['landings']} landing</div>
 </div>""")
     st.markdown('<div class="sector-strip">' + "".join(sector_html) + '</div>', unsafe_allow_html=True)
+
+render_phoenix(state)
 
 st.markdown('<div class="section-head"><div class="section-title">Anticipation Radar</div><div class="section-note">Direction bias · closed candles · confirmation stays separate</div></div>', unsafe_allow_html=True)
 early_rows = (state or {}).get("anticipation_setups", []) or []
