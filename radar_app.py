@@ -3650,23 +3650,56 @@ st.markdown("""<style>
 
 regime = str(market).upper()
 regime_display = "BULL WATCH" if regime in {"PREBULL", "BULL WATCH"} else "NEUTRAL" if regime in {"WAITING", "NEUTRAL", "CHOP"} else "BEAR" if regime in {"BEAR", "DISTRIBUTION", "EXHAUSTION"} else "BULL" if regime == "BULL" else regime
-btc = state.get("btc", {}) or {}
-btc_change = next((btc.get(k) for k in ("change_24h_pct", "price_change_24h_pct", "change_24h") if btc.get(k) is not None), None)
+btc = state.get("btc") if isinstance(state.get("btc"), dict) else {}
+health = state.get("market_health") if isinstance(state.get("market_health"), dict) else {}
+
+def _first_present(source, keys):
+    if not isinstance(source, dict):
+        return None
+    return next((source[k] for k in keys if source.get(k) is not None), None)
+
+def _fmt_pct(value):
+    try:
+        return f"{float(value):+.2f}%"
+    except (ValueError, TypeError):
+        return "—"
+
+def _fmt_rsi(value):
+    try:
+        number = float(value)
+        return f"{number:.1f}" if 0 < number <= 100 else "—"
+    except (ValueError, TypeError):
+        return "—"
+
+def _flag(value):
+    return "Above" if value is True else "Below" if value is False else "—"
+
+btc_change = _first_present(btc, ("change_24h_pct", "price_change_24h_pct", "change_24h"))
+btc_rsi15 = _fmt_rsi(_first_present(btc, ("rsi_15m", "rsi_15", "rsi15")))
+btc_rsi60 = _fmt_rsi(_first_present(btc, ("rsi_60m", "rsi_1h", "rsi_60")))
+btc_vwap15 = _flag(_first_present(btc, ("above_vwap_15m", "above_vwap_15")))
+btc_vwap60 = _flag(_first_present(btc, ("above_vwap_60m", "above_vwap_1h")))
 fg = state.get("fear_greed") or state.get("fear_and_greed") or {}
-fg_value = fg.get("value") if isinstance(fg,dict) else fg if isinstance(fg,(int,float)) else None
-fg_label = str(fg.get("classification", "")) if isinstance(fg,dict) else ""
+fg_value = _first_present(fg, ("value", "index", "score")) if isinstance(fg, dict) else fg if isinstance(fg, (int, float)) else None
+fg_label = str(_first_present(fg, ("classification", "label", "sentiment")) or "") if isinstance(fg, dict) else ""
+health_score = _first_present(health, ("score", "health_score", "market_score"))
+if health_score is None:
+    health_score = _first_present(state, ("market_health_score", "environment_score"))
+health_score_text = html.escape(str(health_score)) if health_score is not None else "—"
+health_breadth = _first_present(health, ("bullish_breadth_pct", "breadth_pct", "bullish_pct"))
+health_breadth_text = _fmt_pct(health_breadth).lstrip('+') if health_breadth is not None else "—"
 regime_tags = ''.join(f'<span class="{"active" if x == regime_display else ""}">{x}</span>' for x in ("BULL","BULL WATCH","NEUTRAL","BEAR"))
 regime_color = "bear" if regime_display == "BEAR" else "neutral" if regime_display in ("NEUTRAL","BULL WATCH") else ""
 header = (
     '<div class="rad-top"><div class="rad-brand"><div class="rad-logo">◎</div><div>'
-    '<h1>ANTICIPATION RADAR <em>v3.2</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
+    '<h1>ANTICIPATION RADAR <em>v3.3</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
     '</div></div><div class="rad-live">● SYNCED' + ('' if ok else ' · DATA ISSUE') + '</div></div>'
 )
 st.markdown(header,unsafe_allow_html=True)
 summary_html = (
     '<div class="rad-overview">'
-    f'<section class="rad-panel"><div class="rad-eyebrow">MARKET REGIME · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div></section>'
-    f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{f"{safe_float(btc_change):+.2f}%" if btc_change is not None else "—"}</div><div class="rad-description">BTC is context, not a hard entry filter</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">MARKET HEALTH · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div><div class="rad-description">Health score: {health_score_text} · Bullish breadth: {health_breadth_text}</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{_fmt_pct(btc_change)}</div><div class="rad-description">RSI 15M: {btc_rsi15} · 1H: {btc_rsi60}</div><div class="rad-description">VWAP 15M: {btc_vwap15} · 1H: {btc_vwap60}</div><div class="rad-description">Weighted context, not a hard entry filter</div></section>'
     f'<section class="rad-panel"><div class="rad-eyebrow">FEAR &amp; GREED</div><div class="rad-value">{html.escape(str(fg_value)) if fg_value is not None else "—"}</div><div class="rad-description">{html.escape(fg_label or "No index reading in scanner export")}</div></section>'
     '</div>'
 )
