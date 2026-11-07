@@ -2415,6 +2415,8 @@ def liquidity_support_html(setup):
     def distance(v):
         return f"{safe_float(v):+.2f}%" if v is not None else "—"
     live = status == "LIVE_UNVERIFIED"
+    if not live:
+        return ""
     label = verdict.replace("_", " ") if live else "AWAITING LIVE BOOK"
     reason = clean_text(q.get("reason") or "Scanner has not exported a fresh order-book reading")
     detail = (f"Bid wall {money(q.get('bid_wall_price'))} ({usd(q.get('bid_wall_usd'))}, {distance(q.get('bid_wall_distance_pct'))})"
@@ -3307,7 +3309,8 @@ if hasattr(st, "fragment"):
             load_state.clear()
             load_performance.clear()
             st.rerun()
-    st.session_state["radar_full_refresh_at"] = time.monotonic()
+    if "radar_full_refresh_at" not in st.session_state:
+        st.session_state["radar_full_refresh_at"] = time.monotonic()
     _refresh_clock()
 elif auto_refresh:
     st.warning("Auto Refresh requires Streamlit 1.37 or newer. Refresh Now is available.")
@@ -3465,6 +3468,169 @@ if HAS_UI_ENGINES:
         ).get("best_pair"),
     )
     
+# ------------------------------------------------------------
+# Anticipation Radar v2 — presentation only; scanner untouched.
+# ------------------------------------------------------------
+def _v2_num(value, decimals=2):
+    try:
+        n = float(value)
+        return f"{n:,.{decimals}f}" if n > 0 else "—"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def _v2_money(value):
+    n = safe_float(value, -1)
+    if n <= 0:
+        return "—"
+    digits = 6 if n < .01 else 4 if n < 10 else 2
+    return f"${n:,.{digits}f}"
+
+
+def _v2_volume(value):
+    n = safe_float(value, -1)
+    if n <= 0:
+        return "—"
+    if n >= 1e9: return f"${n/1e9:.2f}B"
+    if n >= 1e6: return f"${n/1e6:.1f}M"
+    if n >= 1e3: return f"${n/1e3:.0f}K"
+    return f"${n:,.0f}"
+
+
+def _v2_score(setup):
+    # The existing engine exports separate scores; do not synthesize a new score.
+    for key in ("trade_score", "trigger_score", "confidence"):
+        value = setup.get(key)
+        if value is not None and str(value).strip() != "":
+            return max(0, min(100, int(safe_float(value)))), key.replace("_", " ").title()
+    return None, "Unavailable"
+
+
+def _v2_card(f, market):
+    setup = f.get("setup", {}) or {}
+    pair = clean_text(f.get("pair", "UNKNOWN"))
+    url = html.escape(tradingview_url(f.get("pair", "")), quote=True)
+    score, score_name = _v2_score(setup)
+    score_label = str(score) if score is not None else "—"
+    action = str(f.get("action", "WATCH")).upper()
+    status = "READY" if action == "ENTER" else "BUILDING" if action == "WAIT" else "WATCH" if action == "WATCH" else "NO ENTRY"
+    tone = "#72ff9a" if status == "READY" else "#ffd85a" if status in {"BUILDING", "WATCH"} else "#ff7474"
+    price = safe_float(setup.get("price"))
+    vwap = safe_float(setup.get("vwap"))
+    # Use the existing UI's levels helper; don't turn its estimates into verified execution orders.
+    levels = trade_levels(setup, market)
+    can_plan = price > 0 and status in {"READY", "BUILDING", "WATCH"}
+    entry = (f"{levels['entry_low']} – {levels['entry_high']}" if can_plan else "—")
+    stop = levels["stop"] if can_plan else "—"
+    target = levels["target"] if can_plan else "—"
+    rr = levels["rr"] if can_plan else "—"
+    # A setup is not an entry: only the engine's ENTER action is labelled READY.
+    volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd") if setup.get(k) is not None), None)
+    volume_html = f'<div class="v2-cell"><small>24H VOL</small><b>{_v2_volume(volume)}</b></div>' if volume is not None else ''
+    q = setup.get("live_liquidity_support") or {}
+    liquidity = liquidity_support_html(setup) if isinstance(q, dict) and str(q.get("status", "")).upper() == "LIVE_UNVERIFIED" else ""
+    note = clean_text(f.get("entry_condition") or "Await confirmed long entry conditions")
+    return f"""<article class="v2-trade">
+      <div class="v2-pair"><a href="{url}" target="_blank" rel="noopener noreferrer">{pair} ↗</a><span style="color:{tone}">{status}</span></div>
+      <div class="v2-cell"><small>{clean_text(score_name)}</small><b style="color:{tone}">{score_label}</b></div>
+      <div class="v2-cell"><small>BUY ZONE · EST.</small><b>{entry}</b></div>
+      <div class="v2-cell"><small>STOP · EST.</small><b class="v2-red">{stop}</b></div>
+      <div class="v2-cell"><small>TARGET · EST.</small><b>{target}</b></div>
+      <div class="v2-cell"><small>R:R · EST.</small><b>{rr}</b></div>
+      {volume_html}
+      <details class="v2-more"><summary>Setup details</summary><p>{note}</p><p>Price: {_v2_money(price)} · VWAP: {_v2_money(vwap)} · {clean_text(f.get('tower_note', ''))}</p>{awareness_html(setup)}{liquidity}</details>
+    </article>"""
+
+
+st.markdown("""<style>
+.block-container{max-width:1580px;padding-top:1rem}
+.v2-brand{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
+.v2-brand h1{font-size:30px;margin:0;color:#f7fbff;letter-spacing:-.7px}
+.v2-brand h1 em{font-style:normal;color:#72ff9a}
+.v2-sub{font-size:12px;color:#9caebb}
+.v2-pill{border:1px solid #2d8e61;border-radius:999px;color:#72ff9a;padding:6px 12px;font-size:12px;font-weight:800}
+.v2-summary{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;margin-bottom:15px}
+.v2-panel{border:1px solid #294252;background:linear-gradient(125deg,#081923,#071018);border-radius:14px;padding:16px}
+.v2-panel small,.v2-cell small{display:block;color:#9bafbe;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.v2-hero{font-size:27px;font-weight:900;color:#72ff9a;margin:4px 0}
+.v2-regimes{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.v2-regimes span{font-size:10px;border:1px solid #344550;border-radius:6px;padding:4px 8px;color:#aebcc7}
+.v2-regimes .selected{border-color:#72ff9a;color:#72ff9a;background:#113023}
+.v2-head{font-size:17px;font-weight:900;margin:18px 0 9px}
+.v2-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px;align-items:start}
+.v2-trade{display:grid;grid-template-columns:minmax(135px,1.3fr) 75px minmax(145px,1.5fr) minmax(100px,1fr) minmax(100px,1fr) 70px;gap:9px;align-items:center;border:1px solid #294252;border-radius:13px;background:#091720;padding:14px;margin-bottom:10px}
+.v2-pair a{color:#fff!important;font-size:18px;font-weight:900;text-decoration:none!important}
+.v2-pair span{display:block;font-size:11px;font-weight:900;margin-top:5px}
+.v2-cell b{display:block;font-size:14px;color:#f4f8fa;margin-top:5px;overflow-wrap:anywhere}
+.v2-cell .v2-red{color:#ff7474}
+.v2-more{grid-column:1/-1;border-top:1px solid #203440;padding-top:7px;color:#b9cbd7;font-size:12px}
+.v2-more summary{cursor:pointer;color:#5acbff;font-weight:700}
+.v2-news-item{display:block;padding:11px 0;border-bottom:1px solid #243541;color:#e9f3f9;text-decoration:none!important;font-size:12px;line-height:1.4}
+.v2-news-item small{display:block;margin-top:4px;color:#91a8b8}
+.v2-muted{color:#91a8b8;font-size:12px}
+@media(max-width:1150px){.v2-layout{grid-template-columns:1fr}.v2-trade{grid-template-columns:repeat(3,minmax(0,1fr))}.v2-summary{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.v2-summary{grid-template-columns:1fr}.v2-trade{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>""", unsafe_allow_html=True)
+
+st.markdown(f"""<div class="v2-brand"><div><h1>◉ ANTICIPATION RADAR <em>v2</em></h1><div class="v2-sub">Long-only setups · Market context · Risk · Cycle {cycle}</div></div><span class="v2-pill">LONGS ONLY · {"SYNCED" if ok else "DATA UNAVAILABLE"}</span></div>""", unsafe_allow_html=True)
+
+regime = str(market).upper()
+regime_display = "BULL WATCH" if regime in {"PREBULL", "BULL WATCH"} else "NEUTRAL" if regime in {"WAITING", "NEUTRAL", "CHOP"} else "BEAR" if regime in {"BEAR", "DISTRIBUTION", "EXHAUSTION"} else "BULL" if regime == "BULL" else regime
+regimes = ["BULL", "BULL WATCH", "NEUTRAL", "BEAR"]
+regime_badges = ''.join(f'<span class="{"selected" if x == regime_display else ""}">{x}</span>' for x in regimes)
+btc = state.get("btc", {}) or {}
+btc_change = next((btc.get(k) for k in ("change_24h_pct", "price_change_24h_pct", "change_24h") if btc.get(k) is not None), None)
+btc_text = f'{safe_float(btc_change):+.2f}%' if btc_change is not None else '—'
+fg = state.get("fear_greed") or state.get("fear_and_greed") or {}
+fg_value = fg.get("value") if isinstance(fg, dict) else fg if isinstance(fg, (int, float)) else None
+fg_text = str(fg_value) if fg_value is not None else "—"
+fg_label = clean_text(fg.get("classification", "")) if isinstance(fg, dict) else ""
+st.markdown(f"""<div class="v2-summary">
+<div class="v2-panel"><small>Market regime · Context only</small><div class="v2-hero">{clean_text(regime_display)}</div><div class="v2-regimes">{regime_badges}</div></div>
+<div class="v2-panel"><small>BTC influence · 24H</small><div class="v2-hero">{btc_text}</div><div class="v2-muted">BTC is context, not a hard entry filter</div></div>
+<div class="v2-panel"><small>Fear &amp; Greed</small><div class="v2-hero">{fg_text}</div><div class="v2-muted">{fg_label or 'No index reading in scanner export'}</div></div>
+</div>""", unsafe_allow_html=True)
+
+filter_cols = st.columns([1.1, 1, 1])
+with filter_cols[0]:
+    selected_min_score = st.selectbox("Min Score · display filter", [0, 50, 60, 70, 80, 90], index=2, key="v2_min_score")
+with filter_cols[1]:
+    selected_view = st.selectbox("View", ["All long setups", "Ready only", "Building / Watch"], key="v2_view")
+with filter_cols[2]:
+    st.caption(f"Updated: {updated or 'No scanner timestamp'} · {active} pairs scanned")
+
+visible = []
+for f in flights:
+    score, _ = _v2_score(f.get("setup", {}) or {})
+    if score is None or score < selected_min_score:
+        continue
+    action = str(f.get("action", "")).upper()
+    if selected_view == "Ready only" and action != "ENTER": continue
+    if selected_view == "Building / Watch" and action not in {"WAIT", "WATCH"}: continue
+    if action not in {"ENTER", "WAIT", "WATCH"}: continue
+    visible.append(f)
+
+# News uses the existing pair-specific cached RSS fetcher and source links.
+news_items = []
+for f in visible[:3]:
+    pair = f.get("pair", "")
+    stories = dropdown_news.get(pair, []) or []
+    for story in stories[:2]:
+        link = str(story.get("link", ""))
+        if not link.startswith("https://"): continue
+        news_items.append((pair, story))
+news_html = ''.join(f'<a class="v2-news-item" href="{html.escape(str(story.get("link")),quote=True)}" target="_blank" rel="noopener noreferrer">{clean_text(story.get("title", "Headline"))}<small>{clean_text(pair)} · {clean_text(story.get("source", "News"))}</small></a>' for pair, story in news_items[:6])
+if not news_html: news_html = '<p class="v2-muted">No pair-specific headlines available.</p>'
+st.markdown('<div class="v2-head">Long Opportunity Scanner</div>', unsafe_allow_html=True)
+st.markdown('<div class="v2-layout"><div>', unsafe_allow_html=True)
+if visible:
+    st.markdown(''.join(_v2_card(f, market) for f in visible[:12]), unsafe_allow_html=True)
+else:
+    st.info("No long setups meet the selected filters. Lower the minimum score or wait for the next scanner export.")
+st.markdown('</div><aside class="v2-panel"><div class="v2-head" style="margin:0 0 8px">Market News</div>' + news_html + '</aside></div>', unsafe_allow_html=True)
+st.caption("Entry, stop, target and R:R are estimates from the existing UI helper—not validated orders. Confirm structure and fees before trading. Missing 24H volume, Fear & Greed, or verified liquidity is left blank/unavailable rather than invented.")
+st.stop()  # Replace legacy tower presentation; do not execute duplicate UI.
+
 sectors = sector_summary(flights)
 command, command_color, command_copy, primary = tower_command(flights)
 market_metrics = market_command_metrics(flights, sectors, market)
