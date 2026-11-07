@@ -3506,20 +3506,20 @@ def _v2_score(setup):
     return None, "Unavailable"
 
 
-def _v2_card(f, market):
+def _v2_card(f, market, observation_only=False):
     setup = f.get("setup", {}) or {}
     pair = clean_text(f.get("pair", "UNKNOWN"))
     url = html.escape(tradingview_url(f.get("pair", "")), quote=True)
     score, score_name = _v2_score(setup)
     score_label = str(score) if score is not None else "—"
     action = str(f.get("action", "WATCH")).upper()
-    status = "READY" if action == "ENTER" else "BUILDING" if action == "WAIT" else "WATCH" if action == "WATCH" else "NO ENTRY"
+    status = "OBSERVE · NO ENTRY" if observation_only else "READY" if action == "ENTER" else "BUILDING" if action == "WAIT" else "WATCH" if action == "WATCH" else "NO ENTRY"
     tone = "#72ff9a" if status == "READY" else "#ffd85a" if status in {"BUILDING", "WATCH"} else "#ff7474"
     price = safe_float(setup.get("price"))
     vwap = safe_float(setup.get("vwap"))
     # Use the existing UI's levels helper; don't turn its estimates into verified execution orders.
     levels = trade_levels(setup, market)
-    can_plan = price > 0 and status in {"READY", "BUILDING", "WATCH"}
+    can_plan = (not observation_only) and price > 0 and status in {"READY", "BUILDING", "WATCH"}
     entry = (f"{levels['entry_low']} – {levels['entry_high']}" if can_plan else "—")
     stop = levels["stop"] if can_plan else "—"
     target = levels["target"] if can_plan else "—"
@@ -3528,7 +3528,7 @@ def _v2_card(f, market):
     volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd") if setup.get(k) is not None), None)
     volume_html = f'<div class="v2-cell"><small>24H VOL</small><b>{_v2_volume(volume)}</b></div>' if volume is not None else ''
     q = setup.get("live_liquidity_support") or {}
-    liquidity = liquidity_support_html(setup) if isinstance(q, dict) and str(q.get("status", "")).upper() == "LIVE_UNVERIFIED" else ""
+    liquidity = ""  # Never show unverified order-book data as live liquidity.
     note = clean_text(f.get("entry_condition") or "Await confirmed long entry conditions")
     return f"""<article class="v2-trade">
       <div class="v2-pair"><a href="{url}" target="_blank" rel="noopener noreferrer">{pair} ↗</a><span style="color:{tone}">{status}</span></div>
@@ -3600,34 +3600,45 @@ with filter_cols[2]:
     st.caption(f"Updated: {updated or 'No scanner timestamp'} · {active} pairs scanned")
 
 visible = []
+filtered_out = []
 for f in flights:
     score, _ = _v2_score(f.get("setup", {}) or {})
-    if score is None or score < selected_min_score:
-        continue
     action = str(f.get("action", "")).upper()
-    if selected_view == "Ready only" and action != "ENTER": continue
-    if selected_view == "Building / Watch" and action not in {"WAIT", "WATCH"}: continue
-    if action not in {"ENTER", "WAIT", "WATCH"}: continue
-    visible.append(f)
+    meets_score = score is not None and score >= selected_min_score
+    meets_action = action in {"ENTER", "WAIT", "WATCH"}
+    meets_view = (selected_view == "All long setups" or
+                  (selected_view == "Ready only" and action == "ENTER") or
+                  (selected_view == "Building / Watch" and action in {"WAIT", "WATCH"}))
+    if meets_score and meets_action and meets_view:
+        visible.append(f)
+    else:
+        filtered_out.append(f)
 
-# News uses the existing pair-specific cached RSS fetcher and source links.
+# Pair news must not disappear merely because a signal fails the minimum-score filter.
 news_items = []
-for f in visible[:3]:
+for f in flights[:8]:
     pair = f.get("pair", "")
-    stories = dropdown_news.get(pair, []) or []
-    for story in stories[:2]:
+    for story in (dropdown_news.get(pair, []) or [])[:2]:
         link = str(story.get("link", ""))
-        if not link.startswith("https://"): continue
-        news_items.append((pair, story))
+        if link.startswith("https://"):
+            news_items.append((pair, story))
 news_html = ''.join(f'<a class="v2-news-item" href="{html.escape(str(story.get("link")),quote=True)}" target="_blank" rel="noopener noreferrer">{clean_text(story.get("title", "Headline"))}<small>{clean_text(pair)} · {clean_text(story.get("source", "News"))}</small></a>' for pair, story in news_items[:6])
-if not news_html: news_html = '<p class="v2-muted">No pair-specific headlines available.</p>'
+if not news_html: news_html = '<p class="v2-muted">No verified pair headlines in the current news feed.</p>'
+
 st.markdown('<div class="v2-head">Long Opportunity Scanner</div>', unsafe_allow_html=True)
-st.markdown('<div class="v2-layout"><div>', unsafe_allow_html=True)
+st.caption(f"{len(visible)} qualifying long setups · {len(filtered_out)} other tracked pairs · minimum score {selected_min_score}")
 if visible:
     st.markdown(''.join(_v2_card(f, market) for f in visible[:12]), unsafe_allow_html=True)
 else:
-    st.info("No long setups meet the selected filters. Lower the minimum score or wait for the next scanner export.")
-st.markdown('</div><aside class="v2-panel"><div class="v2-head" style="margin:0 0 8px">Market News</div>' + news_html + '</aside></div>', unsafe_allow_html=True)
+    st.info("No qualifying long entries at this threshold. Radar is monitoring the market; no buy signal is implied.")
+
+if filtered_out:
+    with st.expander(f"Observation watchlist · {len(filtered_out)} pairs (NOT buy signals)", expanded=not bool(visible)):
+        st.caption("Pairs excluded by score, action, or view filter. Entries, stops and targets are intentionally hidden; chart links remain available.")
+        st.markdown(''.join(_v2_card(f, market, observation_only=True) for f in filtered_out[:12]), unsafe_allow_html=True)
+
+st.markdown('<div class="v2-head">Market News</div>', unsafe_allow_html=True)
+st.markdown('<div class="v2-panel">' + news_html + '</div>', unsafe_allow_html=True)
 st.caption("Entry, stop, target and R:R are estimates from the existing UI helper—not validated orders. Confirm structure and fees before trading. Missing 24H volume, Fear & Greed, or verified liquidity is left blank/unavailable rather than invented.")
 st.stop()  # Replace legacy tower presentation; do not execute duplicate UI.
 
