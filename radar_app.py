@@ -3506,6 +3506,55 @@ def _v2_score(setup):
     return None, "Unavailable"
 
 
+def _v3_volume_lookup(state, flights):
+    """Use only explicitly labeled 24h quote-USD volume, exact pair match."""
+    result = {}
+    def put(row, allow_generic=False):
+        if not isinstance(row, dict):
+            return
+        pair = str(row.get("pair") or row.get("symbol") or "").upper().strip()
+        if not pair:
+            return
+        # Never treat 1H volume or base-unit volume as USD 24H volume.
+        for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd", "volume_usd_24h", "volume_24h_quote_usd", "volume24h_usd") + (("usd_volume",) if allow_generic else ()):
+            v = safe_float(row.get(k), 0)
+            if v > 0:
+                result[pair] = v
+                return
+    billboard = state.get("billboard") or {}
+    for section in ("twenty_four_hour", "one_hour"):
+        for row in billboard.get(section, []) or []:
+            put(row, allow_generic=(section == "twenty_four_hour"))
+    for key in ("pairs", "pair_data", "market_pairs", "ranked_pairs", "top_setups"):
+        rows = state.get(key) or []
+        if isinstance(rows, dict):
+            rows = list(rows.values())
+        for row in rows if isinstance(rows, list) else []:
+            put(row)
+    for f in flights:
+        setup = f.get("setup") or {}
+        if isinstance(setup, dict):
+            put({**setup, "pair": f.get("pair")})
+    return result
+
+
+def _v3_trade_quality(status, rr, observation_only):
+    """UI advisory, not a scanner signal or a recommendation to execute."""
+    if observation_only:
+        return "NO ENTRY", "muted", "Observation only"
+    try:
+        ratio = float(str(rr).split(":")[0])
+    except (ValueError, TypeError):
+        return "UNRATED", "muted", "Risk/reward unavailable"
+    if ratio < 1.0:
+        return "POOR R:R", "bad", "Below 1:1 estimated reward/risk"
+    if ratio < 1.5:
+        return "CAUTION", "warn", "Below 1.5:1 estimated reward/risk"
+    if status == "READY":
+        return "REVIEW ENTRY", "good", "Check live confirmation and fees"
+    return "WATCH", "warn", "Wait for entry confirmation"
+
+
 def _v2_card(f, market, observation_only=False, volume_lookup=None):
     setup = f.get("setup", {}) or {}
     pair_raw = str(f.get("pair", "UNKNOWN"))
@@ -3513,29 +3562,28 @@ def _v2_card(f, market, observation_only=False, volume_lookup=None):
     url = html.escape(tradingview_url(pair_raw), quote=True)
     score, _ = _v2_score(setup)
     action = str(f.get("action", "WATCH")).upper()
-    status = "OBSERVE · NO ENTRY" if observation_only else {"ENTER":"READY", "WAIT":"BUILDING", "WATCH":"WATCH"}.get(action, "WATCH")
-    tone = "#42f5a0" if status == "READY" else "#ffd36a" if status in ("BUILDING", "WATCH") else "#8ba1af"
+    status = "OBSERVE" if observation_only else {"ENTER":"READY", "WAIT":"BUILDING", "WATCH":"WATCH"}.get(action, "WATCH")
     levels = trade_levels(setup, market) if not observation_only else {"entry_low":"—","entry_high":"—","stop":"—","target":"—","rr":"—"}
     entry = f"{levels['entry_low']} – {levels['entry_high']}" if not observation_only else "—"
-    volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd", "volume_usd_24h") if setup.get(k) is not None), None)
-    if volume is None:
-        volume = (volume_lookup or {}).get(pair_raw.upper())
+    volume = (volume_lookup or {}).get(pair_raw.upper().strip())
     vol = _v2_volume(volume) if volume is not None else "—"
+    quality, quality_class, quality_hint = _v3_trade_quality(status, levels['rr'], observation_only)
+    status_class = "good" if status == "READY" else "warn" if status in ("WATCH", "BUILDING") else "muted"
     def metric(label, value, cls=""):
         return f'<div class="rad-metric"><span>{label}</span><strong class="{cls}">{html.escape(str(value))}</strong></div>'
-    parts = [
-        '<div class="rad-trade">',
-        f'<div class="rad-pair"><div class="rad-token">{html.escape(pair_raw.split("/")[0][:2])}</div><div><strong>{pair}</strong><span style="color:{tone}">{status}</span></div></div>',
-        metric('SCORE', score if score is not None else '—', 'rad-positive' if score is not None and score >= 60 else ''),
+    return ''.join([
+        f'<div class="rad-trade {"rad-observation" if observation_only else ""}">',
+        f'<div class="rad-pair"><div class="rad-token">{html.escape(pair_raw.split("/")[0][:2])}</div><div><strong>{pair}</strong><span class="rad-{status_class}">{html.escape(status)}</span></div></div>',
+        metric('SCORE', score if score is not None else '—'),
         metric('BUY ZONE · EST.', entry),
-        metric('STOP · EST.', levels['stop'], 'rad-negative'),
-        metric('TARGET · EST.', levels['target'], 'rad-positive'),
+        metric('STOP · EST.', levels['stop'], 'rad-negative' if not observation_only else ''),
+        metric('TARGET · EST.', levels['target'], 'rad-positive' if not observation_only else ''),
         metric('R:R · EST.', levels['rr']),
         metric('24H VOLUME', vol),
+        f'<div class="rad-quality rad-{quality_class}" title="{html.escape(quality_hint,quote=True)}">{html.escape(quality)}</div>',
         f'<a class="rad-chart" href="{url}" target="_blank" rel="noopener noreferrer">Chart ↗</a>',
         '</div>'
-    ]
-    return ''.join(parts)
+    ])
 
 
 # RADAR V3: presentation-only command center. All source values are scanner exports.
@@ -3586,6 +3634,18 @@ st.markdown("""<style>
 .rad-count,.rad-description{font-size:13px;color:#b2c9d8}
 .rad-trade{grid-template-columns:minmax(155px,1.55fr) 65px minmax(170px,1.6fr) minmax(105px,1fr) minmax(105px,1fr) 85px 100px 105px}
 @media(max-width:1450px){.rad-trade{grid-template-columns:repeat(4,minmax(0,1fr))}.rad-pair{grid-column:span 2}}
+
+/* v3.2 — larger readable cards with explicit quality guidance */
+.rad-trade{grid-template-columns:minmax(145px,1.45fr) 65px minmax(170px,1.65fr) minmax(110px,1fr) minmax(110px,1fr) 85px 105px minmax(95px,.85fr) 100px!important;min-height:106px!important;padding:23px 21px!important;gap:15px!important;border-radius:15px!important;margin-bottom:12px!important}
+.rad-pair strong{font-size:19px!important}.rad-pair span{font-size:12px!important}.rad-token{width:48px!important;height:48px!important}
+.rad-metric span{font-size:11px!important;color:#c2d8e7!important;letter-spacing:.5px!important}
+.rad-metric strong{font-size:clamp(14px,1.13vw,18px)!important;line-height:1.4!important}
+.rad-quality{display:inline-flex;justify-content:center;align-items:center;text-align:center;border:1px solid currentColor;border-radius:8px;padding:9px 7px;font-weight:900;font-size:11px;line-height:1.2;min-height:37px}
+.rad-good{color:#43fba4!important}.rad-warn{color:#ffd36a!important}.rad-bad{color:#ff7580!important}.rad-muted{color:#a1b6c4!important}
+.rad-observation{border-color:#244052!important;opacity:.85}
+.rad-chart{font-size:14px!important;padding:13px 10px!important}
+@media(max-width:1550px){.rad-trade{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important}.rad-pair{grid-column:span 1!important}}
+@media(max-width:700px){.rad-trade{grid-template-columns:repeat(2,minmax(0,1fr))!important}.rad-pair{grid-column:span 2!important}}
 </style>""",unsafe_allow_html=True)
 
 regime = str(market).upper()
@@ -3599,7 +3659,7 @@ regime_tags = ''.join(f'<span class="{"active" if x == regime_display else ""}">
 regime_color = "bear" if regime_display == "BEAR" else "neutral" if regime_display in ("NEUTRAL","BULL WATCH") else ""
 header = (
     '<div class="rad-top"><div class="rad-brand"><div class="rad-logo">◎</div><div>'
-    '<h1>ANTICIPATION RADAR <em>v3</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
+    '<h1>ANTICIPATION RADAR <em>v3.2</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
     '</div></div><div class="rad-live">● SYNCED' + ('' if ok else ' · DATA ISSUE') + '</div></div>'
 )
 st.markdown(header,unsafe_allow_html=True)
@@ -3613,14 +3673,7 @@ summary_html = (
 st.markdown(summary_html,unsafe_allow_html=True)
 # All tracked pairs are visible by default. View filter only changes ordering,
 # never excludes observations or creates a buy signal.
-board_24h = ((state.get("billboard") or {}).get("twenty_four_hour") or [])
-volume_lookup = {}
-for row in board_24h:
-    if isinstance(row, dict):
-        pair_key = str(row.get("pair", "")).upper()
-        volume_value = next((row.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd", "usd_volume") if row.get(k) is not None), None)
-        if pair_key and volume_value is not None:
-            volume_lookup[pair_key] = volume_value
+volume_lookup = _v3_volume_lookup(state, flights)
 
 st.caption(f"All tracked pairs · Last scanner export: {updated or 'Unavailable'} · {active} pairs")
 qualified = []
@@ -3631,6 +3684,10 @@ for f in flights:
         qualified.append(f)
     else:
         observations.append(f)
+# Keep all pairs visible. Sort by readiness, then existing score, without changing signals.
+priority = {"ENTER": 0, "WAIT": 1, "WATCH": 2}
+qualified.sort(key=lambda f: (priority.get(str(f.get("action", "")).upper(), 3), -(_v2_score(f.get("setup") or {})[0] or 0)))
+observations.sort(key=lambda f: -(_v2_score(f.get("setup") or {})[0] or 0))
 all_rows = qualified + observations
 st.markdown(f'<div class="rad-section"><h2>▥ LONG OPPORTUNITY SCANNER</h2><div class="rad-count">{len(all_rows)} tracked · {len(qualified)} long candidates · {len(observations)} observation only</div></div>', unsafe_allow_html=True)
 if all_rows:
