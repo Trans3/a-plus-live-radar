@@ -3506,18 +3506,20 @@ def _v2_score(setup):
     return None, "Unavailable"
 
 
-def _v2_card(f, market, observation_only=False):
+def _v2_card(f, market, observation_only=False, volume_lookup=None):
     setup = f.get("setup", {}) or {}
     pair_raw = str(f.get("pair", "UNKNOWN"))
     pair = html.escape(pair_raw)
     url = html.escape(tradingview_url(pair_raw), quote=True)
     score, _ = _v2_score(setup)
     action = str(f.get("action", "WATCH")).upper()
-    status = "OBSERVE" if observation_only else {"ENTER":"READY", "WAIT":"BUILDING", "WATCH":"WATCH"}.get(action, "WATCH")
+    status = "OBSERVE · NO ENTRY" if observation_only else {"ENTER":"READY", "WAIT":"BUILDING", "WATCH":"WATCH"}.get(action, "WATCH")
     tone = "#42f5a0" if status == "READY" else "#ffd36a" if status in ("BUILDING", "WATCH") else "#8ba1af"
     levels = trade_levels(setup, market) if not observation_only else {"entry_low":"—","entry_high":"—","stop":"—","target":"—","rr":"—"}
     entry = f"{levels['entry_low']} – {levels['entry_high']}" if not observation_only else "—"
-    volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd") if setup.get(k) is not None), None)
+    volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd", "volume_usd_24h") if setup.get(k) is not None), None)
+    if volume is None:
+        volume = (volume_lookup or {}).get(pair_raw.upper())
     vol = _v2_volume(volume) if volume is not None else "—"
     def metric(label, value, cls=""):
         return f'<div class="rad-metric"><span>{label}</span><strong class="{cls}">{html.escape(str(value))}</strong></div>'
@@ -3572,6 +3574,18 @@ st.markdown("""<style>
 .rad-watch{font-size:12px;color:#9bb4c4}
 @media(max-width:1350px){.rad-trade{grid-template-columns:repeat(4,minmax(0,1fr))}.rad-pair{grid-column:span 2}}
 @media(max-width:760px){.rad-overview{grid-template-columns:1fr}.rad-trade{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.rad-pair{grid-column:span 2}}
+
+/* v3.1 legibility: desktop terminal rows */
+.rad-trade{padding:21px 20px;min-height:84px;gap:18px;border-color:#38687d;box-shadow:0 4px 20px #0007}
+.rad-pair strong{font-size:18px;letter-spacing:.15px}
+.rad-pair span{font-size:12px;margin-top:7px}
+.rad-token{width:44px;height:44px;font-size:15px}
+.rad-metric span{font-size:11px;letter-spacing:.7px;color:#b7ccdb}
+.rad-metric strong{font-size:clamp(13px,1.12vw,17px);margin-top:8px;line-height:1.35}
+.rad-chart{font-size:14px;padding:11px 13px}
+.rad-count,.rad-description{font-size:13px;color:#b2c9d8}
+.rad-trade{grid-template-columns:minmax(155px,1.55fr) 65px minmax(170px,1.6fr) minmax(105px,1fr) minmax(105px,1fr) 85px 100px 105px}
+@media(max-width:1450px){.rad-trade{grid-template-columns:repeat(4,minmax(0,1fr))}.rad-pair{grid-column:span 2}}
 </style>""",unsafe_allow_html=True)
 
 regime = str(market).upper()
@@ -3597,46 +3611,43 @@ summary_html = (
     '</div>'
 )
 st.markdown(summary_html,unsafe_allow_html=True)
-filter_cols=st.columns([1,1,1])
-with filter_cols[0]:
-    selected_min_score=st.selectbox("Minimum setup score",[0,50,60,70,80,90],index=2,key="v3_min_score")
-with filter_cols[1]:
-    selected_view=st.selectbox("Long setup view",["All long setups","Ready only","Building / Watch"],key="v3_view")
-with filter_cols[2]:
-    st.caption(f"Last scanner export: {updated or 'Unavailable'} · {active} pairs")
-visible=[]; filtered_out=[]
+# All tracked pairs are visible by default. View filter only changes ordering,
+# never excludes observations or creates a buy signal.
+board_24h = ((state.get("billboard") or {}).get("twenty_four_hour") or [])
+volume_lookup = {}
+for row in board_24h:
+    if isinstance(row, dict):
+        pair_key = str(row.get("pair", "")).upper()
+        volume_value = next((row.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd", "usd_volume") if row.get(k) is not None), None)
+        if pair_key and volume_value is not None:
+            volume_lookup[pair_key] = volume_value
+
+st.caption(f"All tracked pairs · Last scanner export: {updated or 'Unavailable'} · {active} pairs")
+qualified = []
+observations = []
 for f in flights:
-    score,_=_v2_score(f.get("setup",{}) or {})
-    action=str(f.get("action","")).upper()
-    meets_view=(selected_view=="All long setups" or (selected_view=="Ready only" and action=="ENTER") or (selected_view=="Building / Watch" and action in {"WAIT","WATCH"}))
-    if score is not None and score>=selected_min_score and action in {"ENTER","WAIT","WATCH"} and meets_view:
-        visible.append(f)
+    action = str(f.get("action", "")).upper()
+    if action in {"ENTER", "WAIT", "WATCH"}:
+        qualified.append(f)
     else:
-        filtered_out.append(f)
-st.markdown(f'<div class="rad-section"><h2>▥ LONG OPPORTUNITY SCANNER</h2><div class="rad-count">{len(visible)} qualifying · {len(filtered_out)} observation · min {selected_min_score}</div></div>',unsafe_allow_html=True)
-if visible:
-    # Entire card markup in one Streamlit call: no dangling closing HTML tags.
-    st.markdown(''.join(_v2_card(f,market) for f in visible[:15]),unsafe_allow_html=True)
-    with st.expander("Detailed setup context",expanded=False):
-        for f in visible[:15]:
-            setup=f.get("setup",{}) or {}
-            pair=str(f.get("pair","UNKNOWN"))
-            st.markdown(f'**{pair}** · {str(f.get("action","WATCH")).upper()}')
+        observations.append(f)
+all_rows = qualified + observations
+st.markdown(f'<div class="rad-section"><h2>▥ LONG OPPORTUNITY SCANNER</h2><div class="rad-count">{len(all_rows)} tracked · {len(qualified)} long candidates · {len(observations)} observation only</div></div>', unsafe_allow_html=True)
+if all_rows:
+    # One complete HTML block per batch, never split opening/closing tags.
+    for offset in range(0, len(all_rows), 12):
+        chunk = all_rows[offset:offset+12]
+        st.markdown(''.join(_v2_card(f, market, observation_only=f in observations, volume_lookup=volume_lookup) for f in chunk), unsafe_allow_html=True)
+    with st.expander("Detailed technical context", expanded=False):
+        for f in all_rows:
+            setup = f.get("setup", {}) or {}
+            pair = str(f.get("pair", "UNKNOWN"))
+            st.markdown(f'**{pair}** · {str(f.get("action", "WATCH")).upper()}')
             st.caption(str(f.get("entry_condition") or "Wait for confirmation"))
-            st.write("Timing:",str((setup.get("chart_read") or {}).get("timing") or setup.get("entry_readiness_label") or "—"))
-            st.link_button(f"Open {pair} chart ↗",tradingview_url(pair))
+            st.write("Timing:", str((setup.get("chart_read") or {}).get("timing") or setup.get("entry_readiness_label") or "—"))
+            st.link_button(f"Open {pair} chart ↗", tradingview_url(pair))
 else:
-    st.markdown('<div class="rad-empty"><strong>NO QUALIFIED LONGS</strong><div class="rad-description">Radar is monitoring. No entry is implied by an observation.</div></div>',unsafe_allow_html=True)
-if filtered_out:
-    with st.expander(f"Observation watchlist · {len(filtered_out)} pairs (not buy signals)",expanded=False):
-        st.caption("Pairs excluded by score, action, or view filter. No entry levels are recommended.")
-        for f in filtered_out[:40]:
-            score,_=_v2_score(f.get("setup",{}) or {})
-            pair=str(f.get("pair","UNKNOWN"))
-            c1,c2,c3=st.columns([2,1,1])
-            c1.write(pair)
-            c2.caption(f"Score {score if score is not None else '—'} · OBSERVE")
-            c3.link_button("Chart ↗",tradingview_url(pair))
+    st.markdown('<div class="rad-empty">No tracked pairs in the latest export.</div>', unsafe_allow_html=True)
 news_items=[]
 for f in flights:
     pair=f.get("pair","")
