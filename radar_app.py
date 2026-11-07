@@ -3538,7 +3538,6 @@ def _v2_card(f, market, observation_only=False):
       <div class="v2-cell"><small>TARGET · EST.</small><b>{target}</b></div>
       <div class="v2-cell"><small>R:R · EST.</small><b>{rr}</b></div>
       {volume_html}
-      <details class="v2-more"><summary>Setup details</summary><p>{note}</p><p>Price: {_v2_money(price)} · VWAP: {_v2_money(vwap)} · {clean_text(f.get('tower_note', ''))}</p>{awareness_html(setup)}{liquidity}</details>
     </article>"""
 
 
@@ -3625,21 +3624,42 @@ for f in flights[:8]:
 news_html = ''.join(f'<a class="v2-news-item" href="{html.escape(str(story.get("link")),quote=True)}" target="_blank" rel="noopener noreferrer">{clean_text(story.get("title", "Headline"))}<small>{clean_text(pair)} · {clean_text(story.get("source", "News"))}</small></a>' for pair, story in news_items[:6])
 if not news_html: news_html = '<p class="v2-muted">No verified pair headlines in the current news feed.</p>'
 
+def _v2_render_rows(rows, observation_only=False, limit=12):
+    """Render compact trade rows and native Streamlit expanders (no nested HTML details)."""
+    for f in rows[:limit]:
+        setup = f.get("setup", {}) or {}
+        pair = str(f.get("pair", "UNKNOWN"))
+        st.markdown(_v2_card(f, market, observation_only=observation_only), unsafe_allow_html=True)
+        with st.expander(f"Details · {pair}", expanded=False):
+            st.caption("Observation only — no buy signal." if observation_only else "Setup context — entry requires independent confirmation.")
+            score, score_type = _v2_score(setup)
+            cols = st.columns(4)
+            cols[0].metric("Score", f"{score if score is not None else '—'}")
+            cols[1].metric("Current price", _v2_money(setup.get("price")))
+            cols[2].metric("VWAP", _v2_money(setup.get("vwap")))
+            cols[3].metric("Timing", str((setup.get("chart_read") or {}).get("timing") or setup.get("entry_readiness_label") or "—"))
+            st.write("**Entry condition:**", str(f.get("entry_condition") or "Awaiting confirmation"))
+            if f.get("tower_note"):
+                st.caption(str(f.get("tower_note")))
+            with st.container():
+                st.markdown(awareness_html(setup), unsafe_allow_html=True)
+            st.link_button("Open TradingView chart ↗", tradingview_url(pair))
+
 st.markdown('<div class="v2-head">Long Opportunity Scanner</div>', unsafe_allow_html=True)
-st.caption(f"{len(visible)} qualifying long setups · {len(filtered_out)} other tracked pairs · minimum score {selected_min_score}")
+st.caption(f"{len(visible)} qualifying long setups · {len(filtered_out)} observation-only pairs · minimum score {selected_min_score}")
 if visible:
-    st.markdown(''.join(_v2_card(f, market) for f in visible[:12]), unsafe_allow_html=True)
+    _v2_render_rows(visible)
 else:
     st.info("No qualifying long entries at this threshold. Radar is monitoring the market; no buy signal is implied.")
 
 if filtered_out:
     with st.expander(f"Observation watchlist · {len(filtered_out)} pairs (NOT buy signals)", expanded=not bool(visible)):
         st.caption("Pairs excluded by score, action, or view filter. Entries, stops and targets are intentionally hidden; chart links remain available.")
-        st.markdown(''.join(_v2_card(f, market, observation_only=True) for f in filtered_out[:12]), unsafe_allow_html=True)
+        _v2_render_rows(filtered_out, observation_only=True)
 
 st.markdown('<div class="v2-head">Market News</div>', unsafe_allow_html=True)
 st.markdown('<div class="v2-panel">' + news_html + '</div>', unsafe_allow_html=True)
-st.caption("Entry, stop, target and R:R are estimates from the existing UI helper—not validated orders. Confirm structure and fees before trading. Missing 24H volume, Fear & Greed, or verified liquidity is left blank/unavailable rather than invented.")
+st.caption("A favorable R:R alone is not an entry signal. Entry, stop, target and R:R are estimates from the existing UI helper—not validated orders. Confirm structure and fees before trading. Missing 24H volume, Fear & Greed, or verified liquidity is left blank/unavailable rather than invented.")
 st.stop()  # Replace legacy tower presentation; do not execute duplicate UI.
 
 sectors = sector_summary(flights)
