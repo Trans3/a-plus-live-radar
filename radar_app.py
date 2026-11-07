@@ -3508,330 +3508,148 @@ def _v2_score(setup):
 
 def _v2_card(f, market, observation_only=False):
     setup = f.get("setup", {}) or {}
-    pair = clean_text(f.get("pair", "UNKNOWN"))
-    url = html.escape(tradingview_url(f.get("pair", "")), quote=True)
-    score, score_name = _v2_score(setup)
-    score_label = str(score) if score is not None else "—"
+    pair_raw = str(f.get("pair", "UNKNOWN"))
+    pair = html.escape(pair_raw)
+    url = html.escape(tradingview_url(pair_raw), quote=True)
+    score, _ = _v2_score(setup)
     action = str(f.get("action", "WATCH")).upper()
-    status = "OBSERVE · NO ENTRY" if observation_only else "READY" if action == "ENTER" else "BUILDING" if action == "WAIT" else "WATCH" if action == "WATCH" else "NO ENTRY"
-    tone = "#72ff9a" if status == "READY" else "#ffd85a" if status in {"BUILDING", "WATCH"} else "#ff7474"
-    price = safe_float(setup.get("price"))
-    vwap = safe_float(setup.get("vwap"))
-    # Use the existing UI's levels helper; don't turn its estimates into verified execution orders.
-    levels = trade_levels(setup, market)
-    can_plan = (not observation_only) and price > 0 and status in {"READY", "BUILDING", "WATCH"}
-    entry = (f"{levels['entry_low']} – {levels['entry_high']}" if can_plan else "—")
-    stop = levels["stop"] if can_plan else "—"
-    target = levels["target"] if can_plan else "—"
-    rr = levels["rr"] if can_plan else "—"
-    # A setup is not an entry: only the engine's ENTER action is labelled READY.
+    status = "OBSERVE" if observation_only else {"ENTER":"READY", "WAIT":"BUILDING", "WATCH":"WATCH"}.get(action, "WATCH")
+    tone = "#42f5a0" if status == "READY" else "#ffd36a" if status in ("BUILDING", "WATCH") else "#8ba1af"
+    levels = trade_levels(setup, market) if not observation_only else {"entry_low":"—","entry_high":"—","stop":"—","target":"—","rr":"—"}
+    entry = f"{levels['entry_low']} – {levels['entry_high']}" if not observation_only else "—"
     volume = next((setup.get(k) for k in ("volume_24h_usd", "usd_volume_24h", "quote_volume_24h_usd") if setup.get(k) is not None), None)
-    volume_html = f'<div class="v2-cell"><small>24H VOL</small><b>{_v2_volume(volume)}</b></div>' if volume is not None else ''
-    q = setup.get("live_liquidity_support") or {}
-    liquidity = ""  # Never show unverified order-book data as live liquidity.
-    note = clean_text(f.get("entry_condition") or "Await confirmed long entry conditions")
-    return f"""<article class="v2-trade">
-      <div class="v2-pair"><a href="{url}" target="_blank" rel="noopener noreferrer">{pair} ↗</a><span style="color:{tone}">{status}</span></div>
-      <div class="v2-cell"><small>{clean_text(score_name)}</small><b style="color:{tone}">{score_label}</b></div>
-      <div class="v2-cell"><small>BUY ZONE · EST.</small><b>{entry}</b></div>
-      <div class="v2-cell"><small>STOP · EST.</small><b class="v2-red">{stop}</b></div>
-      <div class="v2-cell"><small>TARGET · EST.</small><b>{target}</b></div>
-      <div class="v2-cell"><small>R:R · EST.</small><b>{rr}</b></div>
-      {volume_html}
-    </article>"""
+    vol = _v2_volume(volume) if volume is not None else "—"
+    def metric(label, value, cls=""):
+        return f'<div class="rad-metric"><span>{label}</span><strong class="{cls}">{html.escape(str(value))}</strong></div>'
+    parts = [
+        '<div class="rad-trade">',
+        f'<div class="rad-pair"><div class="rad-token">{html.escape(pair_raw.split("/")[0][:2])}</div><div><strong>{pair}</strong><span style="color:{tone}">{status}</span></div></div>',
+        metric('SCORE', score if score is not None else '—', 'rad-positive' if score is not None and score >= 60 else ''),
+        metric('BUY ZONE · EST.', entry),
+        metric('STOP · EST.', levels['stop'], 'rad-negative'),
+        metric('TARGET · EST.', levels['target'], 'rad-positive'),
+        metric('R:R · EST.', levels['rr']),
+        metric('24H VOLUME', vol),
+        f'<a class="rad-chart" href="{url}" target="_blank" rel="noopener noreferrer">Chart ↗</a>',
+        '</div>'
+    ]
+    return ''.join(parts)
 
 
+# RADAR V3: presentation-only command center. All source values are scanner exports.
 st.markdown("""<style>
-.block-container{max-width:1580px;padding-top:1rem}
-.v2-brand{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
-.v2-brand h1{font-size:30px;margin:0;color:#f7fbff;letter-spacing:-.7px}
-.v2-brand h1 em{font-style:normal;color:#72ff9a}
-.v2-sub{font-size:12px;color:#9caebb}
-.v2-pill{border:1px solid #2d8e61;border-radius:999px;color:#72ff9a;padding:6px 12px;font-size:12px;font-weight:800}
-.v2-summary{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;margin-bottom:15px}
-.v2-panel{border:1px solid #294252;background:linear-gradient(125deg,#081923,#071018);border-radius:14px;padding:16px}
-.v2-panel small,.v2-cell small{display:block;color:#9bafbe;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.v2-hero{font-size:27px;font-weight:900;color:#72ff9a;margin:4px 0}
-.v2-regimes{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.v2-regimes span{font-size:10px;border:1px solid #344550;border-radius:6px;padding:4px 8px;color:#aebcc7}
-.v2-regimes .selected{border-color:#72ff9a;color:#72ff9a;background:#113023}
-.v2-head{font-size:17px;font-weight:900;margin:18px 0 9px}
-.v2-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px;align-items:start}
-.v2-trade{display:grid;grid-template-columns:minmax(135px,1.3fr) 75px minmax(145px,1.5fr) minmax(100px,1fr) minmax(100px,1fr) 70px;gap:9px;align-items:center;border:1px solid #294252;border-radius:13px;background:#091720;padding:14px;margin-bottom:10px}
-.v2-pair a{color:#fff!important;font-size:18px;font-weight:900;text-decoration:none!important}
-.v2-pair span{display:block;font-size:11px;font-weight:900;margin-top:5px}
-.v2-cell b{display:block;font-size:14px;color:#f4f8fa;margin-top:5px;overflow-wrap:anywhere}
-.v2-cell .v2-red{color:#ff7474}
-.v2-more{grid-column:1/-1;border-top:1px solid #203440;padding-top:7px;color:#b9cbd7;font-size:12px}
-.v2-more summary{cursor:pointer;color:#5acbff;font-weight:700}
-.v2-news-item{display:block;padding:11px 0;border-bottom:1px solid #243541;color:#e9f3f9;text-decoration:none!important;font-size:12px;line-height:1.4}
-.v2-news-item small{display:block;margin-top:4px;color:#91a8b8}
-.v2-muted{color:#91a8b8;font-size:12px}
-@media(max-width:1150px){.v2-layout{grid-template-columns:1fr}.v2-trade{grid-template-columns:repeat(3,minmax(0,1fr))}.v2-summary{grid-template-columns:1fr 1fr}}
-@media(max-width:650px){.v2-summary{grid-template-columns:1fr}.v2-trade{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style>""", unsafe_allow_html=True)
-
-st.markdown(f"""<div class="v2-brand"><div><h1>◉ ANTICIPATION RADAR <em>v2</em></h1><div class="v2-sub">Long-only setups · Market context · Risk · Cycle {cycle}</div></div><span class="v2-pill">LONGS ONLY · {"SYNCED" if ok else "DATA UNAVAILABLE"}</span></div>""", unsafe_allow_html=True)
+.block-container{max-width:1660px!important;padding-top:.8rem!important}
+.stApp{background:radial-gradient(ellipse at 50% -15%,#0b2631 0%,#030a11 55%,#020609 100%)!important}
+.rad-top{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin:10px 0 16px}
+.rad-brand{display:flex;gap:14px;align-items:center}
+.rad-logo{font-size:34px;color:#40ff9c;text-shadow:0 0 18px #17c970}
+.rad-brand h1{font-size:clamp(22px,2.3vw,36px);letter-spacing:-1px;color:#f8fcff;margin:0;line-height:1.15;font-weight:900}
+.rad-brand h1 em{font-style:normal;color:#44ff99}
+.rad-sub{font-size:12px;color:#91acbd;margin-top:5px}
+.rad-live{border:1px solid #1cd878;color:#45ffa2;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:800;box-shadow:0 0 18px #0a6d4933}
+.rad-overview{display:grid;grid-template-columns:1.1fr 1fr .9fr;gap:12px;margin:12px 0}
+.rad-panel{background:linear-gradient(130deg,#0a1d28,#06121b);border:1px solid #2b5368;border-radius:14px;padding:18px;box-shadow:inset 0 1px 0 #ffffff0a,0 9px 25px #0005;min-width:0}
+.rad-eyebrow{font-size:10px;color:#a8c0d0;font-weight:900;letter-spacing:1.1px}
+.rad-value{font-size:clamp(23px,2.3vw,35px);font-weight:950;margin:10px 0 7px;color:#4afba0}
+.rad-value.bear{color:#ff6773}.rad-value.neutral{color:#ffd36a}
+.rad-tags{display:flex;gap:7px;flex-wrap:wrap}
+.rad-tags span{font-size:10px;color:#93aabd;border:1px solid #355063;border-radius:6px;padding:5px 8px}
+.rad-tags .active{border-color:#42ffa1;color:#50ffa6;background:#0d3428}
+.rad-description{font-size:12px;color:#8eaabb;margin-top:8px}
+.rad-section{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0 9px}
+.rad-section h2{font-size:19px;font-weight:900;margin:0;color:#f3faff}
+.rad-count{font-size:12px;color:#95b3c5}
+.rad-trade{display:grid;grid-template-columns:minmax(135px,1.5fr) 60px minmax(135px,1.5fr) minmax(90px,1fr) minmax(90px,1fr) 75px 90px 95px;align-items:center;gap:13px;padding:14px 16px;margin:0 0 9px;border:1px solid #2b5269;border-radius:12px;background:linear-gradient(110deg,#0a1e29,#06131c);box-shadow:0 5px 18px #0005}
+.rad-trade:hover{border-color:#37cda4;box-shadow:0 0 20px #16c68b20}
+.rad-pair{display:flex;align-items:center;gap:11px;min-width:0}.rad-token{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#102f40;border:1px solid #32637a;color:#55edff;font-weight:900;font-size:13px}
+.rad-pair strong{display:block;font-size:15px;color:#fff;white-space:nowrap}.rad-pair span{display:block;font-size:10px;font-weight:900;margin-top:5px}
+.rad-metric{min-width:0}.rad-metric span{display:block;font-size:9px;letter-spacing:.65px;font-weight:800;color:#91a9ba;white-space:nowrap}.rad-metric strong{display:block;font-size:clamp(11px,1vw,14px);color:#f5faff;margin-top:6px;overflow-wrap:anywhere}
+.rad-positive{color:#42ffa1!important}.rad-negative{color:#ff6c79!important}
+.rad-chart{border:1px solid #23d8ff;color:#61e8ff!important;border-radius:9px;padding:9px 10px;text-align:center;font-weight:900;text-decoration:none!important;font-size:12px;white-space:nowrap;box-shadow:0 0 13px #12cafa2b}
+.rad-chart:hover{background:#103544}
+.rad-empty{padding:25px;border:1px dashed #2c5b6d;border-radius:12px;background:#071722;color:#b7cedc;text-align:center}
+.rad-news{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.rad-news a{color:#dcecf4!important;text-decoration:none!important;font-size:12px}.rad-news a:hover{color:#4de6ff!important}.rad-news span{color:#46f9a2}
+.rad-watch{font-size:12px;color:#9bb4c4}
+@media(max-width:1350px){.rad-trade{grid-template-columns:repeat(4,minmax(0,1fr))}.rad-pair{grid-column:span 2}}
+@media(max-width:760px){.rad-overview{grid-template-columns:1fr}.rad-trade{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.rad-pair{grid-column:span 2}}
+</style>""",unsafe_allow_html=True)
 
 regime = str(market).upper()
 regime_display = "BULL WATCH" if regime in {"PREBULL", "BULL WATCH"} else "NEUTRAL" if regime in {"WAITING", "NEUTRAL", "CHOP"} else "BEAR" if regime in {"BEAR", "DISTRIBUTION", "EXHAUSTION"} else "BULL" if regime == "BULL" else regime
-regimes = ["BULL", "BULL WATCH", "NEUTRAL", "BEAR"]
-regime_badges = ''.join(f'<span class="{"selected" if x == regime_display else ""}">{x}</span>' for x in regimes)
 btc = state.get("btc", {}) or {}
 btc_change = next((btc.get(k) for k in ("change_24h_pct", "price_change_24h_pct", "change_24h") if btc.get(k) is not None), None)
-btc_text = f'{safe_float(btc_change):+.2f}%' if btc_change is not None else '—'
 fg = state.get("fear_greed") or state.get("fear_and_greed") or {}
-fg_value = fg.get("value") if isinstance(fg, dict) else fg if isinstance(fg, (int, float)) else None
-fg_text = str(fg_value) if fg_value is not None else "—"
-fg_label = clean_text(fg.get("classification", "")) if isinstance(fg, dict) else ""
-st.markdown(f"""<div class="v2-summary">
-<div class="v2-panel"><small>Market regime · Context only</small><div class="v2-hero">{clean_text(regime_display)}</div><div class="v2-regimes">{regime_badges}</div></div>
-<div class="v2-panel"><small>BTC influence · 24H</small><div class="v2-hero">{btc_text}</div><div class="v2-muted">BTC is context, not a hard entry filter</div></div>
-<div class="v2-panel"><small>Fear &amp; Greed</small><div class="v2-hero">{fg_text}</div><div class="v2-muted">{fg_label or 'No index reading in scanner export'}</div></div>
-</div>""", unsafe_allow_html=True)
-
-filter_cols = st.columns([1.1, 1, 1])
+fg_value = fg.get("value") if isinstance(fg,dict) else fg if isinstance(fg,(int,float)) else None
+fg_label = str(fg.get("classification", "")) if isinstance(fg,dict) else ""
+regime_tags = ''.join(f'<span class="{"active" if x == regime_display else ""}">{x}</span>' for x in ("BULL","BULL WATCH","NEUTRAL","BEAR"))
+regime_color = "bear" if regime_display == "BEAR" else "neutral" if regime_display in ("NEUTRAL","BULL WATCH") else ""
+header = (
+    '<div class="rad-top"><div class="rad-brand"><div class="rad-logo">◎</div><div>'
+    '<h1>ANTICIPATION RADAR <em>v3</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
+    '</div></div><div class="rad-live">● SYNCED' + ('' if ok else ' · DATA ISSUE') + '</div></div>'
+)
+st.markdown(header,unsafe_allow_html=True)
+summary_html = (
+    '<div class="rad-overview">'
+    f'<section class="rad-panel"><div class="rad-eyebrow">MARKET REGIME · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{f"{safe_float(btc_change):+.2f}%" if btc_change is not None else "—"}</div><div class="rad-description">BTC is context, not a hard entry filter</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">FEAR &amp; GREED</div><div class="rad-value">{html.escape(str(fg_value)) if fg_value is not None else "—"}</div><div class="rad-description">{html.escape(fg_label or "No index reading in scanner export")}</div></section>'
+    '</div>'
+)
+st.markdown(summary_html,unsafe_allow_html=True)
+filter_cols=st.columns([1,1,1])
 with filter_cols[0]:
-    selected_min_score = st.selectbox("Min Score · display filter", [0, 50, 60, 70, 80, 90], index=2, key="v2_min_score")
+    selected_min_score=st.selectbox("Minimum setup score",[0,50,60,70,80,90],index=2,key="v3_min_score")
 with filter_cols[1]:
-    selected_view = st.selectbox("View", ["All long setups", "Ready only", "Building / Watch"], key="v2_view")
+    selected_view=st.selectbox("Long setup view",["All long setups","Ready only","Building / Watch"],key="v3_view")
 with filter_cols[2]:
-    st.caption(f"Updated: {updated or 'No scanner timestamp'} · {active} pairs scanned")
-
-visible = []
-filtered_out = []
+    st.caption(f"Last scanner export: {updated or 'Unavailable'} · {active} pairs")
+visible=[]; filtered_out=[]
 for f in flights:
-    score, _ = _v2_score(f.get("setup", {}) or {})
-    action = str(f.get("action", "")).upper()
-    meets_score = score is not None and score >= selected_min_score
-    meets_action = action in {"ENTER", "WAIT", "WATCH"}
-    meets_view = (selected_view == "All long setups" or
-                  (selected_view == "Ready only" and action == "ENTER") or
-                  (selected_view == "Building / Watch" and action in {"WAIT", "WATCH"}))
-    if meets_score and meets_action and meets_view:
+    score,_=_v2_score(f.get("setup",{}) or {})
+    action=str(f.get("action","")).upper()
+    meets_view=(selected_view=="All long setups" or (selected_view=="Ready only" and action=="ENTER") or (selected_view=="Building / Watch" and action in {"WAIT","WATCH"}))
+    if score is not None and score>=selected_min_score and action in {"ENTER","WAIT","WATCH"} and meets_view:
         visible.append(f)
     else:
         filtered_out.append(f)
-
-# Pair news must not disappear merely because a signal fails the minimum-score filter.
-news_items = []
-for f in flights[:8]:
-    pair = f.get("pair", "")
-    for story in (dropdown_news.get(pair, []) or [])[:2]:
-        link = str(story.get("link", ""))
-        if link.startswith("https://"):
-            news_items.append((pair, story))
-news_html = ''.join(f'<a class="v2-news-item" href="{html.escape(str(story.get("link")),quote=True)}" target="_blank" rel="noopener noreferrer">{clean_text(story.get("title", "Headline"))}<small>{clean_text(pair)} · {clean_text(story.get("source", "News"))}</small></a>' for pair, story in news_items[:6])
-if not news_html: news_html = '<p class="v2-muted">No verified pair headlines in the current news feed.</p>'
-
-def _v2_render_rows(rows, observation_only=False, limit=12):
-    """Render compact trade rows and native Streamlit expanders (no nested HTML details)."""
-    for f in rows[:limit]:
-        setup = f.get("setup", {}) or {}
-        pair = str(f.get("pair", "UNKNOWN"))
-        st.markdown(_v2_card(f, market, observation_only=observation_only), unsafe_allow_html=True)
-        with st.expander(f"Details · {pair}", expanded=False):
-            st.caption("Observation only — no buy signal." if observation_only else "Setup context — entry requires independent confirmation.")
-            score, score_type = _v2_score(setup)
-            cols = st.columns(4)
-            cols[0].metric("Score", f"{score if score is not None else '—'}")
-            cols[1].metric("Current price", _v2_money(setup.get("price")))
-            cols[2].metric("VWAP", _v2_money(setup.get("vwap")))
-            cols[3].metric("Timing", str((setup.get("chart_read") or {}).get("timing") or setup.get("entry_readiness_label") or "—"))
-            st.write("**Entry condition:**", str(f.get("entry_condition") or "Awaiting confirmation"))
-            if f.get("tower_note"):
-                st.caption(str(f.get("tower_note")))
-            with st.container():
-                st.markdown(awareness_html(setup), unsafe_allow_html=True)
-            st.link_button("Open TradingView chart ↗", tradingview_url(pair))
-
-st.markdown('<div class="v2-head">Long Opportunity Scanner</div>', unsafe_allow_html=True)
-st.caption(f"{len(visible)} qualifying long setups · {len(filtered_out)} observation-only pairs · minimum score {selected_min_score}")
+st.markdown(f'<div class="rad-section"><h2>▥ LONG OPPORTUNITY SCANNER</h2><div class="rad-count">{len(visible)} qualifying · {len(filtered_out)} observation · min {selected_min_score}</div></div>',unsafe_allow_html=True)
 if visible:
-    _v2_render_rows(visible)
+    # Entire card markup in one Streamlit call: no dangling closing HTML tags.
+    st.markdown(''.join(_v2_card(f,market) for f in visible[:15]),unsafe_allow_html=True)
+    with st.expander("Detailed setup context",expanded=False):
+        for f in visible[:15]:
+            setup=f.get("setup",{}) or {}
+            pair=str(f.get("pair","UNKNOWN"))
+            st.markdown(f'**{pair}** · {str(f.get("action","WATCH")).upper()}')
+            st.caption(str(f.get("entry_condition") or "Wait for confirmation"))
+            st.write("Timing:",str((setup.get("chart_read") or {}).get("timing") or setup.get("entry_readiness_label") or "—"))
+            st.link_button(f"Open {pair} chart ↗",tradingview_url(pair))
 else:
-    st.info("No qualifying long entries at this threshold. Radar is monitoring the market; no buy signal is implied.")
-
+    st.markdown('<div class="rad-empty"><strong>NO QUALIFIED LONGS</strong><div class="rad-description">Radar is monitoring. No entry is implied by an observation.</div></div>',unsafe_allow_html=True)
 if filtered_out:
-    with st.expander(f"Observation watchlist · {len(filtered_out)} pairs (NOT buy signals)", expanded=not bool(visible)):
-        st.caption("Pairs excluded by score, action, or view filter. Entries, stops and targets are intentionally hidden; chart links remain available.")
-        _v2_render_rows(filtered_out, observation_only=True)
-
-st.markdown('<div class="v2-head">Market News</div>', unsafe_allow_html=True)
-st.markdown('<div class="v2-panel">' + news_html + '</div>', unsafe_allow_html=True)
-st.caption("A favorable R:R alone is not an entry signal. Entry, stop, target and R:R are estimates from the existing UI helper—not validated orders. Confirm structure and fees before trading. Missing 24H volume, Fear & Greed, or verified liquidity is left blank/unavailable rather than invented.")
-st.stop()  # Replace legacy tower presentation; do not execute duplicate UI.
-
-sectors = sector_summary(flights)
-command, command_color, command_copy, primary = tower_command(flights)
-market_metrics = market_command_metrics(flights, sectors, market)
-buyers = int(market_metrics.get("buyers", 50))
-sellers = int(market_metrics.get("sellers", 50))
-breadth = int(market_metrics.get("breadth", 0))
-control_edge = buyers - sellers
-if buyers >= 65:
-    control_label = "STRONG BUYERS"
-elif buyers >= 55:
-    control_label = "BUYERS"
-elif buyers <= 35:
-    control_label = "STRONG SELLERS"
-elif buyers <= 45:
-    control_label = "SELLERS"
-else:
-    control_label = "BALANCED"
-
-now_utc = datetime.now(timezone.utc)
-utc_clock = now_utc.strftime("%H:%M:%S")
-utc_date = now_utc.strftime("%a, %b %d")
-
-departures = [f for f in flights if f["phase"] in {"Taxiing","Takeoff"}]
-climbing = [f for f in flights if f["phase"] == "Climbing"]
-cruising = [f for f in flights if f["phase"] == "Cruising"]
-landing = [f for f in flights if f["phase"] in {"Descending","Landing"}]
-
-st.markdown(render_market_command_rail(flights, sectors, market), unsafe_allow_html=True)
-st.markdown('<div class="atc-shell">', unsafe_allow_html=True)
-
-st.markdown(f"""
-<div class="atc-top">
-  <div class="atc-brand">
-    <div class="atc-logo">A+</div>
-    <div><div class="atc-name">MOMENTUM ATC</div><div class="atc-sub">Live Opportunity Control Tower</div></div>
-  </div>
-  <div class="atc-sync">RADAR SYNCED · CYCLE {cycle}</div>
-</div>
-
-<div class="command-strip">
-  <div class="command-metric hero"><div class="cm-k">Market Mode</div><div class="cm-v" style="color:{command_color};">{clean_text(str(market).upper())}</div><div class="cm-sub">Decision engine · {clean_text(command)}</div></div>
-  <div class="command-metric control">
-    <div class="cm-k">Overall Market Control</div>
-    <div class="control-top"><span class="control-side control-buy">BUYERS {buyers}%</span><span class="control-side control-sell">{sellers}% SELLERS</span></div>
-    <div class="control-bar"><div class="control-fill-buy" style="width:{buyers}%;"></div><div class="control-mid"></div></div>
-    <div class="control-read"><span>{clean_text(control_label)}</span><span>EDGE {control_edge:+d} · BREADTH {breadth}%</span></div>
-  </div>
-  <div class="command-metric clock"><div class="cm-k">UTC Clock</div><div class="cm-v">{utc_clock}</div><div class="cm-sub">{clean_text(utc_date)}</div></div>
-  <div class="command-metric"><div class="cm-k">Ready</div><div class="cm-v" style="color:#72ff9a;">{len([f for f in flights if f['action']=='ENTER'])}</div><div class="cm-sub">entry cleared</div></div>
-  <div class="command-metric"><div class="cm-k">Taxi / Takeoff</div><div class="cm-v" style="color:#ffd85a;">{len(departures)}</div><div class="cm-sub">near entry</div></div>
-  <div class="command-metric"><div class="cm-k">Scanning</div><div class="cm-v">{active}</div><div class="cm-sub">Kraken USD pairs</div></div>
-  <div class="command-metric"><div class="cm-k">Cycle</div><div class="cm-v">{cycle}</div><div class="cm-sub">radar synced</div></div>
-</div>
-
-{render_global_market_sessions()}
-
-<div class="lifecycle-rail">
-  <div class="life-stage hot">Scanning</div><div class="life-stage hot">Taxiing</div><div class="life-stage hot">Takeoff</div><div class="life-stage">Airborne</div><div class="life-stage">Landing</div>
-</div>
-
-{render_live_ticker(flights)}
-
-<div class="tower-grid">
-  <div class="tower-command">
-    <div class="kicker">Tower Command</div>
-    <div class="command-action" style="color:{command_color};">{clean_text(command)}</div>
-    <div class="command-copy">{clean_text(command_copy)}</div>
-    <div class="command-target">
-      <div class="command-cell"><div class="command-k">Priority Flight</div><div class="command-v">{clean_text(primary['pair']) if primary else 'NONE'}</div></div>
-      <div class="command-cell"><div class="command-k">Flight Phase</div><div class="command-v">{clean_text(primary['phase']) if primary else 'Grounded'}</div></div>
-      <div class="command-cell"><div class="command-k">Entry Window</div><div class="command-v">{clean_text(primary['window']) if primary else '—'}</div></div>
-    </div>
-  </div>
-  <div class="airspace">
-    <div class="kicker">Airspace Status</div>
-    <div class="airspace-row"><div class="airspace-k">Market</div><div class="airspace-v">{clean_text(str(market).title())}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Departures</div><div class="airspace-v">{len(departures)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Climbing</div><div class="airspace-v">{len(climbing)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Cruising</div><div class="airspace-v">{len(cruising)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Landing</div><div class="airspace-v">{len(landing)}</div></div>
-    <div class="airspace-row"><div class="airspace-k">Pairs Scanned</div><div class="airspace-v">{active}</div></div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown(render_traffic_feed(flights, sectors, updated), unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Sector Traffic</div><div class="section-note">Capital rotation · where momentum is concentrating</div></div>', unsafe_allow_html=True)
-if sectors:
-    sector_html = []
-    for s in sectors[:5]:
-        c = "#72ff9a" if s["avg"] > .5 else "#ffd85a" if s["avg"] >= 0 else "#ff6262"
-        sector_html.append(f"""
-<div class="sector-card">
-  <div class="sector-name">{clean_text(s['sector'])}</div>
-  <div class="sector-read" style="color:{c};">{s['avg']:+.2f}%</div>
-  <div class="sector-sub">{s['departures']} departing · {s['landings']} landing</div>
-</div>""")
-    st.markdown('<div class="sector-strip">' + "".join(sector_html) + '</div>', unsafe_allow_html=True)
-
-render_phoenix(state)
-
-st.markdown('<div class="section-head"><div class="section-title">Anticipation Radar</div><div class="section-note">Direction bias · closed candles · confirmation stays separate</div></div>', unsafe_allow_html=True)
-early_rows = (state or {}).get("anticipation_setups", []) or []
-if early_rows:
-    early_cards = [render_flight_card({"pair": s.get("pair"), "setup": s}) for s in early_rows[:9]]
-    st.markdown('<div class="flight-grid">' + ''.join(early_cards) + '</div>', unsafe_allow_html=True)
-else:
-    st.caption("Awaiting awareness v2 engine scan.")
-
-st.markdown('<div class="section-head"><div class="section-title">Departures Board</div><div class="section-note">Pairs closest to a qualified entry</div></div>', unsafe_allow_html=True)
-departure_board = [f for f in flights if f["action"] in {"ENTER","WAIT"}][:6]
-if departure_board:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in departure_board) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No qualified departures right now.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Airborne Traffic</div><div class="section-note">Momentum active — new entry requires a retest</div></div>', unsafe_allow_html=True)
-airborne = [f for f in flights if f["action"] in {"WATCH","HOLD / SKIP"}][:6]
-if airborne:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in airborne) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No airborne opportunities currently tracked.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Approach & Landing</div><div class="section-note">Momentum fading — fresh entry is closed</div></div>', unsafe_allow_html=True)
-if landing:
-    st.markdown('<div class="flight-grid">' + "".join(render_flight_card(f) for f in landing[:6]) + '</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="empty">No flights currently approaching landing.</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-head"><div class="section-title">Flight Readout</div><div class="section-note">Pair-specific radar briefing</div></div>', unsafe_allow_html=True)
-if flights:
-    if broadcast_mode:
-        selected = flights[int(time.time() // 20) % len(flights)]
-    else:
-        selected_pair = st.selectbox("Flight", [f["pair"] for f in flights], key="atc_flight")
-        selected = next(f for f in flights if f["pair"] == selected_pair)
-
-    st.markdown(awareness_html(selected.get("setup", {})) + liquidity_support_html(selected.get("setup", {})), unsafe_allow_html=True)
-    st.markdown(render_news_rail(selected, dropdown_news), unsafe_allow_html=True)
-
-    checks = [
-        ("VWAP verified", selected["vwap_dist"] is not None),
-        ("Radar timing actionable", selected.get("timing") in {"ON TIME", "OPTIMAL", "READY SOON"}),
-        ("Entry window open", selected["action"] == "ENTER"),
-        ("Fresh entry not extended", selected["action"] not in {"SKIP", "HOLD / SKIP"}),
-    ]
-    check_html = "".join(
-        f'<div class="check" style="color:{"#72ff9a" if ok else "#ffd85a"};">{"✓" if ok else "□"} {clean_text(label)}</div>'
-        for label, ok in checks
-    )
-    st.markdown(f"""
-<div class="detail">
-  <div class="detail-grid">
-    <div class="detail-left">
-      <div class="kicker">Flight</div>
-      <div class="detail-pair">{clean_text(selected['pair'])}</div>
-      <div class="detail-action" style="color:{selected['color']};">{clean_text(selected['action'])}</div>
-      <div class="flight-sector">{clean_text(selected['sector'])} · {clean_text(selected['phase'])}</div>
-    </div>
-    <div>
-      <div class="kicker">Existing Confirmation Checklist</div>
-      <div class="detail-checks" style="margin-top:10px;">{check_html}</div>
-      <div class="next-step"><b>TOWER READ:</b> {clean_text(selected['tower_note'])}</div>
-      <div class="next-step"><b>BEST ENTRY:</b> {clean_text(selected['entry_condition'])}</div>
-      <div class="next-step"><b>INVALIDATION:</b> {clean_text(selected['invalidation'])}</div>
-    </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown(f'<div class="section-note" style="margin-top:18px;">Source: {clean_text(source)} · Estimated windows are model guidance, not guarantees.</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+    with st.expander(f"Observation watchlist · {len(filtered_out)} pairs (not buy signals)",expanded=False):
+        st.caption("Pairs excluded by score, action, or view filter. No entry levels are recommended.")
+        for f in filtered_out[:40]:
+            score,_=_v2_score(f.get("setup",{}) or {})
+            pair=str(f.get("pair","UNKNOWN"))
+            c1,c2,c3=st.columns([2,1,1])
+            c1.write(pair)
+            c2.caption(f"Score {score if score is not None else '—'} · OBSERVE")
+            c3.link_button("Chart ↗",tradingview_url(pair))
+news_items=[]
+for f in flights:
+    pair=f.get("pair","")
+    for story in (dropdown_news.get(pair,[]) or [])[:2]:
+        link=str(story.get("link",""))
+        if link.startswith("https://"):
+            news_items.append((pair,story))
+news_parts=[]
+for pair,story in news_items[:6]:
+    url=html.escape(str(story.get("link")),quote=True)
+    title=html.escape(str(story.get("title","Headline")))
+    news_parts.append(f'<a href="{url}" target="_blank" rel="noopener noreferrer"><span>●</span> {title} · {html.escape(str(pair))}</a>')
+news_body=''.join(news_parts) if news_parts else '<div class="rad-description">No verified news headlines in the current scanner export.</div>'
+st.markdown('<div class="rad-section"><h2>▤ MARKET NEWS</h2></div><div class="rad-panel"><div class="rad-news">'+news_body+'</div></div>',unsafe_allow_html=True)
+st.caption("Buy zones, stops, targets, and R:R are estimates from the existing UI helper, not validated orders. No verified live liquidity is displayed without exported data.")
+st.stop()  # Preserve original scanner and helpers; suppress duplicate legacy dashboard.
