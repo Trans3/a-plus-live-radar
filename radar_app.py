@@ -3679,6 +3679,59 @@ btc_rsi15 = _fmt_rsi(_first_present(btc, ("rsi_15m", "rsi_15", "rsi15")))
 btc_rsi60 = _fmt_rsi(_first_present(btc, ("rsi_60m", "rsi_1h", "rsi_60")))
 btc_vwap15 = _flag(_first_present(btc, ("above_vwap_15m", "above_vwap_15")))
 btc_vwap60 = _flag(_first_present(btc, ("above_vwap_60m", "above_vwap_1h")))
+# Supplement only genuinely missing market context. Values are labeled by source.
+def _btc_24h_from_billboard(snapshot):
+    board = snapshot.get("billboard") or {}
+    for section in ("twenty_four_hour", "one_hour"):
+        for row in board.get(section, []) or []:
+            pair = str(row.get("pair") or row.get("symbol") or "").upper().replace("-", "/")
+            if pair in {"BTC/USD", "XBT/USD", "BTCUSD", "XBTUSD"}:
+                value = _first_present(row, ("change_24h_pct", "price_change_24h_pct"))
+                if value is not None:
+                    return value
+    return None
+
+
+def _derived_breadth(rows):
+    # A transparent observation metric, NOT a backtested market-health score.
+    # Count distinct pairs only when the scanner exports valid 15m RSI.
+    observed = {}
+    for row in rows:
+        setup = row.get("setup") or {}
+        pair = str(row.get("pair") or "").upper()
+        rsi = _first_present(setup, ("rsi_15m", "rsi_15", "rsi15"))
+        try:
+            rsi = float(rsi)
+        except (TypeError, ValueError):
+            continue
+        if pair and 0 < rsi <= 100:
+            observed[pair] = rsi > 50
+    if not observed:
+        return None
+    bullish = sum(observed.values())
+    return {"pct": bullish / len(observed) * 100, "bullish": bullish, "total": len(observed)}
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _external_fear_greed():
+    # Public Alternative.me index; distinct from engine-produced scanner data.
+    try:
+        response = requests.get("https://api.alternative.me/fng/?limit=2", timeout=5)
+        response.raise_for_status()
+        entries = response.json().get("data") or []
+        current = entries[0]
+        value = int(current["value"])
+        if not 0 <= value <= 100:
+            return None
+        previous = int(entries[1]["value"]) if len(entries) > 1 else None
+        return {"value": value, "label": str(current.get("value_classification", "")),
+                "previous": previous, "timestamp": current.get("timestamp")}
+    except (requests.RequestException, ValueError, KeyError, TypeError, IndexError):
+        return None
+
+if btc_change is None:
+    btc_change = _btc_24h_from_billboard(state)
+
 fg = state.get("fear_greed") or state.get("fear_and_greed") or {}
 fg_value = _first_present(fg, ("value", "index", "score")) if isinstance(fg, dict) else fg if isinstance(fg, (int, float)) else None
 fg_label = str(_first_present(fg, ("classification", "label", "sentiment")) or "") if isinstance(fg, dict) else ""
@@ -3688,17 +3741,31 @@ if health_score is None:
 health_score_text = html.escape(str(health_score)) if health_score is not None else "—"
 health_breadth = _first_present(health, ("bullish_breadth_pct", "breadth_pct", "bullish_pct"))
 health_breadth_text = _fmt_pct(health_breadth).lstrip('+') if health_breadth is not None else "—"
+breadth_detail = "Scanner export"
+if health_breadth is None:
+    observed_breadth = _derived_breadth(flights)
+    if observed_breadth:
+        health_breadth_text = f"{observed_breadth['pct']:.1f}%"
+        breadth_detail = f"RSI 15M > 50: {observed_breadth['bullish']}/{observed_breadth['total']} pairs"
+if fg_value is None:
+    public_fg = _external_fear_greed()
+    if public_fg:
+        fg_value = public_fg['value']
+        fg_label = public_fg['label'] + ' · Alternative.me (external)'
+        if public_fg['previous'] is not None:
+            fg_label += f" · Prev: {public_fg['previous']} · Δ {public_fg['value'] - public_fg['previous']:+d}"
+
 regime_tags = ''.join(f'<span class="{"active" if x == regime_display else ""}">{x}</span>' for x in ("BULL","BULL WATCH","NEUTRAL","BEAR"))
 regime_color = "bear" if regime_display == "BEAR" else "neutral" if regime_display in ("NEUTRAL","BULL WATCH") else ""
 header = (
     '<div class="rad-top"><div class="rad-brand"><div class="rad-logo">◎</div><div>'
-    '<h1>ANTICIPATION RADAR <em>v3.3</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
+    '<h1>ANTICIPATION RADAR <em>v3.4</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
     '</div></div><div class="rad-live">● SYNCED' + ('' if ok else ' · DATA ISSUE') + '</div></div>'
 )
 st.markdown(header,unsafe_allow_html=True)
 summary_html = (
     '<div class="rad-overview">'
-    f'<section class="rad-panel"><div class="rad-eyebrow">MARKET HEALTH · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div><div class="rad-description">Health score: {health_score_text} · Bullish breadth: {health_breadth_text}</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">MARKET HEALTH · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div><div class="rad-description">Health score: {health_score_text} · Bullish breadth: {health_breadth_text}</div><div class="rad-description">{html.escape(breadth_detail)}</div></section>'
     f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{_fmt_pct(btc_change)}</div><div class="rad-description">RSI 15M: {btc_rsi15} · 1H: {btc_rsi60}</div><div class="rad-description">VWAP 15M: {btc_vwap15} · 1H: {btc_vwap60}</div><div class="rad-description">Weighted context, not a hard entry filter</div></section>'
     f'<section class="rad-panel"><div class="rad-eyebrow">FEAR &amp; GREED</div><div class="rad-value">{html.escape(str(fg_value)) if fg_value is not None else "—"}</div><div class="rad-description">{html.escape(fg_label or "No index reading in scanner export")}</div></section>'
     '</div>'
