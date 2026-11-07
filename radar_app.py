@@ -3712,6 +3712,90 @@ def _derived_breadth(rows):
     return {"pct": bullish / len(observed) * 100, "bullish": bullish, "total": len(observed)}
 
 
+def _radar_market_metrics(rows):
+    """Descriptive, snapshot-only measures from tracked pairs; not backtested signals."""
+    unique = {}
+    for row in rows:
+        pair = str(row.get("pair") or "").upper()
+        setup = row.get("setup") or {}
+        if pair and isinstance(setup, dict):
+            unique[pair] = setup
+    if not unique:
+        return None
+    rsi_values = []
+    above_vwap = []
+    for setup in unique.values():
+        rsi = _first_present(setup, ("rsi_15m", "rsi_15", "rsi15"))
+        try:
+            rsi = float(rsi)
+            if 0 < rsi <= 100:
+                rsi_values.append(rsi)
+        except (ValueError, TypeError):
+            pass
+        price = _first_present(setup, ("price", "last_price"))
+        vwap = _first_present(setup, ("vwap", "vwap_15m"))
+        try:
+            if float(price) > 0 and float(vwap) > 0:
+                above_vwap.append(float(price) > float(vwap))
+        except (ValueError, TypeError):
+            pass
+    if not rsi_values and not above_vwap:
+        return {"pairs": len(unique), "score": None, "breadth": None, "detail": "Insufficient pair momentum fields"}
+    rsi_bulls = sum(r > 50 for r in rsi_values)
+    breadth = 100 * rsi_bulls / len(rsi_values) if rsi_values else None
+    vwap_pct = 100 * sum(above_vwap) / len(above_vwap) if above_vwap else None
+    # Transparent composite: equal weight of available RSI breadth and VWAP participation.
+    components = [x for x in (breadth, vwap_pct) if x is not None]
+    score = round(sum(components) / len(components))
+    detail = f"RSI>50: {rsi_bulls}/{len(rsi_values)}" if rsi_values else "RSI: unavailable"
+    if above_vwap:
+        detail += f" · Above VWAP: {sum(above_vwap)}/{len(above_vwap)}"
+    return {"pairs": len(unique), "score": score, "breadth": breadth, "detail": detail}
+
+
+def _btc_price_from_feed(snapshot, rows):
+    btc_data = snapshot.get("btc") or {}
+    if isinstance(btc_data, dict):
+        for key in ("price", "last_price", "last", "close"):
+            try:
+                v = float(btc_data.get(key))
+                if v > 0:
+                    return v
+            except (TypeError, ValueError):
+                pass
+    for row in rows:
+        pair = str(row.get("pair") or "").upper().replace("-", "/")
+        if pair in {"BTC/USD", "XBT/USD", "BTC/USDT", "XBT/USDT"}:
+            try:
+                v = float((row.get("setup") or {}).get("price"))
+                if v > 0:
+                    return v
+            except (TypeError, ValueError):
+                pass
+    return None
+
+
+def _fear_greed_dial(value):
+    try:
+        value = max(0, min(100, float(value)))
+    except (TypeError, ValueError):
+        return '<div class="rad-description">Gauge unavailable</div>'
+    # 0 left, 50 top, 100 right. Static SVG; no extra dependencies.
+    import math
+    theta = math.pi * (1 - value / 100)
+    x = 150 + 85 * math.cos(theta)
+    y = 112 - 85 * math.sin(theta)
+    return (f'<svg viewBox="0 -15 300 160" style="width:100%;max-width:300px;height:120px" role="img" aria-label="Fear and Greed index {value:.0f} out of 100">'
+            '<path d="M35 112 A115 115 0 0 1 265 112" stroke="#203443" stroke-width="19" fill="none"/>'
+            '<path d="M35 112 A115 115 0 0 1 92.5 12.4" stroke="#ff5a6a" stroke-width="16" fill="none"/>'
+            '<path d="M92.5 12.4 A115 115 0 0 1 150 -3" stroke="#ffb04a" stroke-width="16" fill="none"/>'
+            '<path d="M150 -3 A115 115 0 0 1 207.5 12.4" stroke="#f2d85d" stroke-width="16" fill="none"/>'
+            '<path d="M207.5 12.4 A115 115 0 0 1 265 112" stroke="#43e5a3" stroke-width="16" fill="none"/>'
+            f'<line x1="150" y1="112" x2="{x:.1f}" y2="{y:.1f}" stroke="#e9f6ff" stroke-width="4" stroke-linecap="round"/>'
+            '<circle cx="150" cy="112" r="6" fill="#e9f6ff"/>'
+            '<text x="31" y="135" font-size="11" fill="#b2c9d8">0</text><text x="251" y="135" font-size="11" fill="#b2c9d8">100</text></svg>')
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def _external_fear_greed():
     # Public Alternative.me index; distinct from engine-produced scanner data.
@@ -3755,19 +3839,30 @@ if fg_value is None:
         if public_fg['previous'] is not None:
             fg_label += f" · Prev: {public_fg['previous']} · Δ {public_fg['value'] - public_fg['previous']:+d}"
 
+derived_market = _radar_market_metrics(flights)
+if derived_market:
+    if health_score is None and derived_market["score"] is not None:
+        health_score_text = f'{derived_market["score"]}/100'
+    if health_breadth is None and derived_market["breadth"] is not None:
+        health_breadth_text = f'{derived_market["breadth"]:.1f}%'
+    breadth_detail = derived_market["detail"] + " · Radar-derived snapshot"
+btc_price = _btc_price_from_feed(state, flights)
+btc_price_text = f'${btc_price:,.2f}' if btc_price is not None else '—'
+fg_dial = _fear_greed_dial(fg_value)
+
 regime_tags = ''.join(f'<span class="{"active" if x == regime_display else ""}">{x}</span>' for x in ("BULL","BULL WATCH","NEUTRAL","BEAR"))
 regime_color = "bear" if regime_display == "BEAR" else "neutral" if regime_display in ("NEUTRAL","BULL WATCH") else ""
 header = (
     '<div class="rad-top"><div class="rad-brand"><div class="rad-logo">◎</div><div>'
-    '<h1>ANTICIPATION RADAR <em>v3.4</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
+    '<h1>ANTICIPATION RADAR <em>v3.5</em></h1><div class="rad-sub">CRYPTO TRADE SCANNER · LONGS ONLY · OBSERVATION ≠ ENTRY</div>'
     '</div></div><div class="rad-live">● SYNCED' + ('' if ok else ' · DATA ISSUE') + '</div></div>'
 )
 st.markdown(header,unsafe_allow_html=True)
 summary_html = (
     '<div class="rad-overview">'
     f'<section class="rad-panel"><div class="rad-eyebrow">MARKET HEALTH · CONTEXT ONLY</div><div class="rad-value {regime_color}">{html.escape(regime_display)}</div><div class="rad-tags">{regime_tags}</div><div class="rad-description">Health score: {health_score_text} · Bullish breadth: {health_breadth_text}</div><div class="rad-description">{html.escape(breadth_detail)}</div></section>'
-    f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{_fmt_pct(btc_change)}</div><div class="rad-description">RSI 15M: {btc_rsi15} · 1H: {btc_rsi60}</div><div class="rad-description">VWAP 15M: {btc_vwap15} · 1H: {btc_vwap60}</div><div class="rad-description">Weighted context, not a hard entry filter</div></section>'
-    f'<section class="rad-panel"><div class="rad-eyebrow">FEAR &amp; GREED</div><div class="rad-value">{html.escape(str(fg_value)) if fg_value is not None else "—"}</div><div class="rad-description">{html.escape(fg_label or "No index reading in scanner export")}</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">BTC INFLUENCE · 24H</div><div class="rad-value">{_fmt_pct(btc_change)}</div><div class="rad-description">RSI 15M: {btc_rsi15} · 1H: {btc_rsi60}</div><div class="rad-description">VWAP 15M: {btc_vwap15} · 1H: {btc_vwap60}</div><div class="rad-description">BTC price: {btc_price_text} · Weighted context only</div></section>'
+    f'<section class="rad-panel"><div class="rad-eyebrow">FEAR &amp; GREED</div><div class="rad-value">{html.escape(str(fg_value)) if fg_value is not None else "—"}</div>{fg_dial}<div class="rad-description">{html.escape(fg_label or "No index reading in scanner export")}</div></section>'
     '</div>'
 )
 st.markdown(summary_html,unsafe_allow_html=True)
