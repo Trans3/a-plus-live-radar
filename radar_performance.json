@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-09T16:13:26",
-  "cycle_number": 931,
+  "generated_at": "2026-11-09T16:20:21",
+  "cycle_number": 932,
   "settings": {
     "hit_1pct": 1.0,
     "hit_2pct": 2.0,
@@ -11,7 +11,7 @@
   },
   "summary": {
     "total_signals": 250,
-    "open_signals": 9,
+    "open_signals": 5,
     "hit_1pct_count": 15,
     "hit_2pct_count": 3,
     "drawdown_count": 1,
@@ -1006,7 +1006,7 @@
       "trigger_score_zone": "90-100",
       "trade_score_zone": "<60",
       "confidence_zone": "90-100",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 60,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 4.28,
@@ -1016,7 +1016,8 @@
       "drawdown_pct": -0.221,
       "current_pct": -0.221,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T16:20:21"
     },
     {
       "key": "QNT/USD|WATCHLIST|cycle-922|1794255952",
@@ -1059,7 +1060,7 @@
       "trigger_score_zone": "80-89",
       "trade_score_zone": "<60",
       "confidence_zone": "80-89",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 62,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 21.76,
@@ -1069,7 +1070,8 @@
       "drawdown_pct": -0.255,
       "current_pct": -0.255,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T16:20:21"
     },
     {
       "key": "PEPE/USD|WATCHLIST|cycle-927|1794257257",
@@ -1112,7 +1114,7 @@
       "trigger_score_zone": "70-79",
       "trade_score_zone": "<60",
       "confidence_zone": "70-79",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 47,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1122,7 +1124,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T16:20:21"
     },
     {
       "key": "NEAR/USD|WATCHLIST|cycle-927|1794257257",
@@ -1165,7 +1168,7 @@
       "trigger_score_zone": "70-79",
       "trade_score_zone": "<60",
       "confidence_zone": "70-79",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 51,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1175,7 +1178,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T16:20:21"
     },
     {
       "key": "AKT/USD|WATCHLIST|cycle-924|1794256493",
