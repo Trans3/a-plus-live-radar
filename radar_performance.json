@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-09T15:52:41",
-  "cycle_number": 928,
+  "generated_at": "2026-11-09T15:59:36",
+  "cycle_number": 929,
   "settings": {
     "hit_1pct": 1.0,
     "hit_2pct": 2.0,
@@ -11,7 +11,7 @@
   },
   "summary": {
     "total_signals": 250,
-    "open_signals": 22,
+    "open_signals": 18,
     "hit_1pct_count": 15,
     "hit_2pct_count": 3,
     "drawdown_count": 1,
@@ -1695,7 +1695,7 @@
       "trigger_score_zone": "70-79",
       "trade_score_zone": "60-69",
       "confidence_zone": "70-79",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 72,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 26.35,
@@ -1705,7 +1705,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.064,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T15:59:36"
     },
     {
       "key": "ONDO/USD|WATCHLIST|cycle-922|1794255952",
@@ -1748,7 +1749,7 @@
       "trigger_score_zone": "90-100",
       "trade_score_zone": "<60",
       "confidence_zone": "90-100",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 75,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1758,7 +1759,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T15:59:36"
     },
     {
       "key": "MORPHO/USD|WATCHLIST|cycle-922|1794255952",
@@ -1801,7 +1803,7 @@
       "trigger_score_zone": "90-100",
       "trade_score_zone": "<60",
       "confidence_zone": "90-100",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 54,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1811,7 +1813,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T15:59:36"
     },
     {
       "key": "AVAX/USD|WATCHLIST|cycle-922|1794255952",
@@ -1854,7 +1857,7 @@
       "trigger_score_zone": "80-89",
       "trade_score_zone": "70-79",
       "confidence_zone": "80-89",
-      "status": "OPEN",
+      "status": "INACTIVE",
       "environment_score_last": 75,
       "environment_tier_last": "UNKNOWN",
       "age_minutes": 0.0,
@@ -1864,7 +1867,8 @@
       "drawdown_pct": 0.0,
       "current_pct": 0.0,
       "hit_1pct": false,
-      "hit_2pct": false
+      "hit_2pct": false,
+      "inactive_at": "2026-11-09T15:59:36"
     },
     {
       "key": "HYPE/USD|WATCHLIST|cycle-918|1794254889",
