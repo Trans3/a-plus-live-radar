@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-09T16:20:19",
-  "cycle_number": 932,
+  "generated_at": "2026-11-09T16:27:15",
+  "cycle_number": 933,
   "active_pairs": 42,
   "market_state": "CHOP",
   "regime_name": "CHOP",
@@ -627,7 +627,7 @@
         "stop_distance_pct": 0.0
       }
     ],
-    "generated_at": 1794259219.605311
+    "generated_at": 1794259635.01467
   },
   "top_setups": [],
   "anticipation_setups": [],
